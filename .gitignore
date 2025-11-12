@@ -12,3 +12,4 @@ __pycache__/
 .env.local
 .env.*.local
 backend/utils/requirements.txt
+Emissions_Canada.csv

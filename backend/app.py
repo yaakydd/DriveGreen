@@ -9,7 +9,7 @@ app = FastAPI(title="CO2 Emission Predictor API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for production restrict to your frontend domain
+    #allow_origins=["*"],  # for production restrict to your frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -22,7 +22,7 @@ def root():
     return {"message": "Welcome to the CO2 Emission Prediction API!"}
 
 # Serve the frontend
-app.mount("/", StaticFiles(directory="frontend_dist", html=True), name="frontend")
+app.mount("/", StaticFiles(directory="dist", html=True), name="frontend")
 
 # Optional: fallback route for React Router
 @app.get("/{full_path:path}")
