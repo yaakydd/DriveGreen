@@ -53,14 +53,14 @@ class PredictionInput(BaseModel):
     
     @validator('engine_size')
     def validate_engine_size(cls, v):
-        if v <= 0 or v > 10:
-            raise ValueError('Engine size must be between 0.1 and 10.0 liters')
+        if v <= 0 or v > 16:
+            raise ValueError('Engine size must be between 0.1 and 16.0 liters')
         return v
     
     @validator('cylinders')
     def validate_cylinders(cls, v):
-        if v < 2 or v > 16:
-            raise ValueError('Cylinders must be between 2 and 16')
+        if v < 1 or v > 10:
+            raise ValueError('Cylinders must be between 1 and 10')
         return v
     
     class Config:
@@ -80,78 +80,67 @@ class PredictionOutput(BaseModel):
     color: str
 
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
-    """
-    Apply the EXACT same preprocessing as in training:
-    1. Log transform numerical features (engine_size, cylinders)
-    2. Create DataFrame with transformed values + categorical
-    3. One-hot encode fuel_type (with drop='first')
-    4. Combine numerical (log-transformed) + encoded categorical
-    5. Scale everything with StandardScaler
-    """
     
-    # STEP 1: Log transform numerical features (MATCHING YOUR TRAINING!)
-    log_engine_size = np.log(engine_size)
-    log_cylinders = np.log(cylinders)
     
-    # STEP 2: Create DataFrame with log-transformed numerical + categorical
+    #  Log transform numerical features 
+    log_engine_size = np.log1p(engine_size)
+    log_cylinders = np.log1p(cylinders)
+    
+    # Create DataFrame with log-transformed numerical + categorical features 
     df = pd.DataFrame([{
         "engine_size(l)": log_engine_size,
         "cylinders": log_cylinders,
         "fuel_type": fuel_type
     }])
     
-    # STEP 3: One-hot encode categorical (drop='first' as in training)
+    # One-hot encode categorical 
     cat_encoded = encoder.transform(df[["fuel_type"]])
     cat_encoded_df = pd.DataFrame(
         cat_encoded,
         columns=encoder.get_feature_names_out(["fuel_type"])
     )
     
-    # STEP 4: Combine numerical (already log-transformed) + encoded categorical
+    # Combine numerical (already log-transformed) + encoded categorical
     num_df = df[["engine_size(l)", "cylinders"]]
     combined = pd.concat([num_df, cat_encoded_df], axis=1)
     
-    # STEP 5: Scale everything (EXACT same as training)
+    # Scale inputs
     scaled_input = scaler.transform(combined)
     
     return scaled_input
 
 def interpret_emissions(co2_value: float) -> tuple:
-    """
-    Interpret the CO2 emissions value
-    Returns (interpretation_text, category, color)
-    """
     if co2_value < 120:
         return (
-            "🌱 Excellent! This vehicle has very low emissions and is highly environmentally friendly. "
+            " Excellent! This vehicle has very low emissions and is highly environmentally friendly. "
             "You'll save money on fuel and contribute less to climate change.",
             "Excellent",
             "#10b981"  # green
         )
     elif co2_value < 160:
         return (
-            "✅ Good! This vehicle has moderate emissions and is reasonably eco-friendly. "
+            " Good! This vehicle has moderate emissions and is reasonably eco-friendly. "
             "A solid choice for balancing performance and environmental impact.",
             "Good",
             "#22c55e"  # light green
         )
     elif co2_value < 200:
         return (
-            "⚠️ Average. This vehicle has typical emissions for its class. "
+            " Average. This vehicle has typical emissions for its class. "
             "Consider more fuel-efficient options if environmental impact is a priority.",
             "Average",
             "#f59e0b"  # orange
         )
     elif co2_value < 250:
         return (
-            "⚡ High. This vehicle produces above-average emissions. "
+            "High. This vehicle produces above-average emissions. "
             "Expect higher fuel costs and greater environmental impact.",
             "High",
             "#ef4444"  # red
         )
     else:
         return (
-            "🔥 Very High. This vehicle produces significant emissions. "
+            " Very High. This vehicle produces significant emissions. "
             "Fuel costs will be substantial and environmental impact is considerable.",
             "Very High",
             "#dc2626"  # dark red
@@ -159,9 +148,7 @@ def interpret_emissions(co2_value: float) -> tuple:
 
 @predict_router.post("/predict", response_model=PredictionOutput)
 async def predict_emissions(input_data: PredictionInput):
-    """
-    Predict CO2 emissions based on vehicle features
-    """
+    
     if model is None or encoder is None or scaler is None:
         raise HTTPException(
             status_code=503, 
@@ -176,18 +163,18 @@ async def predict_emissions(input_data: PredictionInput):
             input_data.cylinders
         )
         
-        # Make prediction (model returns LOG-TRANSFORMED CO2 value!)
+        # Make prediction (model returns log transformed values)
         log_prediction = model.predict(scaled_features)[0]
         
-        # ⚡ CRITICAL: Reverse log transform to get actual CO2 emissions
+        # Reverse log transform to get actual CO2 emissions
         actual_co2 = np.exp(log_prediction)
         co2_value = round(float(actual_co2), 2)
         
         # Get interpretation with color
         interpretation, category, color = interpret_emissions(co2_value)
         
-        # Debug logging
-        print(f"📊 Prediction Details:")
+        # Prediction 
+        print(f" Prediction Details:")
         print(f"   Input: fuel={input_data.fuel_type}, engine={input_data.engine_size}L, cyl={input_data.cylinders}")
         print(f"   Log prediction: {log_prediction:.4f}")
         print(f"   Actual CO2: {co2_value} g/km")
