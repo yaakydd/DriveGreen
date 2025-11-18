@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "bot", text: "Hi! I'm your CO₂ assistant. Ask me anything about vehicle emissions!" }
+    { role: "bot", text: "Hi! I'm your vehicle carbon emissions assistant. Ask me anything about vehicle emissions!" }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
