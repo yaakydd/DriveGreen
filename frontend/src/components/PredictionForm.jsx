@@ -10,11 +10,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 /**
  * PredictionForm Component (Arrow Function)
  * 
- * Updates:
- * - Removed artificial delay (faster response)
- * - Added proper spacing/padding
- * - CO2 molecules animation background
- * - Vehicle icon at top
+ * Features:
+ * - Animated vehicle emitting CO2 across screen
+ * - CO2 smoke trail following vehicle
+ * - Continuous loop animation
  */
 const PredictionForm = () => {
   const [form, setForm] = useState({
@@ -53,10 +52,6 @@ const PredictionForm = () => {
       }
 
       const data = await res.json();
-      
-      // ✅ REMOVED ARTIFICIAL DELAY - Now instant!
-      // await new Promise(resolve => setTimeout(resolve, 1500));
-      
       setPrediction(data);
       toast.success("Prediction successful!");
       
@@ -79,34 +74,111 @@ const PredictionForm = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* 🌫️ CO2 Molecules Animation (Left to Right) */}
+      
+      {/* 🚗💨 ANIMATED VEHICLE EMITTING CO2 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* CO2 Molecules floating across screen */}
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={`co2-${i}`}
-            className="absolute text-green-400/20 font-bold text-2xl"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: '-10%'
-            }}
-            animate={{
-              x: ['0vw', '110vw'],  // Move from left to right across screen
-              y: [0, Math.random() * 50 - 25, 0],  // Slight up/down float
-            }}
-            transition={{
-              duration: 15 + Math.random() * 10,  // Vary speed
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * 10  // Stagger start times
-            }}
-          >
-            CO₂
-          </motion.div>
-        ))}
+        
+        {/* Vehicle Animation - Moves from left to right */}
+        <motion.div
+          className="absolute"
+          style={{ 
+            top: '15%',
+            left: '-100px'
+          }}
+          animate={{
+            x: ['0vw', '110vw']  // Move across entire screen
+          }}
+          transition={{
+            duration: 20,        // 20 seconds to cross screen
+            repeat: Infinity,    // Loop forever
+            ease: "linear",      // Constant speed
+            repeatDelay: 2       // 2 second pause before restarting
+          }}
+        >
+          {/* Car Icon */}
+          <div className="relative">
+            <svg 
+              width="80" 
+              height="40" 
+              viewBox="0 0 80 40" 
+              className="drop-shadow-lg"
+            >
+              {/* Car Body */}
+              <rect x="10" y="20" width="60" height="15" rx="3" fill="#3B82F6" />
+              <rect x="20" y="10" width="40" height="15" rx="3" fill="#60A5FA" />
+              
+              {/* Windows */}
+              <rect x="25" y="13" width="15" height="10" rx="2" fill="#93C5FD" opacity="0.6" />
+              <rect x="45" y="13" width="15" height="10" rx="2" fill="#93C5FD" opacity="0.6" />
+              
+              {/* Wheels */}
+              <circle cx="25" cy="35" r="5" fill="#1F2937" />
+              <circle cx="25" cy="35" r="3" fill="#6B7280" />
+              <circle cx="55" cy="35" r="5" fill="#1F2937" />
+              <circle cx="55" cy="35" r="3" fill="#6B7280" />
+              
+              {/* Exhaust Pipe */}
+              <rect x="8" y="28" width="4" height="3" rx="1" fill="#374151" />
+            </svg>
 
-        {/* Animated Carbon Particles (Original) */}
-        {[...Array(25)].map((_, i) => (
+            {/* CO2 Emission Trail - Multiple puffs coming from exhaust */}
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute"
+                style={{
+                  left: '-30px',
+                  top: '25px',
+                }}
+                animate={{
+                  x: [-20 * i, -20 * i - 80],  // Move backward from car
+                  y: [0, -20, -30],              // Float upward
+                  opacity: [0, 0.6, 0.3, 0],     // Fade in and out
+                  scale: [0.5, 1, 1.5, 2]        // Expand as it dissipates
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: i * 0.3  // Stagger each puff
+                }}
+              >
+                <div className="text-gray-400/60 font-bold text-lg select-none">
+                  CO₂
+                </div>
+              </motion.div>
+            ))}
+
+            {/* Smoke Puffs - Gray clouds */}
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={`smoke-${i}`}
+                className="absolute"
+                style={{
+                  left: '-25px',
+                  top: '22px',
+                }}
+                animate={{
+                  x: [-15 * i, -15 * i - 60],
+                  y: [0, -15, -25],
+                  opacity: [0, 0.4, 0.2, 0],
+                  scale: [0.3, 0.8, 1.2]
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: i * 0.25
+                }}
+              >
+                <div className="w-8 h-8 bg-gray-500/30 rounded-full blur-sm"></div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Additional Floating CO2 Particles in Background */}
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={`particle-${i}`}
             className="absolute rounded-full bg-green-400/20"
@@ -164,57 +236,12 @@ const PredictionForm = () => {
               transition={{ duration: 0.3 }}
               className="w-full max-w-md"
             >
-              {/* ✅ ADDED PROPER SPACING with p-8 and space-y-6 */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
                 
-                {/* Header Section with Vehicle Icon */}
+                {/* Header Section */}
                 <div className="text-center mb-8 space-y-4">
-                  {/* 🚗 Vehicle Icon at Top */}
-                  <motion.div
-                    initial={{ x: -100, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 100,
-                      delay: 0.2 
-                    }}
-                    className="flex justify-center"
-                  >
-                    <div className="relative">
-                      {/* Car Icon with Exhaust Animation */}
-                      <motion.div
-                        animate={{ 
-                          x: [0, 5, 0],  // Slight shake
-                        }}
-                        transition={{ 
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      >
-                        <Car className="w-16 h-16 text-blue-400" />
-                      </motion.div>
-                      
-                      {/* Exhaust Smoke Animation */}
-                      <motion.div
-                        className="absolute -right-8 top-1/2 transform -translate-y-1/2"
-                        animate={{ 
-                          x: [0, 20, 40],
-                          opacity: [0.6, 0.3, 0],
-                          scale: [0.5, 1, 1.5]
-                        }}
-                        transition={{ 
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeOut"
-                        }}
-                      >
-                        <div className="text-gray-400/50 text-xl">💨</div>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-
-                  {/* Eco Icon with Animation */}
+                  
+                  {/* Eco Icon */}
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -237,10 +264,10 @@ const PredictionForm = () => {
                   </div>
                 </div>
 
-                {/* ✅ FORM WITH PROPER SPACING */}
+                {/* Form with Proper Spacing */}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
-                  {/* Fuel Type Input - ✅ Added spacing */}
+                  {/* Fuel Type Input */}
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-200">
                       <Sparkles className="w-4 h-4 text-yellow-400" />
@@ -262,7 +289,7 @@ const PredictionForm = () => {
                     </select>
                   </div>
 
-                  {/* Cylinders Input - ✅ Added spacing */}
+                  {/* Cylinders Input */}
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-200">
                       <Settings className="w-4 h-4 text-blue-400" />
@@ -281,7 +308,7 @@ const PredictionForm = () => {
                     />
                   </div>
 
-                  {/* Engine Size Input - ✅ Added spacing */}
+                  {/* Engine Size Input */}
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-gray-200">
                       <Gauge className="w-4 h-4 text-red-400" />
@@ -301,7 +328,7 @@ const PredictionForm = () => {
                     />
                   </div>
 
-                  {/* Submit Button - ✅ Added top margin */}
+                  {/* Submit Button */}
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
