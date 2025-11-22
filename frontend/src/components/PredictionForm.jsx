@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Leaf, Gauge, Settings, Sparkles, Car } from "lucide-react";
+import { Leaf, Gauge, Settings, Sparkles } from "lucide-react";
 import Spinner from "./Spinner";
 import AnimationCard from "./AnimationCard";
 import toast from "react-hot-toast";
@@ -11,8 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
  * PredictionForm Component (Arrow Function)
  * 
  * Features:
- * - Animated vehicle emitting CO2 across screen
- * - CO2 smoke trail following vehicle
+ * - Vehicle in BACKGROUND emitting CO2 from exhaust
+ * - CO2 trail moves left-to-right across screen
  * - Continuous loop animation
  */
 const PredictionForm = () => {
@@ -75,112 +75,159 @@ const PredictionForm = () => {
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       
-      {/* 🚗💨 ANIMATED VEHICLE EMITTING CO2 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* 🚗💨 BACKGROUND VEHICLE ANIMATION WITH CO2 EMISSIONS */}
+      <div className="absolute inset-0 pointer-events-none">
         
-        {/* Vehicle Animation - Moves from left to right */}
+        {/* VEHICLE + CO2 EMISSIONS (Moves as one unit) */}
         <motion.div
           className="absolute"
           style={{ 
-            top: '15%',
-            left: '-100px'
+            top: '20%',      // Position in background (not on form)
+            left: '-150px'    // Start off-screen left
           }}
           animate={{
-            x: ['0vw', '110vw']  // Move across entire screen
+            x: ['0vw', '110vw']  // Move from left to right edge
           }}
           transition={{
-            duration: 20,        // 20 seconds to cross screen
+            duration: 25,        // 25 seconds to cross screen
             repeat: Infinity,    // Loop forever
             ease: "linear",      // Constant speed
-            repeatDelay: 2       // 2 second pause before restarting
+            repeatDelay: 1       // 1 second pause before restart
           }}
         >
-          {/* Car Icon */}
-          <div className="relative">
-            <svg 
-              width="80" 
-              height="40" 
-              viewBox="0 0 80 40" 
-              className="drop-shadow-lg"
-            >
-              {/* Car Body */}
-              <rect x="10" y="20" width="60" height="15" rx="3" fill="#3B82F6" />
-              <rect x="20" y="10" width="40" height="15" rx="3" fill="#60A5FA" />
+          {/* VEHICLE SVG */}
+          <svg 
+            width="120" 
+            height="60" 
+            viewBox="0 0 120 60" 
+            className="drop-shadow-2xl"
+          >
+            {/* Car Body - Main structure */}
+            <g opacity="0.9">
+              {/* Bottom body */}
+              <rect x="15" y="30" width="90" height="20" rx="4" fill="#3B82F6" stroke="#2563EB" strokeWidth="2"/>
               
-              {/* Windows */}
-              <rect x="25" y="13" width="15" height="10" rx="2" fill="#93C5FD" opacity="0.6" />
-              <rect x="45" y="13" width="15" height="10" rx="2" fill="#93C5FD" opacity="0.6" />
+              {/* Top cabin */}
+              <path d="M 30 30 L 35 15 L 75 15 L 80 30 Z" fill="#60A5FA" stroke="#3B82F6" strokeWidth="2"/>
+              
+              {/* Front window */}
+              <path d="M 38 18 L 42 28 L 55 28 L 55 18 Z" fill="#DBEAFE" opacity="0.7"/>
+              
+              {/* Back window */}
+              <path d="M 60 18 L 60 28 L 73 28 L 70 18 Z" fill="#DBEAFE" opacity="0.7"/>
+              
+              {/* Front bumper */}
+              <rect x="100" y="35" width="8" height="10" rx="2" fill="#2563EB"/>
+              
+              {/* Back bumper */}
+              <rect x="12" y="35" width="8" height="10" rx="2" fill="#2563EB"/>
               
               {/* Wheels */}
-              <circle cx="25" cy="35" r="5" fill="#1F2937" />
-              <circle cx="25" cy="35" r="3" fill="#6B7280" />
-              <circle cx="55" cy="35" r="5" fill="#1F2937" />
-              <circle cx="55" cy="35" r="3" fill="#6B7280" />
+              <circle cx="35" cy="50" r="8" fill="#1F2937" stroke="#374151" strokeWidth="2"/>
+              <circle cx="35" cy="50" r="4" fill="#6B7280"/>
+              <circle cx="85" cy="50" r="8" fill="#1F2937" stroke="#374151" strokeWidth="2"/>
+              <circle cx="85" cy="50" r="4" fill="#6B7280"/>
               
-              {/* Exhaust Pipe */}
-              <rect x="8" y="28" width="4" height="3" rx="1" fill="#374151" />
-            </svg>
+              {/* Headlight */}
+              <circle cx="104" cy="40" r="3" fill="#FEF3C7" opacity="0.8"/>
+              
+              {/* EXHAUST PIPE - Where CO2 comes from */}
+              <rect x="10" y="42" width="6" height="4" rx="1" fill="#374151" stroke="#1F2937" strokeWidth="1"/>
+            </g>
+          </svg>
 
-            {/* CO2 Emission Trail - Multiple puffs coming from exhaust */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute"
-                style={{
-                  left: '-30px',
-                  top: '25px',
-                }}
-                animate={{
-                  x: [-20 * i, -20 * i - 80],  // Move backward from car
-                  y: [0, -20, -30],              // Float upward
-                  opacity: [0, 0.6, 0.3, 0],     // Fade in and out
-                  scale: [0.5, 1, 1.5, 2]        // Expand as it dissipates
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  ease: "easeOut",
-                  delay: i * 0.3  // Stagger each puff
-                }}
-              >
-                <div className="text-gray-400/60 font-bold text-lg select-none">
-                  CO₂
-                </div>
-              </motion.div>
-            ))}
-
-            {/* Smoke Puffs - Gray clouds */}
-            {[...Array(5)].map((_, i) => (
+          {/* CO2 EMISSIONS FROM EXHAUST PIPE */}
+          <div className="absolute" style={{ left: '10px', top: '42px' }}>
+            
+            {/* CO2 Smoke Puffs - Coming from exhaust */}
+            {[...Array(12)].map((_, i) => (
               <motion.div
                 key={`smoke-${i}`}
                 className="absolute"
                 style={{
-                  left: '-25px',
-                  top: '22px',
+                  left: '0px',
+                  top: '0px',
                 }}
+                initial={{ opacity: 0 }}
                 animate={{
-                  x: [-15 * i, -15 * i - 60],
-                  y: [0, -15, -25],
-                  opacity: [0, 0.4, 0.2, 0],
-                  scale: [0.3, 0.8, 1.2]
+                  x: [-10, -30 - (i * 20), -50 - (i * 30)],  // Trail behind car
+                  y: [0, -10, -20],                           // Float upward
+                  opacity: [0, 0.7, 0.4, 0],                  // Fade in then out
+                  scale: [0.3, 0.8, 1.2, 1.8]                 // Expand as it disperses
                 }}
                 transition={{
                   duration: 2.5,
                   repeat: Infinity,
                   ease: "easeOut",
-                  delay: i * 0.25
+                  delay: i * 0.2  // Stagger each puff
                 }}
               >
-                <div className="w-8 h-8 bg-gray-500/30 rounded-full blur-sm"></div>
+                {/* Gray smoke cloud */}
+                <div className="w-6 h-6 bg-gray-400/60 rounded-full blur-md"></div>
+              </motion.div>
+            ))}
+
+            {/* CO2 Text Labels - Following smoke */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={`co2-${i}`}
+                className="absolute"
+                style={{
+                  left: '5px',
+                  top: '-5px',
+                }}
+                initial={{ opacity: 0 }}
+                animate={{
+                  x: [-15, -40 - (i * 25), -70 - (i * 35)],  // Follow smoke trail
+                  y: [0, -15, -25],                           // Float up
+                  opacity: [0, 0.8, 0.5, 0],                  // Fade
+                  scale: [0.5, 1, 1.3]                        // Grow
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: i * 0.4  // Stagger
+                }}
+              >
+                <span className="text-gray-300/80 font-bold text-sm whitespace-nowrap select-none">
+                  CO₂
+                </span>
+              </motion.div>
+            ))}
+
+            {/* Dense Exhaust Particles - Right at exhaust */}
+            {[...Array(8)].map((_, i) => (
+              <motion.div
+                key={`particle-${i}`}
+                className="absolute"
+                style={{
+                  left: '-2px',
+                  top: '2px',
+                }}
+                animate={{
+                  x: [-5, -15 - (i * 8)],
+                  y: [0, -8, -12],
+                  opacity: [0, 0.6, 0],
+                  scale: [0.2, 0.5, 0.8]
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: i * 0.15
+                }}
+              >
+                <div className="w-3 h-3 bg-gray-500/50 rounded-full blur-sm"></div>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* Additional Floating CO2 Particles in Background */}
-        {[...Array(20)].map((_, i) => (
+        {/* Ambient Background Particles */}
+        {[...Array(15)].map((_, i) => (
           <motion.div
-            key={`particle-${i}`}
+            key={`ambient-${i}`}
             className="absolute rounded-full bg-green-400/20"
             style={{
               width: Math.random() * 4 + 2,
@@ -189,21 +236,21 @@ const PredictionForm = () => {
               top: `${Math.random() * 100}%`
             }}
             animate={{
-              y: [0, -100, 0],
-              opacity: [0.2, 0.6, 0.2],
+              y: [0, -80, 0],
+              opacity: [0.2, 0.5, 0.2],
               scale: [1, 1.2, 1]
             }}
             transition={{
-              duration: 3 + Math.random() * 3,
+              duration: 4 + Math.random() * 4,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: Math.random() * 2
+              delay: Math.random() * 3
             }}
           />
         ))}
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - FORM STAYS IN CENTER */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         <AnimatePresence mode="wait">
           {loading ? (
