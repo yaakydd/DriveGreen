@@ -1,30 +1,35 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { FileDown, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 import jsPDF from "jspdf";
 
-export default function AnimationCard({ prediction, onReset }) {
+/**
+ * AnimationCard Component (Arrow Function)
+ * 
+ * Purpose: Display prediction results with PDF export
+ */
+const AnimationCard = ({ prediction, onReset }) => {
   const { predicted_co2_emissions, interpretation, category, color } = prediction;
 
+  // Generate PDF report
   const generateAndSharePDF = () => {
     const doc = new jsPDF();
     
-    // Set colors based on category
     const getCategoryColor = () => {
       switch(category) {
-        case "Excellent": return [16, 185, 129]; // green
-        case "Good": return [34, 197, 94]; // light green
-        case "Average": return [245, 158, 11]; // orange
-        case "High": return [239, 68, 68]; // red
-        case "Very High": return [220, 38, 38]; // dark red
+        case "Excellent": return [16, 185, 129];
+        case "Good": return [34, 197, 94];
+        case "Average": return [245, 158, 11];
+        case "High": return [239, 68, 68];
+        case "Very High": return [220, 38, 38];
         default: return [0, 0, 0];
       }
     };
 
-    // Header with background
-    doc.setFillColor(71, 85, 105); // slate-700
+    // Header
+    doc.setFillColor(71, 85, 105);
     doc.rect(0, 0, 210, 40, 'F');
     
-    // Title
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
     doc.setFont(undefined, 'bold');
@@ -44,14 +49,13 @@ export default function AnimationCard({ prediction, onReset }) {
     doc.setFontSize(10);
     doc.text(`Generated: ${date}`, 105, 50, { align: 'center' });
 
-    // Main Result Box
+    // Main Result
     const [r, g, b] = getCategoryColor();
     doc.setFillColor(r, g, b, 0.1);
     doc.setDrawColor(r, g, b);
     doc.setLineWidth(2);
     doc.roundedRect(20, 60, 170, 50, 5, 5, 'FD');
     
-    // CO2 Value
     doc.setTextColor(r, g, b);
     doc.setFontSize(48);
     doc.setFont(undefined, 'bold');
@@ -69,7 +73,7 @@ export default function AnimationCard({ prediction, onReset }) {
     doc.setFont(undefined, 'bold');
     doc.text(category, 105, 123, { align: 'center' });
 
-    // Interpretation Section
+    // Interpretation
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
@@ -79,11 +83,10 @@ export default function AnimationCard({ prediction, onReset }) {
     doc.setFont(undefined, 'normal');
     doc.setTextColor(60, 60, 60);
     
-    // Split interpretation into multiple lines
     const splitText = doc.splitTextToSize(interpretation, 170);
     doc.text(splitText, 20, 155);
 
-    // Recommendations Section
+    // Recommendations
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(0, 0, 0);
@@ -145,14 +148,14 @@ export default function AnimationCard({ prediction, onReset }) {
     doc.setFontSize(9);
     doc.text("CO₂ Emissions Predictor | Helping You Track Your Carbon Footprint", 105, 290, { align: 'center' });
 
-    // Save PDF
+    // Save
     const fileName = `CO2_Report_${predicted_co2_emissions}gkm_${date.replace(/\s/g, '_')}.pdf`;
     doc.save(fileName);
     
-    // Show success message
-    alert(`✅ PDF Report Generated!\n\nFilename: ${fileName}\n\nYou can now share this report online or via email.`);
+    alert(`PDF Generated!\n\nFilename: ${fileName}`);
   };
 
+  // Get recommendations based on category
   const getRecommendations = (category) => {
     switch(category) {
       case "Excellent":
@@ -190,6 +193,17 @@ export default function AnimationCard({ prediction, onReset }) {
     }
   };
 
+  // Get appropriate icon based on category
+  const getCategoryIcon = () => {
+    if (category === "Excellent" || category === "Good") {
+      return <CheckCircle2 className="w-12 h-12 text-green-400" />;
+    } else if (category === "Average") {
+      return <AlertTriangle className="w-12 h-12 text-yellow-400" />;
+    } else {
+      return <AlertCircle className="w-12 h-12 text-red-400" />;
+    }
+  };
+
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white/20">
       <motion.div
@@ -198,7 +212,6 @@ export default function AnimationCard({ prediction, onReset }) {
         transition={{ type: "spring", stiffness: 200 }}
         className="text-center"
       >
-        {/* Success Icon */}
         <motion.div
           className="inline-block mb-6"
           animate={{ 
@@ -212,7 +225,7 @@ export default function AnimationCard({ prediction, onReset }) {
           }}
         >
           <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center">
-            <span className="text-5xl">✅</span>
+            {getCategoryIcon()}
           </div>
         </motion.div>
 
@@ -223,7 +236,6 @@ export default function AnimationCard({ prediction, onReset }) {
           Here's your vehicle's estimated carbon footprint
         </p>
 
-        {/* Main Result */}
         <motion.div
           className="my-8 p-6 rounded-xl bg-white/5"
           animate={{ 
@@ -246,7 +258,6 @@ export default function AnimationCard({ prediction, onReset }) {
           </motion.div>
         </motion.div>
 
-        {/* Category Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -262,7 +273,6 @@ export default function AnimationCard({ prediction, onReset }) {
           </span>
         </motion.div>
 
-        {/* Interpretation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -275,14 +285,14 @@ export default function AnimationCard({ prediction, onReset }) {
           </p>
         </motion.div>
 
-        {/* Action Buttons */}
         <div className="space-y-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onReset}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-green-500/50 transition-all"
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:shadow-green-500/50 transition-all flex items-center justify-center gap-2"
           >
+            <RefreshCw className="w-5 h-5" />
             Make Another Prediction
           </motion.button>
           
@@ -292,11 +302,13 @@ export default function AnimationCard({ prediction, onReset }) {
             onClick={generateAndSharePDF}
             className="w-full bg-white/10 hover:bg-white/20 text-white py-3 rounded-lg font-semibold border border-white/30 transition-all flex items-center justify-center gap-2"
           >
-            <span>📄</span>
-            <span>Share Result (PDF)</span>
+            <FileDown className="w-5 h-5" />
+            Share Result (PDF)
           </motion.button>
         </div>
       </motion.div>
     </div>
   );
-}
+};
+
+export default AnimationCard;
