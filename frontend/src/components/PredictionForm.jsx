@@ -30,10 +30,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
  * 
  * Purpose: Main form for CO2 emissions prediction
  * Features:
- * - Collects vehicle data from user
- * - Sends data to backend API
- * - Displays results
- * - Shows animated vehicle in background
+ *  Collects vehicle data from user
+ *  Sends data to backend API
+ *  Displays results
+ *  Shows animated vehicle in background
+ *  Chatbot to answer vehicle emissions questions based on user inputs
  */
 const PredictionForm = () => {
   
@@ -45,8 +46,8 @@ const PredictionForm = () => {
   // Initial value: Object with empty strings for each field
   const [form, setForm] = useState({
     fuel_type: "",    // Selected fuel type (X, Z, E, D, or N)
-    cylinders: "",    // Number of cylinders (2-16)
-    engine_size: ""   // Engine size in liters (0.1-10)
+    cylinders: "",    // Number of cylinders (3-16)
+    engine_size: ""   // Engine size in liters (0.9-8.4)
   });
   
   // prediction state: Stores API response data
@@ -62,7 +63,7 @@ const PredictionForm = () => {
   /**
    * handleChange - Updates form state when user types
    * 
-   * @param {Event} e - Browser event object containing input information
+  @param {Event} e - Browser event object containing input information
    * 
    * How it works:
    * 1. User types in input field
@@ -82,7 +83,7 @@ const PredictionForm = () => {
   /**
    * handleSubmit - Sends prediction request to backend
    * 
-   * @param {Event} e - Form submit event
+  @param {Event} e - Form submit event
    * 
    * Flow:
    * 1. Prevent page reload
@@ -110,7 +111,7 @@ const PredictionForm = () => {
         engine_size: parseFloat(form.engine_size)     // Convert string to decimal number
       };
 
-      // ===== SEND REQUEST TO BACKEND =====
+      //       SEND REQUEST TO BACKEND 
       // fetch: Modern way to make HTTP requests
       // await: Wait for response before continuing
       const res = await fetch(`${API_URL}/api/predict`, {
@@ -119,7 +120,7 @@ const PredictionForm = () => {
         body: JSON.stringify(payload)                // Convert JavaScript object to JSON string
       });
 
-      // ===== CHECK IF REQUEST SUCCEEDED =====
+      //    CHECK IF REQUEST SUCCEEDED 
       // res.ok is false if status code is 400-599 (error)
       if (!res.ok) {
         // Parse error response from server
