@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Spinner from "./Spinner";
 import ResultCard from "./AnimationCard";
-import fetchWithMinDelay from "../utils/min";
+import fetchWithMinDelay from "./utils/fetchWithMinDelay";
 
 const API = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/predict/";
 
