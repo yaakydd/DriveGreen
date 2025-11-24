@@ -1,31 +1,29 @@
-// ===== IMPORTS =====
-// Import React library - needed for creating React components
+// Import React library needed for creating React components
 import React, { useState } from "react";
 
 // Import animation libraries from Framer Motion
-// - motion: Creates animated HTML elements
-// - AnimatePresence: Handles animations when components appear/disappear
+// motion: Creates animated HTML elements
+// AnimatePresence: Handles animations when components appear/disappear
 import { motion, AnimatePresence } from "framer-motion";
 
 // Import icons from Lucide React icon library
 // These are SVG icons that can be styled with CSS
 import { Leaf, Gauge, Settings, Fuel, Car } from "lucide-react";
 
-// Import custom components we created
+// Import custom components created
 import Spinner from "./Spinner";           // Loading animation component
 import AnimationCard from "./AnimationCard"; // Results display component
 
 // Import toast notifications library for success/error messages
 import toast from "react-hot-toast";
 
-// ===== API CONFIGURATION =====
 // Get API URL from environment variable, or use localhost as fallback
 // import.meta.env.VITE_API_URL comes from .env file
 // || means "OR" - if left side is empty, use right side
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 /**
- * ===== MAIN COMPONENT =====
+ *    MAIN COMPONENT 
  * PredictionForm Component (Arrow Function)
  * 
  * Purpose: Main form for CO2 emissions prediction
@@ -33,11 +31,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
  * - Collects vehicle data from user
  * - Sends data to backend API
  * - Displays results
- * - Shows animated vehicle in background
  */
 const PredictionForm = () => {
   
-  // ===== STATE MANAGEMENT =====
+  //    STATE MANAGEMENT 
   // useState creates state variables that trigger re-renders when changed
   
   // form state: Stores all form input values
@@ -45,8 +42,8 @@ const PredictionForm = () => {
   // Initial value: Object with empty strings for each field
   const [form, setForm] = useState({
     fuel_type: "",    // Selected fuel type (X, Z, E, D, or N)
-    cylinders: "",    // Number of cylinders (2-16)
-    engine_size: ""   // Engine size in liters (0.1-10)
+    cylinders: "",    // Number of cylinders (3-16)
+    engine_size: ""   // Engine size in liters (0.9-8.4)
   });
   
   // prediction state: Stores API response data
@@ -57,7 +54,7 @@ const PredictionForm = () => {
   // false means not loading initially
   const [loading, setLoading] = useState(false);
 
-  // ===== EVENT HANDLERS =====
+  //     EVENT HANDLERS 
   
   /**
    * handleChange - Updates form state when user types
@@ -102,7 +99,7 @@ const PredictionForm = () => {
 
     // try-catch: Handle errors gracefully
     try {
-      // ===== PREPARE DATA FOR API =====
+      //    PREPARE DATA FOR API  
       // Create object with properly formatted data
       const payload = {
         fuel_type: form.fuel_type,                    // String: "X", "Z", etc.
@@ -110,7 +107,7 @@ const PredictionForm = () => {
         engine_size: parseFloat(form.engine_size)     // Convert string to decimal number
       };
 
-      // ===== SEND REQUEST TO BACKEND =====
+      //     SEND REQUEST TO BACKEND 
       // fetch: Modern way to make HTTP requests
       // await: Wait for response before continuing
       const res = await fetch(`${API_URL}/api/predict`, {
@@ -119,7 +116,7 @@ const PredictionForm = () => {
         body: JSON.stringify(payload)                // Convert JavaScript object to JSON string
       });
 
-      // ===== CHECK IF REQUEST SUCCEEDED =====
+      //     CHECK IF REQUEST SUCCEEDED 
       // res.ok is false if status code is 400-599 (error)
       if (!res.ok) {
         // Parse error response from server
@@ -130,22 +127,21 @@ const PredictionForm = () => {
         throw new Error(error.detail || "Prediction failed");
       }
 
-      // ===== PARSE SUCCESSFUL RESPONSE =====
+      //     PARSE SUCCESSFUL RESPONSE 
       // Convert JSON response to JavaScript object
       const data = await res.json();
       
-      // ⚡ NO DELAY - Results appear immediately
-      // (Previously had: await new Promise(resolve => setTimeout(resolve, 1500));)
+      // Results appear immediately
       
       // Store prediction data in state (triggers re-render to show results)
       setPrediction(data);
       
-      // ✅ CRITICAL FIX: Set loading to false so AnimationCard appears
+      // Set loading to false so AnimationCard appears
       setLoading(false);
       
       // Show success notification
       toast.success("Prediction successful!", {
-        icon: '🌍',                    // Custom icon
+        icon: '<Globe className="w-14 h-14 text-white/90" />',                    // Custom icon
         style: {
           background: '#10b981',       // Green background
           color: '#fff',               // White text
@@ -153,7 +149,7 @@ const PredictionForm = () => {
       });
       
     } catch (err) {
-      // ===== HANDLE ERRORS =====
+      //   HANDLE ERRORS    
       // Log error to browser console for debugging
       console.error(err);
       
@@ -165,7 +161,7 @@ const PredictionForm = () => {
       // Hide loading spinner
       setLoading(false);
     }
-    // Note: If successful, loading stays true until AnimationCard appears
+    // If successful, loading stays true until AnimationCard appears
   };
 
   /**
@@ -188,16 +184,16 @@ const PredictionForm = () => {
     });
   };
 
-  // ===== JSX RETURN (UI STRUCTURE) =====
+  //    JSX RETURN (UI STRUCTURE)     
   return (
     // Main container
     // min-h-screen: Minimum height = full viewport height
     // relative: Position context for absolute children
     // overflow-hidden: Hide content that goes outside boundaries
     // bg-gradient-to-br: Background gradient from top-left to bottom-right
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-black">
       
-      {/* ===== BACKGROUND ANIMATIONS ===== */}
+      {/*BACKGROUND ANIMATIONS */}
       {/* This section creates the animated vehicle and smoke */}
       
       {/* Container for all background animations */}
@@ -207,12 +203,12 @@ const PredictionForm = () => {
       {/* opacity-40: 40% transparent */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
         
-        {/* ===== ANIMATED VEHICLE ===== */}
+        {/*  ANIMATED VEHICLE  */}
         {/* motion.div: Animated div from Framer Motion */}
         <motion.div
           className="absolute"              // Positioned absolutely
           style={{ 
-            top: '15%',                      // 15% from top of screen
+            top: '25%',                      // 15% from top of screen
             left: '-150px'                   // Start 150px off left edge (invisible)
           }}
           // animate: Target animation values
@@ -226,16 +222,16 @@ const PredictionForm = () => {
             duration: 20,                    // Takes 20 seconds to complete
             repeat: Infinity,                // Loop forever
             ease: "linear",                  // Constant speed (no acceleration)
-            repeatDelay: 2                   // Wait 2 seconds before restarting
+            repeatDelay: 1                   // Wait 1 seconds before restarting
           }}
         >
-          {/* ===== VEHICLE SVG (Car Drawing) ===== */}
+          {/* VEHICLE SVG (Car Drawing)  */}
           {/* SVG: Scalable Vector Graphics - drawn with code, not pixels */}
           <svg 
-            width="140"                      // SVG canvas width
-            height="70"                      // SVG canvas height
-            viewBox="0 0 140 70"            // Coordinate system (left top right bottom)
-            className="drop-shadow-2xl"     // Add shadow for depth
+            width="240"                      // SVG canvas width
+            height="130"                      // SVG canvas height
+            viewBox="0 0 240 130"            // Coordinate system (left top right bottom)
+            className="drop-shadow-3x2"     // Add shadow for depth
           >
             {/* g: Group element - groups shapes together */}
             {/* opacity="0.8": 80% opaque (slightly transparent) */}
@@ -246,12 +242,12 @@ const PredictionForm = () => {
               <rect 
                 x="20"                       // X position (20 pixels from left)
                 y="35"                       // Y position (35 pixels from top)
-                width="100"                  // Width in pixels
-                height="22"                  // Height in pixels
-                rx="3"                       // Border radius (rounded corners)
-                fill="#EF4444"              // Fill color (red)
-                stroke="#DC2626"            // Border color (darker red)
-                strokeWidth="2"             // Border thickness
+                width="210"                  // Width in pixels
+                height="70"                  // Height in pixels
+                rx="7"                       // Border radius (rounded corners)
+                fill="#62eee7ff"              // Fill color (light-green)
+                stroke="#7afaf3ff"            // Border color (light-green)
+                strokeWidth="5"             // Border thickness
               />
               
               {/* Car Roof - Polygon shape */}
@@ -260,22 +256,22 @@ const PredictionForm = () => {
               <path 
                 d="M 35 35 L 42 20 L 88 20 L 95 35 Z"  // M=start, L=line to, Z=close path
                 // Creates trapezoid shape for roof
-                fill="#F87171"              // Light red
-                stroke="#EF4444"            // Border
+                fill="#71f8d6ff"              // Light greeb
+                stroke="#77f1e7ff"            // Border
                 strokeWidth="2"
               />
               
               {/* Front Window */}
               <path 
                 d="M 45 23 L 50 32 L 65 32 L 65 23 Z"  // Polygon for window
-                fill="#93C5FD"              // Light blue (glass)
+                fill="#549df1ff"              // Light blue (glass)
                 opacity="0.5"               // 50% transparent
               />
               
               {/* Back Window - FIXED: Changed coordinates to match roof */}
               <path 
                 d="M 70 23 L 70 32 L 85 32 L 82 23 Z"
-                fill="#93C5FD"
+                fill="#489cfcff"
                 opacity="0.5"
               />
               
@@ -327,13 +323,13 @@ const PredictionForm = () => {
                 fill="#FDE047"              // Yellow
               />
               
-              {/* ===== EXHAUST PIPE (WHERE CO2 COMES FROM) ===== */}
+              {/*  EXHAUST PIPE (WHERE CO2 COMES FROM) */}
               <rect 
-                x="15"                       // Back of car
-                y="48"                       // Bottom area
-                width="8"                    // Small rectangle
-                height="5" 
-                rx="2"                       // Slightly rounded
+                x="35"                       // Back of car
+                y="58"                       // Bottom area
+                width="15"                    // Small rectangle
+                height="17" 
+                rx="7"                       // Slightly rounded
                 fill="#374151"              // Dark gray
                 stroke="#1F2937"
                 strokeWidth="1"
@@ -341,17 +337,17 @@ const PredictionForm = () => {
             </g>
           </svg>
 
-          {/* ===== CO2 EMISSIONS FROM EXHAUST ===== */}
+          {/* CO2 EMISSIONS FROM EXHAUST */}
           {/* Container positioned at exhaust pipe location */}
           <div 
             className="absolute"            // Position relative to vehicle
             style={{ 
-              left: '15px',                  // Match exhaust pipe X position
-              top: '48px'                    // Match exhaust pipe Y position
+              left: '35px',                  // Match exhaust pipe X position
+              top: '58px'                    // Match exhaust pipe Y position
             }}
           >
             
-            {/* ===== SMOKE PUFFS ===== */}
+            {/*  SMOKE PUFFS */}
             {/* Create array of 10 items, map over them to create 10 smoke puffs */}
             {/* [...Array(10)]: Creates array [undefined, undefined, ...] with 10 items */}
             {/* .map((_, i) => ...): Loop through array, i = index (0, 1, 2, ...) */}
@@ -394,7 +390,7 @@ const PredictionForm = () => {
               </motion.div>
             ))}
 
-            {/* ===== CO2 TEXT LABELS ===== */}
+            {/*  CO2 TEXT LABELS  */}
             {/* Similar to smoke puffs but shows "CO₂" text */}
             {/* Only 5 labels (fewer than smoke puffs) */}
             {[...Array(5)].map((_, i) => (
@@ -462,18 +458,18 @@ const PredictionForm = () => {
         ))}
       </div>
 
-      {/* ===== MAIN CONTENT AREA ===== */}
+      {/*  MAIN CONTENT AREA */}
       {/* Container for form/spinner/results */}
       {/* relative z-10: Above background (z-index stacking) */}
       {/* flex items-center justify-center: Center content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
         
-        {/* ===== ANIMATED CONTENT SWITCHING ===== */}
+        {/*  ANIMATED CONTENT SWITCHING  */}
         {/* AnimatePresence: Handles animations when switching between components */}
         {/* mode="wait": Wait for exit animation before enter animation */}
         <AnimatePresence mode="wait">
           
-          {/* ===== CONDITIONAL RENDERING ===== */}
+          {/*  CONDITIONAL RENDERING  */}
           {/* JavaScript ternary: condition ? ifTrue : ifFalse */}
           {/* Shows different content based on state */}
           
@@ -522,7 +518,7 @@ const PredictionForm = () => {
               className="w-full max-w-md"        // Full width, max 448px
             >
               
-              {/* ===== FORM CONTAINER ===== */}
+              {/*  FORM CONTAINER */}
               {/* relative: Position context for absolute children */}
               {/* bg-gradient-to-br: Diagonal gradient background */}
               {/* /95: 95% opacity */}
@@ -534,21 +530,23 @@ const PredictionForm = () => {
               {/* border-orange-500/20: Orange border at 20% opacity */}
               <div className="relative bg-gradient-to-br from-gray-800/95 via-gray-900/95 to-black/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-orange-500/20">
                 
-                {/* ===== GLOWING BORDER EFFECT ===== */}
+                 {/* GLOWING BORDER EFFECT  */}
                 {/* Creates glow around form */}
                 {/* absolute inset-0: Covers entire parent */}
                 {/* rounded-3xl: Match parent corners */}
                 {/* blur-xl: Large blur */}
                 {/* -z-10: Behind content (negative z-index) */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-500/20 via-red-500/20 to-yellow-500/20 blur-xl -z-10"></div>
+
+                {/*<div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-orange-500/20 via-red-500/20 to-yellow-500/20 blur-xl -z-10"></div>*/}
                 
-                {/* ===== HEADER SECTION ===== */}
+
+                {/*  HEADER SECTION */}
                 {/* text-center: Center align text */}
                 {/* mb-8: 32px bottom margin */}
                 {/* space-y-5: 20px vertical gap between children */}
-                <div className="text-center mb-8 space-y-5">
+                <div className="text-center mb-15 space-y-10">
                   
-                  {/* ===== ANIMATED ICON ===== */}
+                  {/*ANIMATED ICON */}
                   <motion.div
                     // Start invisible and rotated
                     initial={{ scale: 0, rotate: -180 }}
@@ -578,7 +576,7 @@ const PredictionForm = () => {
                     </div>
                   </motion.div>
 
-                  {/* ===== TITLE AND SUBTITLE ===== */}
+                  {/*  TITLE AND SUBTITLE */}
                   <div className="space-y-3">
                     {/* Main title */}
                     {/* text-4xl: 36px font size */}
@@ -587,7 +585,7 @@ const PredictionForm = () => {
                     {/* bg-clip-text: Clip gradient to text */}
                     {/* text-transparent: Make text transparent (shows gradient) */}
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-400 via-red-400 to-yellow-400 bg-clip-text text-transparent">
-                      CO₂ Emissions Calculator
+                      DriveGreen
                     </h1>
                     
                     {/* Subtitle */}
@@ -597,7 +595,7 @@ const PredictionForm = () => {
                     <p className="text-gray-400 text-sm flex items-center justify-center gap-2">
                       {/* Leaf icon */}
                       <Leaf className="w-4 h-4 text-green-400" />
-                      Track your vehicle's carbon footprint
+                      Track your vehicle's carbon emission
                     </p>
                   </div>
                 </div>
@@ -647,16 +645,16 @@ const PredictionForm = () => {
                     >
                       {/* Options */}
                       {/* value="": Empty value (no selection) */}
-                      <option value="" className="text-gray-400 bg-gray-900">Select fuel type...</option>
-                      <option value="X" className="bg-gray-900">⛽ X - Regular Gasoline</option>
-                      <option value="Z" className="bg-gray-900">⭐ Z - Premium Gasoline</option>
-                      <option value="E" className="bg-gray-900">🌽 E - Ethanol (E85)</option>
-                      <option value="D" className="bg-gray-900">🚛 D - Diesel</option>
-                      <option value="N" className="bg-gray-900">💨 N - Natural Gas</option>
+                      <option value="" className="text-gray-400 bg-gray-900">Select fuel type</option>
+                      <option value="X" className="bg-gray-900"> X - Regular Gasoline</option>
+                      <option value="Z" className="bg-gray-900"> Z - Premium Gasoline</option>
+                      <option value="E" className="bg-gray-900"> E - Ethanol (E85)</option>
+                      <option value="D" className="bg-gray-900"> D - Diesel</option>
+                      <option value="N" className="bg-gray-900"> N - Natural Gas</option>
                     </select>
                   </motion.div>
 
-                  {/* ===== CYLINDERS INPUT ===== */}
+                  {/*  CYLINDERS INPUT */}
                   {/* Similar structure to fuel type */}
                   <motion.div 
                     className="space-y-2"
@@ -682,11 +680,11 @@ const PredictionForm = () => {
                       // placeholder: Hint text when empty
                       // placeholder-gray-500: Gray placeholder
                       className="w-full p-4 bg-gray-900/80 border-2 border-red-500/30 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-red-500/50"
-                      placeholder="e.g., 6 cylinders"
+                      placeholder="e.g., 7 cylinders"
                     />
                   </motion.div>
 
-                  {/* ===== ENGINE SIZE INPUT ===== */}
+                  {/* ENGINE SIZE INPUT  */}
                   {/* 
                     Motion wrapper for the engine size input field
                     - Adds fade-in and slide-in animation from the left
@@ -741,7 +739,7 @@ const PredictionForm = () => {
                     />
                   </motion.div>
 
-                  {/* ===== SUBMIT BUTTON ===== */}
+                  {/* SUBMIT BUTTON  */}
                   {/* 
                     Animated submit button with gradient background
                     - Triggers form submission and API call
@@ -776,14 +774,12 @@ const PredictionForm = () => {
                     <Car className="w-6 h-6" />
                     
                     {/* Main button text */}
-                    Calculate Emissions
+                    Predict Vehicle Emissions
                     
-                    {/* Arrow symbol on the right - indicates forward action */}
-                    <span className="text-sm opacity-80">→</span>
                   </motion.button>
                 </form>
 
-                {/* ===== FOOTER INFO ===== */}
+                {/*FOOTER INFO */}
                 {/* 
                   Footer section with branding and status indicator
                   - Shows that app is powered by AI
@@ -810,7 +806,7 @@ const PredictionForm = () => {
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     
                     {/* Footer text */}
-                    Powered by AI · Real-time Analysis
+                    Powered by DriveGreen Technologies
                   </p>
                 </div>
               </div>
@@ -822,7 +818,7 @@ const PredictionForm = () => {
   );
 };
 
-// ===== EXPORT =====
+//  EXPORT 
 // Export component as default export so it can be imported elsewhere
 // Usage: import PredictionForm from './components/PredictionForm'
 export default PredictionForm;
