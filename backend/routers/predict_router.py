@@ -53,13 +53,13 @@ class PredictionInput(BaseModel):
     
     @validator('engine_size')
     def validate_engine_size(cls, v):
-        if v <= 0 or v > 16:
+        if v <= 0 or v > 8.4:
             raise ValueError('Engine size must be between 0.1 and 16.0 liters')
         return v
     
     @validator('cylinders')
     def validate_cylinders(cls, v):
-        if v < 1 or v > 10:
+        if v < 3 or v > 16:
             raise ValueError('Cylinders must be between 1 and 10')
         return v
     
@@ -67,8 +67,8 @@ class PredictionInput(BaseModel):
         json_schema_extra = {
             "example": {
                 "fuel_type": "X",
-                "engine_size": 2.0,
-                "cylinders": 4
+                "engine_size": 1.0,
+                "cylinders": 3
             }
         }
 
@@ -83,8 +83,8 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     
     
     #  Log transform numerical features 
-    log_engine_size = np.log1p(engine_size)
-    log_cylinders = np.log1p(cylinders)
+    log_engine_size = np.log(engine_size)
+    log_cylinders = np.log(cylinders)
     
     # Create DataFrame with log-transformed numerical + categorical features 
     df = pd.DataFrame([{

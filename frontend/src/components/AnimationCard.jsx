@@ -1,6 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FileDown, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import { FileDown, RefreshCw, CheckCircle2, AlertTriangle, AlertCircle,Share2, RotateCcw  } from "lucide-react";
+
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 /**
@@ -149,10 +151,7 @@ const AnimationCard = ({ prediction, onReset }) => {
     doc.text("CO₂ Emissions Predictor | Helping You Track Your Carbon Footprint", 105, 290, { align: 'center' });
 
     // Save
-    const fileName = `CO2_Report_${predicted_co2_emissions}gkm_${date.replace(/\s/g, '_')}.pdf`;
-    doc.save(fileName);
-    
-    alert(`PDF Generated!\n\nFilename: ${fileName}`);
+  
   };
 
   // Get recommendations based on category

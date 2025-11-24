@@ -30,11 +30,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
  * 
  * Purpose: Main form for CO2 emissions prediction
  * Features:
- *  Collects vehicle data from user
- *  Sends data to backend API
- *  Displays results
- *  Shows animated vehicle in background
- *  Chatbot to answer vehicle emissions questions based on user inputs
+ * - Collects vehicle data from user
+ * - Sends data to backend API
+ * - Displays results
+ * - Shows animated vehicle in background
  */
 const PredictionForm = () => {
   
@@ -46,8 +45,8 @@ const PredictionForm = () => {
   // Initial value: Object with empty strings for each field
   const [form, setForm] = useState({
     fuel_type: "",    // Selected fuel type (X, Z, E, D, or N)
-    cylinders: "",    // Number of cylinders (3-16)
-    engine_size: ""   // Engine size in liters (0.9-8.4)
+    cylinders: "",    // Number of cylinders (2-16)
+    engine_size: ""   // Engine size in liters (0.1-10)
   });
   
   // prediction state: Stores API response data
@@ -63,7 +62,7 @@ const PredictionForm = () => {
   /**
    * handleChange - Updates form state when user types
    * 
-  @param {Event} e - Browser event object containing input information
+   * @param {Event} e - Browser event object containing input information
    * 
    * How it works:
    * 1. User types in input field
@@ -83,7 +82,7 @@ const PredictionForm = () => {
   /**
    * handleSubmit - Sends prediction request to backend
    * 
-  @param {Event} e - Form submit event
+   * @param {Event} e - Form submit event
    * 
    * Flow:
    * 1. Prevent page reload
@@ -111,7 +110,7 @@ const PredictionForm = () => {
         engine_size: parseFloat(form.engine_size)     // Convert string to decimal number
       };
 
-      //       SEND REQUEST TO BACKEND 
+      // ===== SEND REQUEST TO BACKEND =====
       // fetch: Modern way to make HTTP requests
       // await: Wait for response before continuing
       const res = await fetch(`${API_URL}/api/predict`, {
@@ -120,7 +119,7 @@ const PredictionForm = () => {
         body: JSON.stringify(payload)                // Convert JavaScript object to JSON string
       });
 
-      //    CHECK IF REQUEST SUCCEEDED 
+      // ===== CHECK IF REQUEST SUCCEEDED =====
       // res.ok is false if status code is 400-599 (error)
       if (!res.ok) {
         // Parse error response from server
@@ -140,6 +139,9 @@ const PredictionForm = () => {
       
       // Store prediction data in state (triggers re-render to show results)
       setPrediction(data);
+      
+      // ✅ CRITICAL FIX: Set loading to false so AnimationCard appears
+      setLoading(false);
       
       // Show success notification
       toast.success("Prediction successful!", {
@@ -675,12 +677,12 @@ const PredictionForm = () => {
                       onChange={handleChange}
                       required
                       type="number"                  // Only allows numbers
-                      min="2"                        // Minimum value
-                      max="16"                       // Maximum value
+                      min="3"                        // Minimum value (matches dataset)
+                      max="16"                       // Maximum value (matches dataset)
                       // placeholder: Hint text when empty
                       // placeholder-gray-500: Gray placeholder
                       className="w-full p-4 bg-gray-900/80 border-2 border-red-500/30 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all hover:border-red-500/50"
-                      placeholder="e.g., 4 cylinders"
+                      placeholder="e.g., 6 cylinders"
                     />
                   </motion.div>
 
@@ -720,8 +722,8 @@ const PredictionForm = () => {
                       required // Makes field mandatory for form submission
                       type="number" // Restricts input to numeric values only
                       step="0.1" // Allows decimal increments of 0.1 (e.g., 2.0, 2.1, 2.2)
-                      min="0.1" // Minimum allowed value (prevents 0 or negative)
-                      max="10" // Maximum allowed value (realistic engine size limit)
+                      min="0.9" // Minimum allowed value (matches dataset minimum)
+                      max="8.4" // Maximum allowed value (matches dataset maximum)
                       // Styling classes:
                       // - w-full: Takes full width of parent container
                       // - p-4: Adds padding inside input for better UX
@@ -823,4 +825,4 @@ const PredictionForm = () => {
 // ===== EXPORT =====
 // Export component as default export so it can be imported elsewhere
 // Usage: import PredictionForm from './components/PredictionForm'
-export default PredictionForm
+export default PredictionForm;
