@@ -1,165 +1,180 @@
+// ===== NEON CAR COMPONENT (Separate File) =====
+// File: frontend/src/components/NeonCar.jsx
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 
 /**
- * Vehicle component (Luxury Cruiser)
- * - Features a dramatic, high-altitude entrance and a full-screen, elegant S-curve path.
- * - Slower, 60-second duration for a majestic cruise.
- * - Includes a sophisticated, neon-accented SVG and realistic, spinning wheels.
+ * NeonCar Component
+ * 
+ * A futuristic neon-styled vehicle that drives across the screen
+ * emitting CO2 smoke puffs with visible text
+ * 
+ * Features:
+ * - Neon blue/cyan (#00F9FF) glow effects
+ * - Curved driving path animation
+ * - Realistic exhaust emissions with CO₂ text
+ * - Spinning wheels
+ * - Atmospheric particles
  */
 const NeonCar = () => {
-  // --- Constants for Design and Puffs ---
-  const ACCENT_TEAL = "#00CED1"; // Sophisticated Deep Teal/Cyan for neon glow
-  const BODY_COLOR = "#0A0D15";   // Near-black for main body
-  const CHROME_COLOR = "#E0E0E0"; // Light gray/silver for grille/accents
+  // ===== COLOR CONSTANTS =====
+  const NEON_BLUE = "#00F9FF";        // Vibrant Neon Blue/Cyan
+  const BODY_COLOR = "#0A0D15";       // Near-black for main body
+  const CHROME_COLOR = "#E0E0E0";     // Light gray/silver for accents
+  const SMOKE_COLOR = "rgba(100, 100, 100, 0.9)"; // Visible cloud-like grey
   
-  const SMOKE_COLOR = "rgba(100, 100, 100, 0.7)"; 
-  const CAR_WIDTH = 260; 
-  const DURATION = 60; // Majestic 60-second cruise
+  // ===== ANIMATION CONSTANTS =====
+  const CAR_WIDTH = 400;
+  const DURATION = 60; // 60 seconds for complete path
 
+  // ===== STATE =====
   const [puffs, setPuffs] = useState([]);
 
-  // --- Animation Path Definition (Dramatic Entrance & Elegant S-Curve) ---
+  // ===== ANIMATION PATH VARIANTS =====
+  // useMemo prevents recreation on every render
   const drivePathVariants = useMemo(() => ({
     animate: {
-      // X-coordinates: Define the journey across the screen
       x: [
-        "-20vw",  // 0. Start (High off-screen left)
-        "30vw",   // 1. **Noticeable Entrance Point** (Mid-screen top)
-        "10vw",   // 2. Dip down towards the left edge
-        "50vw",   // 3. Center Sweep (Horizontal mid-point)
-        "80vw",   // 4. Rise up center-right
-        "120vw",  // 5. Descend towards exit
-        "150vw",  // 6. Exit Right (Fully off-screen right)
-        "-20vw"   // 7. Loop back to start (instantaneous reset)
+        "-30vw",   // Start off-screen left
+        "30vw",    // Enter screen
+        "10vw",    // Curve down
+        "50vw",    // Middle screen
+        "80vw",    // Move right
+        "120vw",   // Exit right
+        "150vw",   // Far off-screen
+        "-30vw"    // Loop back to start
       ],
-      // Y-coordinates: Defines the vertical path (Expanded Vh values for full screen usage)
       y: [
-        "-60vh",  // 0. Start (High off-screen top)
-        "-15vh",  // 1. Descent to high cruising altitude
-        "20vh",   // 2. Deepest dip (Low screen altitude)
-        "0vh",    // 3. Level out at vertical center
-        "-25vh",  // 4. Highest rise (High screen altitude)
-        "10vh",   // 5. Descent towards the exit
-        "20vh",   // 6. Exit at low altitude
-        "-60vh"   // 7. Loop back Y reset
+        "-60vh",   // Top
+        "-15vh",   // Come down
+        "20vh",    // Below center
+        "0vh",     // Center
+        "-25vh",   // Go up
+        "10vh",    // Come down
+        "20vh",    // Lower
+        "-60vh"    // Back to top
       ],
-      // Rotational keyframes: Small rotations to follow the curves naturally
       rotate: [
-        -5,      // Starting tilt down
-        10,      // Tilt right while leveling out
-        -15,     // Sharp tilt left at the bottom of the dip
-        5,       // Leveling off
-        -10,     // Tilt left for the high rise
-        10,      // Tilt right on descent
-        0,       // Exit straight
-        -5       // Loop reset
+        -5, 10, -15, 5, -10, 10, 0, -5
       ],
       transition: {
         duration: DURATION,
-        ease: "linear", // Using linear for fine control via 'times'
-        // Define when each keyframe point occurs (smoother transitions between points)
-        times: [0, 0.10, 0.30, 0.50, 0.70, 0.90, 0.999, 1], 
+        ease: "linear",
+        times: [0, 0.10, 0.30, 0.50, 0.70, 0.90, 0.999, 1],
         repeat: Infinity,
       }
     }
-  }), []);
+  }), [DURATION]);
 
-  // Wheel Spin Animation
+  // ===== WHEEL SPIN ANIMATION =====
   const wheelSpinVariants = {
     animate: {
       rotate: 360,
       transition: {
-        duration: 1, // Full rotation every second
+        duration: 0.5,
         ease: "linear",
         repeat: Infinity,
       }
     }
   };
 
-
-  // --- Puff Emission Logic ---
+  // ===== PUFF EMISSION LOGIC =====
+  // useCallback prevents function recreation
   const emitPuff = useCallback(() => {
-    const newId = Date.now();
-    const offset = Math.random() > 0.5 ? 1 : 2;
+    const newId = Date.now() + Math.random(); // Ensure unique ID
+    const offset = Math.random() > 0.5 ? 1 : 2; // Two exhaust pipes
+    const randomRotation = Math.random() * 15 - 7; // -7 to +7 degrees
 
-    setPuffs(prevPuffs => [...prevPuffs, { id: newId, offset, randomRotation: Math.random() * 10 - 5 }]);
+    // Add new puff to state
+    setPuffs(prevPuffs => [
+      ...prevPuffs, 
+      { id: newId, offset, randomRotation }
+    ]);
 
+    // Remove puff after animation completes
     setTimeout(() => {
       setPuffs(prevPuffs => prevPuffs.filter(puff => puff.id !== newId));
-    }, 4500); 
-
+    }, 4500);
   }, []);
 
-  // Continuous Smoke Effect
+  // ===== EMIT PUFFS CONTINUOUSLY =====
   useEffect(() => {
-    const intervalId = setInterval(emitPuff, 500); 
-    return () => clearInterval(intervalId);
+    const intervalId = setInterval(emitPuff, 500); // Every 500ms
+    return () => clearInterval(intervalId); // Cleanup
   }, [emitPuff]);
 
-
-  // 2. Individual Puff Animation (Realistic Smoke)
+  // ===== PUFF ANIMATION VARIANTS =====
   const puffVariants = {
-    initial: { opacity: 0.8, scale: 0.1, x: 0, y: 0 },
+    initial: { 
+      opacity: 0.9, 
+      scale: 0.2, 
+      x: 0, 
+      y: 0 
+    },
     animate: {
-      opacity: [0.8, 0.5, 0], 
-      scale: [0.1, 1.5, 3.0], 
-      x: [0, -40],           
-      y: [0, -30],            
+      opacity: [0.9, 0.7, 0.0],
+      scale: [0.2, 2.0, 4.5],
+      x: [0, -60],
+      y: [0, -40],
       transition: {
-        duration: 4.0, 
+        duration: 4.0,
         ease: "easeOut",
       }
     }
   };
 
-
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-      
-      {/* Driving Container (Car and Puffs move together) */}
+      {/* ===== ANIMATED CAR CONTAINER ===== */}
       <motion.div
-        className="absolute w-[260px] h-[120px] top-1/2 left-0 transform -translate-y-1/2" 
-        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }} 
+        className="absolute w-[400px] h-[150px] top-1/2 left-0 transform -translate-y-1/2"
+        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }}
         variants={drivePathVariants}
-        initial={{ x: "-20vw", y: "-60vh", rotate: -5 }}
+        initial={{ x: "-30vw", y: "-60vh", rotate: -5 }}
         animate="animate"
       >
-        {/* === INDIVIDUAL SMOKE PUFFS (Emission) === */}
+        {/* ===== EXHAUST PUFFS WITH CO2 TEXT ===== */}
         {puffs.map(puff => (
           <motion.div
             key={puff.id}
             variants={puffVariants}
             initial="initial"
             animate="animate"
-            className={`absolute top-[88px] w-8 h-8 flex items-center justify-center rounded-full`}
+            className="absolute top-[105px] w-12 h-12 flex items-center justify-center rounded-full"
             style={{
-              left: puff.offset === 1 ? '5px' : '30px', 
+              left: puff.offset === 1 ? '10px' : '35px',
               background: `radial-gradient(circle at center, ${SMOKE_COLOR} 0%, transparent 70%)`,
               filter: 'blur(3px)',
               transform: `rotate(${puff.randomRotation}deg)`,
             }}
           >
+            {/* CO₂ Text - Highly visible */}
             <span
-              className="text-[8px] font-mono font-black whitespace-nowrap"
-              style={{ color: "#000", filter: 'none', opacity: 1 }}
+              className="text-xs font-black text-gray-900 whitespace-nowrap"
+              style={{ 
+                filter: 'none', 
+                opacity: 1,
+                textShadow: '0 0 2px white' 
+              }}
             >
               CO₂
             </span>
           </motion.div>
         ))}
 
-        {/* === NEON ROLLS ROYCE STYLE SVG === */}
+        {/* ===== SVG CAR ===== */}
         <svg
           width={CAR_WIDTH}
-          height="120"
-          viewBox="0 0 350 100" 
+          height="150"
+          viewBox="0 0 350 100"
           preserveAspectRatio="xMinYMin meet"
           className="drop-shadow-2xl absolute"
-          style={{ transform: 'scale(0.75) translate(0, 0)' }}
+          style={{ transform: 'scale(1.0) translate(0, 0)' }}
         >
+          {/* ===== FILTERS AND GRADIENTS ===== */}
           <defs>
-            {/* Neon Glow Filter - Teal */}
+            {/* Neon glow filter */}
             <filter id="luxuryNeon" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
               <feMerge>
@@ -168,75 +183,124 @@ const NeonCar = () => {
               </feMerge>
             </filter>
             
-            {/* Main Body Gradient */}
+            {/* Body gradient (dark teal to black) */}
             <linearGradient id="bodyGradientLuxury" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="0%" stopColor="#004C4C" />
               <stop offset="100%" stopColor={BODY_COLOR} />
             </linearGradient>
           </defs>
 
+          {/* ===== CAR BODY WITH NEON GLOW ===== */}
           <g filter="url(#luxuryNeon)">
-
-            {/* Main Body - Boxy, classic silhouette */}
-            <rect x="50" y="55" width="280" height="25" rx="5" fill="url(#bodyGradientLuxury)" stroke={ACCENT_TEAL} strokeWidth="1.5"/>
-
-            {/* Cabin/Canopy - Distinctly separate from the hood */}
-            <rect x="100" y="40" width="150" height="15" rx="3" fill="#000" stroke={ACCENT_TEAL} strokeWidth="0.5" opacity="0.8"/>
-
-            {/* Imposing Grille - Vertical and Chrome-like */}
-            <rect x="330" y="50" width="8" height="35" rx="2" fill={CHROME_COLOR} stroke={ACCENT_TEAL} strokeWidth="1"/>
-
-            {/* Wheels - Grouped for spinning animation */}
+            {/* Main Body Shape */}
+            <path 
+              d="M 30 75 L 80 55 H 280 L 330 75 Z" 
+              fill="url(#bodyGradientLuxury)" 
+              stroke={NEON_BLUE} 
+              strokeWidth="2.5" 
+            />
+            
+            {/* Cabin/Windshield */}
+            <rect 
+              x="100" 
+              y="40" 
+              width="150" 
+              height="15" 
+              rx="3" 
+              fill="#000" 
+              stroke={NEON_BLUE} 
+              strokeWidth="1" 
+              opacity="0.8"
+            />
+            
+            {/* Rear Spoiler/Light bar */}
+            <rect 
+              x="330" 
+              y="50" 
+              width="8" 
+              height="30" 
+              rx="2" 
+              fill={CHROME_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1"
+            />
+            
+            {/* ===== WHEELS ===== */}
             <g>
-              {/* Front Wheel */}
-              <motion.circle 
-                cx="80" 
-                cy="80" 
-                r="12" 
-                fill={BODY_COLOR} 
-                stroke={CHROME_COLOR} 
-                strokeWidth="2"
+              {/* Front wheel */}
+              <motion.circle
+                cx="80"
+                cy="80"
+                r="15"
+                fill={BODY_COLOR}
+                stroke={CHROME_COLOR}
+                strokeWidth="2.5"
                 variants={wheelSpinVariants}
                 animate="animate"
                 style={{ transformOrigin: '80px 80px' }}
               />
-              {/* Rear Wheel */}
-              <motion.circle 
-                cx="280" 
-                cy="80" 
-                r="12" 
-                fill={BODY_COLOR} 
-                stroke={CHROME_COLOR} 
-                strokeWidth="2"
+              
+              {/* Rear wheel */}
+              <motion.circle
+                cx="280"
+                cy="80"
+                r="15"
+                fill={BODY_COLOR}
+                stroke={CHROME_COLOR}
+                strokeWidth="2.5"
                 variants={wheelSpinVariants}
                 animate="animate"
                 style={{ transformOrigin: '280px 80px' }}
               />
             </g>
 
-
-            {/* Headlights - Rectangular and Bright */}
-            <rect x="335" y="60" width="5" height="10" rx="1" fill="#FFF" style={{ filter: "drop-shadow(0 0 8px #FFF)" }}/>
-
-            {/* Neon Underglow Line */}
-            <path
-              d="M 50 85 L 330 85"
-              fill="none"
-              stroke={ACCENT_TEAL}
-              strokeWidth="2.5"
+            {/* Headlights (White Neon) */}
+            <rect 
+              x="335" 
+              y="60" 
+              width="5" 
+              height="10" 
+              rx="1" 
+              fill="#FFF" 
+              style={{ filter: "drop-shadow(0 0 10px #FFF)" }}
+            />
+            
+            {/* Bottom ground line */}
+            <path 
+              d="M 30 85 L 330 85" 
+              fill="none" 
+              stroke={NEON_BLUE} 
+              strokeWidth="3" 
               opacity="0.8"
             />
-
-            {/* Twin Exhaust Ports */}
-            <rect x="15" y="75" width="10" height="5" rx="1.5" fill={BODY_COLOR} stroke={ACCENT_TEAL} strokeWidth="1"/>
-            <rect x="40" y="75" width="10" height="5" rx="1.5" fill={BODY_COLOR} stroke={ACCENT_TEAL} strokeWidth="1"/>
-
+            
+            {/* Dual Exhaust Pipes */}
+            <rect 
+              x="25" 
+              y="75" 
+              width="10" 
+              height="8" 
+              rx="2" 
+              fill={BODY_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1.5"
+            />
+            <rect 
+              x="40" 
+              y="75" 
+              width="10" 
+              height="8" 
+              rx="2" 
+              fill={BODY_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1.5"
+            />
           </g>
         </svg>
       </motion.div>
 
-      {/* ambient particles */}
-      {[...Array(18)].map((_, i) => (
+      {/* ===== BACKGROUND PARTICLES (Cyan/Teal) ===== */}
+      {[...Array(25)].map((_, i) => (
         <motion.div
           key={`particle-${i}`}
           className="absolute rounded-full"
@@ -245,14 +309,23 @@ const NeonCar = () => {
             height: Math.random() * 6 + 2,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            background: `rgba(0, 206, 209, ${Math.random() * 0.26 + 0.06})` // Using the new Teal color
+            background: `rgba(0, 255, 255, ${Math.random() * 0.3 + 0.1})` // Cyan/Teal
           }}
-          animate={{ y: [0, -100, 0], opacity: [0.1, 0.45, 0.1], scale: [1, 1.3, 1] }}
-          transition={{ duration: 5 + Math.random() * 5, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 3 }}
+          animate={{ 
+            y: [0, -100, 0], 
+            opacity: [0.1, 0.45, 0.1], 
+            scale: [1, 1.3, 1] 
+          }}
+          transition={{ 
+            duration: 5 + Math.random() * 5, 
+            repeat: Infinity, 
+            ease: "easeInOut", 
+            delay: Math.random() * 3 
+          }}
         />
       ))}
     </div>
   );
-}
+};
 
 export default NeonCar;
