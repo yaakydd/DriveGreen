@@ -1,4 +1,6 @@
-const DriveGreenLogoComponent = ({ size = "normal" }) => {
+import { motion } from 'framer-motion';
+
+const DriveGreenLogo = ({ size = "normal" }) => {
   const sizes = {
     small: { logo: 40, text: "text-2xl" },
     normal: { logo: 56, text: "text-3xl" },
@@ -6,7 +8,7 @@ const DriveGreenLogoComponent = ({ size = "normal" }) => {
   };
 
   const { logo, text } = sizes[size];
-  const colorClass = "text-green-600"; // Define consistent primary color
+  const colorClass = "text-green-600";
 
   return (
     <div className="flex items-center gap-3">
@@ -21,14 +23,14 @@ const DriveGreenLogoComponent = ({ size = "normal" }) => {
         <div 
           className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-lg"
           style={{
-            boxShadow: '0 0 20px rgba(16, 185, 129, 0.6)' // Increased shadow visibility
+            boxShadow: '0 0 20px rgba(16, 185, 129, 0.6)'
           }}
         />
         
         {/* Inner Circle - White */}
         <div className="absolute inset-2 rounded-full bg-white" />
         
-        {/* Leaf Icon - Stylized SVG (using hex codes for consistency) */}
+        {/* Leaf Icon - Stylized SVG */}
         <svg
           viewBox="0 0 24 24"
           className="relative z-10"
@@ -39,7 +41,7 @@ const DriveGreenLogoComponent = ({ size = "normal" }) => {
           {/* Leaf shape */}
           <path
             d="M12 3C7 3 3 7 3 12c0 2.5 1 4.5 2.5 6C7 19.5 9.5 21 12 21c5 0 9-4 9-9 0-5-4-9-9-9z"
-            fill="#10b981" // A shade of emerald/green
+            fill="#10b981"
             stroke="#059669" 
             strokeWidth="1.5"
           />
@@ -69,11 +71,11 @@ const DriveGreenLogoComponent = ({ size = "normal" }) => {
 
       {/* ===== TEXT LOGO ===== */}
       <div className={`flex items-center font-bold tracking-tight ${text}`}>
-        {/* Text: Deep Slate (Brand) */}
-        <span className={`text-slate-800`}>Drive</span>
-        {/* Text: Vibrant Green (Theme) */}
+        <span className="text-slate-800">Drive</span>
         <span className={colorClass}>Green</span>
       </div>
     </div>
   );
 };
+
+export default DriveGreenLogo;
