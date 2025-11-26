@@ -1,164 +1,203 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-// Imports core React hooks for state, effects, memoization, and callback optimization.
 import { motion, AnimatePresence } from "framer-motion";
-// Imports Framer Motion components for handling complex animations.
-import { Leaf, Gauge, Settings, Fuel, Car, Sparkles, Zap, Wind } from "lucide-react";
-// Imports Lucide icons (used mainly for visual context, not directly rendered in the car).
+import { Leaf, Gauge, Settings, Fuel, Car, Sparkles, Zap, Wind, TrendingUp, Activity } from "lucide-react";
 
-// ===== NEON CAR COMPONENT (REAR EXHAUST & SEAMLESS LOOP) =====
+// ===== NEON CAR COMPONENT WITH UNDULATING MOTION =====
 const NeonCar = () => {
-  // Define constant color variables for easy adjustment of the theme.
-  const NEON_BLUE = "#00F9FF";
-  const BODY_COLOR = "#0A0D15";
-  const CHROME_COLOR = "#E0E0E0";
-  const SMOKE_COLOR = "rgba(120, 120, 120, 0.85)";
+  // Color constants for consistent theming throughout the car design
+  const NEON_BLUE = "#00F9FF";        // Primary neon accent color
+  const BODY_COLOR = "#0A0D15";       // Dark body color for contrast
+  const CHROME_COLOR = "#E0E0E0";     // Metallic accent color
+  const SMOKE_COLOR = "rgba(140, 140, 140, 0.9)"; // Semi-transparent smoke
   
-  // Define constant dimension variables.
-  const CAR_WIDTH = 400;
-  const DURATION = 30; // Time in seconds for one full horizontal travel (seamless loop).
-  const PUFF_SIZE = 64; // Size of the smoke puff container (w-16 = 4rem = 64px).
+  // Dimensional constants for car size and animation timing
+  const CAR_WIDTH = 400;              // Width of the car SVG container
+  const DURATION = 35;                // Total animation duration in seconds
+  const PUFF_SIZE = 64;               // Size of smoke puff (64px = 4rem)
 
-  // State to hold the list of currently visible smoke puffs.
+  // State to manage actively displayed smoke puffs
   const [puffs, setPuffs] = useState([]);
 
-  // --- 1. SEAMLESS LOOP FIX ---
-  // useMemo caches the animation variants, recalculating only if DURATION changes.
+  // ===== UNDULATING MOTION PATH =====
+  // useMemo caches the animation to prevent unnecessary recalculations
   const drivePathVariants = useMemo(() => ({
     animate: {
-      // X animation: Defines the car's horizontal movement for a seamless loop.
-      // Starts far off-screen left (-150vw), moves across to far off-screen right (150vw),
-      // then instantly jumps back to the start state (-150vw) at the end.
-      x: ["-150vw", "150vw", "-150vw"], 
-      // Y animation: Defines vertical movement, previously complex, now simplified.
-      y: ["-60vh", "20vh", "-60vh"], // Original oscillating Y path.
-      // Rotation animation: Defines the car's tilt.
-      rotate: [-5, 5, -5],
+      // Horizontal movement: Smooth travel from left to right with seamless loop
+      x: ["-150vw", "-80vw", "-20vw", "40vw", "100vw", "150vw", "-150vw"],
+      
+      // Vertical movement: Creates wave-like undulating motion (up and down)
+      y: ["-50vh", "-30vh", "-10vh", "5vh", "-15vh", "-40vh", "-50vh"],
+      
+      // Rotation: Tilts the car to follow the curves naturally
+      rotate: [-8, -3, 2, -1, -5, -10, -8],
+      
       transition: {
-        // Horizontal transition: Uses linear ease for constant speed, and the times [0, 0.999, 1]
-        // ensure the jump back happens in the last tiny fraction of a second, hiding the reset.
-        x: { duration: DURATION, ease: "linear", times: [0, 0.999, 1], repeat: Infinity },
-        // Y transition: Runs for the full duration.
-        y: { duration: DURATION, ease: "easeInOut", times: [0, 0.999, 1], repeat: Infinity },
-        // Rotation transition: Runs for the full duration.
-        rotate: { duration: DURATION, ease: "easeInOut", times: [0, 0.999, 1], repeat: Infinity },
+        // X-axis: Linear motion for constant horizontal speed
+        x: { 
+          duration: DURATION, 
+          ease: "linear",
+          times: [0, 0.15, 0.30, 0.50, 0.75, 0.995, 1], 
+          repeat: Infinity 
+        },
+        // Y-axis: Smooth easing for natural wave motion
+        y: { 
+          duration: DURATION, 
+          ease: "easeInOut",
+          times: [0, 0.15, 0.30, 0.50, 0.75, 0.995, 1], 
+          repeat: Infinity 
+        },
+        // Rotation: Matches the Y-axis timing for coordinated tilting
+        rotate: { 
+          duration: DURATION, 
+          ease: "easeInOut",
+          times: [0, 0.15, 0.30, 0.50, 0.75, 0.995, 1], 
+          repeat: Infinity 
+        },
       }
     }
-  }), [DURATION]); // Dependency array: Recalculates if DURATION changes.
+  }), [DURATION]);
 
-  // Framer Motion variants for spinning the car's wheels.
+  // ===== WHEEL SPINNING ANIMATION =====
+  // Creates continuous rotation for realistic wheel movement
   const wheelSpinVariants = {
     animate: {
-      rotate: 360, // Rotates 360 degrees.
-      transition: { duration: 0.5, ease: "linear", repeat: Infinity } // Repeats continuously at a constant speed.
+      rotate: 360,  // Full 360-degree rotation
+      transition: { 
+        duration: 0.5,          // Fast spin speed
+        ease: "linear",         // Constant rotation speed
+        repeat: Infinity        // Never stops spinning
+      }
     }
   };
 
-  // useCallback memoizes the function responsible for creating a smoke puff.
+  // ===== SMOKE PUFF EMISSION LOGIC =====
+  // useCallback prevents function recreation on every render
   const emitPuff = useCallback(() => {
-    const newId = Date.now() + Math.random(); // Unique ID for the puff.
-    // Randomly chooses which of the two exhaust pipes (offset 1 or 2) the puff comes from.
-    const offset = Math.random() > 0.5 ? 1 : 2; 
-    // Adds a slight random rotation for visual variety.
-    const randomRotation = Math.random() * 15 - 7;
+    // Generate unique ID using timestamp and random number
+    const newId = Date.now() + Math.random();
+    
+    // Randomly select which exhaust pipe (1 = left, 2 = right)
+    const offset = Math.random() > 0.5 ? 1 : 2;
+    
+    // Add slight random rotation for natural smoke variation
+    const randomRotation = Math.random() * 20 - 10; // Range: -10 to +10 degrees
 
-    // Adds the new puff object to the state array.
+    // Add new puff to the state array
     setPuffs(prevPuffs => [...prevPuffs, { id: newId, offset, randomRotation }]);
 
-    // Sets a timeout to remove the puff after 4.5 seconds (its animation duration is 4.0s).
+    // Auto-remove puff after animation completes (4.5s)
     setTimeout(() => {
       setPuffs(prevPuffs => prevPuffs.filter(puff => puff.id !== newId));
     }, 4500);
-  }, []); // Dependency array is empty, ensuring the function reference remains constant.
+  }, []);
 
-  // useEffect hook to set up the smoke puff emission interval.
+  // ===== CONTINUOUS PUFF EMISSION =====
+  // useEffect sets up interval for regular smoke emission
   useEffect(() => {
-    // Sets an interval to call emitPuff every 500 milliseconds.
-    const intervalId = setInterval(emitPuff, 500);
-    // Cleanup function: Clears the interval when the component unmounts.
+    // Emit a new puff every 450ms for realistic exhaust
+    const intervalId = setInterval(emitPuff, 450);
+    
+    // Cleanup: Clear interval when component unmounts
     return () => clearInterval(intervalId);
-  }, [emitPuff]); // Dependency array: Recalculates if emitPuff changes (it's memoized, so it won't).
+  }, [emitPuff]);
 
-  // Framer Motion variants defining the puff's animation (expansion, fading, and drift).
+  // ===== SMOKE ANIMATION DEFINITION =====
+  // Defines how each puff expands, fades, and drifts
   const puffVariants = {
-    initial: { opacity: 0.9, scale: 0.2, x: 0, y: 0 }, // Starting state (small, slightly visible).
+    initial: { 
+      opacity: 0.95,    // Start nearly opaque
+      scale: 0.3,       // Start small
+      x: 0,             // No horizontal offset initially
+      y: 0              // No vertical offset initially
+    },
     animate: {
-      opacity: [0.9, 0.7, 0.0], // Fades out.
-      scale: [0.2, 2.0, 4.5], // Grows significantly.
-      // Smoke drifts back (negative X) and up (negative Y) relative to the car.
-      x: [0, -50], 
-      y: [0, -60], 
-      transition: { duration: 4.0, ease: "easeOut" } // Slow transition speed.
+      // Fade out gradually
+      opacity: [0.95, 0.7, 0.3, 0.0],
+      
+      // Expand significantly as smoke disperses
+      scale: [0.3, 1.5, 3.0, 5.0],
+      
+      // Drift backward relative to car motion
+      x: [0, -40, -70, -100],
+      
+      // Rise upward as hot smoke naturally does
+      y: [0, -30, -55, -80],
+      
+      transition: { 
+        duration: 4.0,    // 4-second animation
+        ease: "easeOut"   // Slow deceleration
+      }
     }
   };
 
-  // --- CALCULATE SMOKE POSITION FOR LEFT END OF THE BODY ---
-  // These constants calculate the exact CSS position needed to center the 64px smoke puff
-  // over the small SVG exhaust pipe rectangles located at x=3 and x=23 in the SVG's coordinate system (viewBox).
+  // ===== CALCULATE PRECISE SMOKE POSITIONS =====
+  // Position calculations to center 64px puffs over 12px exhaust rectangles
   
-  // Y calculation: 82 (SVG pipe y-coord) - 32 (half of PUFF_SIZE) = 50.
-  const PUFF_TOP_OFFSET = '50px'; 
+  // Y-position: Pipe center (76) minus half puff size (32) = 44px
+  const PUFF_TOP_OFFSET = '44px';
   
-  // X calculation 1 (Outer pipe): 3 (SVG x-coord) - 32 = -29.
-  const PUFF_LEFT_OUTER = '-29px';
+  // Left pipe: SVG x-coord (40) minus half puff size (32) = 8px
+  const PUFF_LEFT_OUTER = '8px';
+  
+  // Right pipe: SVG x-coord (60) minus half puff size (32) = 28px
+  const PUFF_LEFT_INNER = '28px';
 
-  // X calculation 2 (Inner pipe): 23 (SVG x-coord) - 32 = -9.
-  const PUFF_LEFT_INNER = '-9px';
-  // --------------------------------
-
-  // Main component render function.
   return (
-    // Outer div for the entire scene, hiding anything that leaves its bounds.
+    // Main container: Full screen, clips overflow, non-interactive
     <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
       
-      {/* Motion div for the car assembly, responsible for the global driving animation. */}
+      {/* Animated car container with undulating motion */}
       <motion.div
         className="absolute w-[400px] h-[150px] top-1/2 left-0 transform -translate-y-1/2"
-        // Adjusts the car's starting position so the center of the car is at the animation's starting X/Y point.
-        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }} 
-        variants={drivePathVariants}
-        // Sets the starting position (off-screen left).
-        initial={{ x: "-150vw", y: "-60vh", rotate: -5 }} 
-        animate="animate" // Starts the primary animation loop.
+        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }}  // Center the car horizontally
+        variants={drivePathVariants}                     // Apply motion variants
+        initial={{ x: "-150vw", y: "-50vh", rotate: -8 }} // Starting position
+        animate="animate"                                // Trigger animation
       >
-        {/* EXHAUST PUFFS - Dynamically rendered smoke based on 'puffs' state. */}
+        {/* ===== EXHAUST SMOKE PUFFS ===== */}
+        {/* Map through puffs array to render each smoke cloud */}
         {puffs.map(puff => (
-          // Framer Motion div for each smoke puff.
           <motion.div
-            key={puff.id}
-            variants={puffVariants}
-            initial="initial"
-            animate="animate"
+            key={puff.id}                    // Unique key for React reconciliation
+            variants={puffVariants}          // Apply smoke animation
+            initial="initial"                // Start from initial state
+            animate="animate"                // Animate to final state
             className="absolute w-16 h-16 flex items-center justify-center rounded-full"
             style={{
-              // Positions the puff based on which pipe it came from (offset 1 or 2).
+              // Position based on which exhaust pipe emitted this puff
               left: puff.offset === 1 ? PUFF_LEFT_OUTER : PUFF_LEFT_INNER,
               top: PUFF_TOP_OFFSET,
-              // Creates the smoke look (radial gradient and blur filter).
+              
+              // Radial gradient for realistic smoke appearance
               background: `radial-gradient(circle at center, ${SMOKE_COLOR} 0%, transparent 70%)`,
-              filter: 'blur(4px)',
-              // Applies the slight random rotation.
+              
+              // Blur for soft cloud effect
+              filter: 'blur(5px)',
+              
+              // Apply random rotation for variety
               transform: `rotate(${puff.randomRotation}deg)`,
             }}
           >
-            {/* 3. VISIBLE CO₂ TEXT FIX */}
+            {/* CO₂ text label inside smoke */}
             <span
-              className="text-lg font-extrabold text-white whitespace-nowrap"
+              className="text-base font-black text-white whitespace-nowrap"
               style={{ 
-                filter: 'none', // Prevents the parent's blur from affecting the text.
+                filter: 'none',  // Override parent blur
                 opacity: 1,
-                // Enhanced text shadow to make CO₂ clearly visible.
-                textShadow: '0 0 8px rgba(0,0,0,1.0), 0 0 5px #FFFFFF' 
+                // Strong shadow for visibility against smoke
+                textShadow: '0 0 10px rgba(0,0,0,1), 0 0 6px #FFFFFF, 0 0 3px #000000' 
               }}
             >
-              CO₂ {/* The text clearly identifying the exhaust as carbon dioxide. */}
+              CO₂
             </span>
           </motion.div>
         ))}
 
-        {/* SVG CAR BODY: The vector graphics defining the car's appearance. */}
+        {/* ===== CAR SVG GRAPHIC ===== */}
         <svg width={CAR_WIDTH} height="150" viewBox="0 0 350 100" className="drop-shadow-2xl absolute">
           <defs>
-            {/* Filter definition for the luxury neon glow effect. */}
+            {/* Neon glow filter for futuristic effect */}
             <filter id="luxuryNeon" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
               <feMerge>
@@ -167,81 +206,175 @@ const NeonCar = () => {
               </feMerge>
             </filter>
             
-            {/* Gradient definition for the main car body color. */}
+            {/* Gradient for car body depth */}
             <linearGradient id="bodyGradientLuxury" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#004C4C" />
               <stop offset="100%" stopColor={BODY_COLOR} />
             </linearGradient>
           </defs>
 
-          {/* Group applying the neon filter to all car elements. */}
+          {/* Group with neon filter applied */}
           <g filter="url(#luxuryNeon)">
-            {/* CAR BODY (main trapezoid shape) */}
-            <path d="M 30 75 L 80 55 H 280 L 330 75 Z" fill="url(#bodyGradientLuxury)" stroke={NEON_BLUE} strokeWidth="2.5" />
-            {/* WINDOW (black rectangle) */}
-            <rect x="100" y="40" width="150" height="15" rx="3" fill="#000" stroke={NEON_BLUE} strokeWidth="1" opacity="0.8"/>
-            {/* REAR LIGHT/DETAIL (right side) */}
-            <rect x="330" y="50" width="8" height="30" rx="2" fill={CHROME_COLOR} stroke={NEON_BLUE} strokeWidth="1"/>
+            {/* Main car body trapezoid */}
+            <path d="M 30 75 L 80 55 H 280 L 330 75 Z" 
+              fill="url(#bodyGradientLuxury)" 
+              stroke={NEON_BLUE} 
+              strokeWidth="2.5" />
             
-            {/* WHEELS group */}
+            {/* Windshield/cabin window */}
+            <rect x="100" y="40" width="150" height="15" rx="3" 
+              fill="#000" 
+              stroke={NEON_BLUE} 
+              strokeWidth="1" 
+              opacity="0.8"/>
+            
+            {/* Rear spoiler detail */}
+            <rect x="330" y="50" width="8" height="30" rx="2" 
+              fill={CHROME_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1"/>
+            
+            {/* ===== WHEELS ===== */}
             <g>
-              {/* Front wheel: Framer Motion circle applying the spin variant. */}
-              <motion.circle cx="80" cy="80" r="15" fill={BODY_COLOR} stroke={CHROME_COLOR} strokeWidth="2.5"
-                variants={wheelSpinVariants} animate="animate" style={{ transformOrigin: '80px 80px' }}/>
-              {/* Rear wheel: Framer Motion circle applying the spin variant. */}
-              <motion.circle cx="280" cy="80" r="15" fill={BODY_COLOR} stroke={CHROME_COLOR} strokeWidth="2.5"
-                variants={wheelSpinVariants} animate="animate" style={{ transformOrigin: '280px 80px' }}/>
+              {/* Front wheel with continuous spin */}
+              <motion.circle cx="80" cy="80" r="15" 
+                fill={BODY_COLOR} 
+                stroke={CHROME_COLOR} 
+                strokeWidth="2.5"
+                variants={wheelSpinVariants} 
+                animate="animate" 
+                style={{ transformOrigin: '80px 80px' }}/>
+              
+              {/* Rear wheel with continuous spin */}
+              <motion.circle cx="280" cy="80" r="15" 
+                fill={BODY_COLOR} 
+                stroke={CHROME_COLOR} 
+                strokeWidth="2.5"
+                variants={wheelSpinVariants} 
+                animate="animate" 
+                style={{ transformOrigin: '280px 80px' }}/>
             </g>
 
-            {/* Small light detail (top right) */}
-            <rect x="335" y="60" width="5" height="10" rx="1" fill="#FFF" style={{ filter: "drop-shadow(0 0 10px #FFF)" }}/>
-            {/* Bottom neon light strip */}
-            <path d="M 30 85 L 330 85" fill="none" stroke={NEON_BLUE} strokeWidth="3" opacity="0.8"/>
+            {/* Bright headlight */}
+            <rect x="335" y="60" width="5" height="10" rx="1" 
+              fill="#FFF" 
+              style={{ filter: "drop-shadow(0 0 10px #FFF)" }}/>
             
-            {/* 1. EXHAUST PIPES - REPOSITIONED TO THE LEFT END OF THE CAR BODY */}
-            {/* Pipe 1 (Outer/Left) - Placed just outside the main body shape (x=30). */}
-            <rect x="3" y="82" width="12" height="6" rx="2" fill={BODY_COLOR} stroke={NEON_BLUE} strokeWidth="1.5"/>
-            {/* Pipe 2 (Inner/Right) - Placed just inside the main body shape. */}
-            <rect x="23" y="82" width="12" height="6" rx="2" fill={BODY_COLOR} stroke={NEON_BLUE} strokeWidth="1.5"/>
+            {/* Bottom chassis neon strip */}
+            <path d="M 30 80 L 330 80" 
+              fill="none" 
+              stroke={NEON_BLUE} 
+              strokeWidth="3" 
+              opacity="0.8"/>
+            
+            {/* ===== EXHAUST PIPES (POSITIONED BETWEEN BODY AND BOTTOM LINE) ===== */}
+            {/* Left exhaust pipe - positioned at x=40, y=73 (between body at y=75 and line at y=80) */}
+            <rect x="40" y="73" width="12" height="7" rx="2" 
+              fill={BODY_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1.5"/>
+            
+            {/* Right exhaust pipe - positioned at x=60, y=73 */}
+            <rect x="60" y="73" width="12" height="7" rx="2" 
+              fill={BODY_COLOR} 
+              stroke={NEON_BLUE} 
+              strokeWidth="1.5"/>
           </g>
         </svg>
       </motion.div>
 
-      {/* ENHANCED BACKGROUND PARTICLES (Decorative elements) */}
-      {[...Array(30)].map((_, i) => ( // Creates 30 decorative background particles.
+      {/* ===== ENHANCED BACKGROUND PARTICLES ===== */}
+      {/* Create 40 floating particles with varied animations */}
+      {[...Array(40)].map((_, i) => {
+        // Calculate random properties for each particle
+        const size = Math.random() * 10 + 4;           // Size: 4-14px
+        const startX = Math.random() * 100;            // Random horizontal position
+        const startY = Math.random() * 100;            // Random vertical position
+        const floatDistance = Math.random() * 150 + 80; // How far it floats: 80-230px
+        const drift = Math.random() * 60 - 30;         // Horizontal drift: -30 to +30px
+        const duration = Math.random() * 8 + 6;        // Animation duration: 6-14s
+        const delay = Math.random() * 5;               // Stagger start: 0-5s
+        
+        // Assign color based on index (cycle through 4 eco-themed colors)
+        let particleColor;
+        if (i % 4 === 0) {
+          particleColor = `rgba(16, 185, 129, ${Math.random() * 0.5 + 0.3})`; // Emerald
+        } else if (i % 4 === 1) {
+          particleColor = `rgba(6, 182, 212, ${Math.random() * 0.5 + 0.3})`;  // Cyan
+        } else if (i % 4 === 2) {
+          particleColor = `rgba(132, 204, 22, ${Math.random() * 0.5 + 0.3})`; // Lime
+        } else {
+          particleColor = `rgba(20, 184, 166, ${Math.random() * 0.5 + 0.3})`; // Teal
+        }
+        
+        return (
+          <motion.div
+            key={`particle-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: size,
+              height: size,
+              left: `${startX}%`,
+              top: `${startY}%`,
+              background: particleColor,
+              // Add soft glow to particles
+              boxShadow: `0 0 ${size * 2}px ${particleColor}`,
+            }}
+            animate={{ 
+              // Vertical float
+              y: [0, -floatDistance, 0],
+              
+              // Horizontal drift for organic movement
+              x: [0, drift, -drift, 0],
+              
+              // Pulse opacity
+              opacity: [0.3, 0.8, 0.3],
+              
+              // Subtle scale pulse
+              scale: [1, 1.4, 1] 
+            }}
+            transition={{ 
+              duration: duration,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: delay
+            }}
+          />
+        );
+      })}
+
+      {/* ===== FLOATING SPARKLE EFFECTS ===== */}
+      {/* Add 15 sparkle particles for extra visual interest */}
+      {[...Array(15)].map((_, i) => (
         <motion.div
-          key={`particle-${i}`}
-          className="absolute rounded-full"
+          key={`sparkle-${i}`}
+          className="absolute"
           style={{
-            width: Math.random() * 8 + 3,
-            height: Math.random() * 8 + 3,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            // Randomly assigns one of three neon-like colors.
-            background: i % 3 === 0 
-              ? `rgba(16, 185, 129, ${Math.random() * 0.4 + 0.2})` 
-              : i % 3 === 1
-              ? `rgba(6, 182, 212, ${Math.random() * 0.4 + 0.2})`
-              : `rgba(132, 204, 22, ${Math.random() * 0.4 + 0.2})`,
           }}
-          // Defines a subtle floating/pulsing animation for the particles.
-          animate={{ 
-            y: [0, -120, 0], 
-            x: [0, Math.random() * 40 - 20, 0],
-            opacity: [0.2, 0.6, 0.2], 
-            scale: [1, 1.5, 1] 
+          animate={{
+            // Twinkle effect
+            opacity: [0, 0.8, 0],
+            scale: [0.5, 1.2, 0.5],
+            rotate: [0, 180, 360],
           }}
-          // Sets long, random durations and delays for a non-uniform, ambient effect.
-          transition={{ 
-            duration: 6 + Math.random() * 4, 
-            repeat: Infinity, 
-            ease: "easeInOut", 
-            delay: Math.random() * 3 
+          transition={{
+            duration: Math.random() * 3 + 2,  // 2-5 seconds
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: Math.random() * 4,
           }}
-        />
+        >
+          {/* Star-shaped sparkle */}
+          <Sparkles 
+            className="text-emerald-400" 
+            size={Math.random() * 12 + 6}  // Size: 6-18px
+            style={{ filter: 'drop-shadow(0 0 4px rgba(16, 185, 129, 0.8))' }}
+          />
+        </motion.div>
       ))}
     </div>
   );
 };
-
-export default NeonCar; // Exports the component for use in other parts of the application.
+export default NeonCar;
