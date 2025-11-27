@@ -1,246 +1,221 @@
-// ===== FIXED PREDICTION FORM =====
+// ===== FINAL REFINED PREDICTION FORM UI - MATCHING LOGIC =====
 // File: frontend/src/components/PredictionForm.jsx
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Leaf, Gauge, Settings, Fuel, Car, Sparkles } from "lucide-react";
-//import Spinner from "./Spinner";
-//import AnimationCard from "./AnimationCard";
+// Ensure all necessary icons are imported
+import { Leaf, Gauge, Settings, Fuel, Car, Sparkles, Activity, Zap, TrendingUp } from "lucide-react";
+// Assuming these components are correctly defined and imported
+import Spinner from "./Spinner";
+import AnimationCard from "./AnimationCard";
 import NeonCar from "./NeonCar";
 import DriveGreenLogo from "./DriveGreenLogo";
-//import toast from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-/**
- * ===== NEW COLOR SCHEME =====
- * 
- * Fun, Catchy, Professional:
- * - Primary: Emerald (#10B981) - Eco-friendly, vibrant
- * - Secondary: Teal (#14B8A6) - Fresh, modern
- * - Accent: Cyan (#06B6D4) - Tech, futuristic
- * - Success: Lime (#84CC16) - Positive results
- * - Warning: Amber (#F59E0B) - Attention
- * - Danger: Orange-Red (#F97316) - High emissions
- * 
- * Background: Dark gradient (professional)
- * Text: White/Gray (high contrast)
- */
-
 const PredictionForm = () => {
-  // State for form input values
-  const [formData, setFormData] = useState({
+  // ===== STATE (LOGIC RETAINED) =====
+  const [form, setForm] = useState({
     fuel_type: "",
     cylinders: "",
     engine_size: ""
   });
   
-  // State for prediction results
   const [prediction, setPrediction] = useState(null);
-  
-  // State for loading indicator
   const [loading, setLoading] = useState(false);
 
-  // Handle input changes
+  // ===== HANDLERS (LOGIC RETAINED) =====
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    // Uses 'form' state object
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // Handle form submission (simulated with timeout)
-  const handleSubmit = () => {
-    // Validate all fields are filled
-    if (!formData.fuel_type || !formData.cylinders || !formData.engine_size) {
-      return; // Exit if validation fails
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Simple validation before API call
+    if (!form.fuel_type || !form.cylinders || !form.engine_size) {
+        toast.error("Please fill all fields.", { icon: '🚨' });
+        return;
     }
     
-    setLoading(true);      // Show loading state
-    setPrediction(null);   // Clear previous results
+    setLoading(true);
+    setPrediction(null);
 
-    // Simulate API call with 2-second delay
-    setTimeout(() => {
-      setPrediction({
-        co2_emissions: 245.7,
-        rating: "Moderate"
+    try {
+      const payload = {
+        fuel_type: form.fuel_type,
+        // Ensure inputs are correctly parsed
+        cylinders: parseInt(form.cylinders, 10),
+        engine_size: parseFloat(form.engine_size)
+      };
+
+      const res = await fetch(`${API_URL}/api/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
-      setLoading(false);  // Hide loading state
-    }, 2000);
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.detail || "Prediction failed");
+      }
+
+      const data = await res.json();
+      setPrediction(data);
+      
+      toast.success("Prediction successful!", {
+        icon: '🌍',
+        style: {
+          background: '#10b981', // Emerald success background
+          color: '#fff',
+        }
+      });
+      
+    } catch (err) {
+      console.error(err);
+      toast.error(err.message || "Prediction failed. Check your inputs.", {
+        icon: '⚠️',
+      });
+    } finally {
+        setLoading(false); // Ensure loading is turned off in all cases
+    }
   };
 
-  // Reset form to initial state
   const handleReset = () => {
     setPrediction(null);
-    setFormData({ fuel_type: "", cylinders: "", engine_size: "" });
+    setLoading(false);
+    setForm({
+      fuel_type: "",
+      cylinders: "",
+      engine_size: ""
+    });
   };
 
+  // Check if form is complete for button disabling (LOGIC RETAINED)
+  const isFormComplete = form.fuel_type && form.cylinders && form.engine_size;
+
+  // ===== JSX (REFINED UI) =====
   return (
-    // Main container: Full screen with dark gradient background
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950">
+    // Dark, professional background
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-sans">
       
-      {/* ===== AMBIENT BACKGROUND GLOWS ===== */}
+      {/* ===== BACKGROUND GLOW EFFECTS (Subtle) ===== */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Left green glow */}
         <div 
-          className="absolute inset-0 bg-emerald-600/25 blur-[140px] opacity-20" 
-          style={{ clipPath: 'ellipse(55% 65% at 25% 45%)' }}
-        />
-        
-        {/* Right cyan glow */}
+          className="absolute inset-0 bg-emerald-600/20 blur-[150px] opacity-15" 
+          style={{ clipPath: 'ellipse(60% 70% at 20% 50%)' }}
+        ></div>
         <div 
-          className="absolute inset-0 bg-cyan-500/25 blur-[140px] opacity-20" 
-          style={{ clipPath: 'ellipse(55% 65% at 75% 55%)' }}
-        />
-        
-        {/* Top teal accent */}
-        <div 
-          className="absolute inset-0 bg-teal-400/20 blur-[120px] opacity-15" 
-          style={{ clipPath: 'ellipse(60% 40% at 50% 15%)' }}
-        />
+          className="absolute inset-0 bg-cyan-500/20 blur-[150px] opacity-15" 
+          style={{ clipPath: 'ellipse(60% 70% at 80% 50%)' }}
+        ></div>
       </div>
 
-      {/* Animated car background */}
+      {/* ===== NEON CAR BACKGROUND (Retained) ===== */}
       <NeonCar />
 
-      {/* ===== MAIN CONTENT AREA ===== */}
+      {/* ===== MAIN CONTENT ===== */}
       <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
-        {/* AnimatePresence enables exit animations */}
         <AnimatePresence mode="wait">
           
-          {/* ===== LOADING STATE ===== */}
+          {/* LOADING STATE (Uses external Spinner component) */}
           {loading ? (
-            <motion.div 
-              key="spinner" 
-              initial={{ opacity: 0, scale: 0.8 }} 
+            <motion.div
+              key="spinner"
+              initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="text-white text-3xl font-bold flex flex-col items-center gap-6"
+              transition={{ duration: 0.3 }}
+              className="text-white text-3xl"
             >
-              {/* Rotating icon animation */}
-              <motion.div 
-                animate={{ rotate: 360 }} 
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              >
-                <Activity className="w-20 h-20 text-emerald-400" />
-              </motion.div>
-              
-              {/* Loading text with subtle pulse */}
-              <motion.span
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              >
-                Analyzing Vehicle Data...
-              </motion.span>
+              <Spinner /> {/* RETAINS Spinner component */}
             </motion.div>
           
-          // ===== RESULTS STATE =====
+          // RESULTS STATE (Uses external AnimationCard component)
           ) : prediction ? (
-            <motion.div 
-              key="result" 
-              initial={{ opacity: 0, scale: 0.9 }} 
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="bg-white rounded-3xl p-14 max-w-2xl w-full text-center shadow-2xl"
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ duration: 0.5 }}
+              className="w-full max-w-lg"
             >
-              {/* Success icon with bounce animation */}
-              <motion.div 
-                animate={{ scale: [1, 1.15, 1] }} 
-                transition={{ duration: 0.6, repeat: 2 }}
-              >
-                <Leaf className="w-24 h-24 text-green-600 mx-auto mb-6" />
-              </motion.div>
-              
-              {/* Results heading */}
-              <h2 className="text-5xl font-black text-green-600 mb-6">
-                Emission Analysis
-              </h2>
-              
-              {/* Large emission value display */}
-              <p className="text-8xl font-black text-slate-800 mb-3">
-                {prediction.co2_emissions}
-              </p>
-              
-              {/* Unit label */}
-              <p className="text-3xl text-slate-600 mb-10">
-                g/km CO₂ Emissions
-              </p>
-              
-              {/* Reset button */}
-              <motion.button 
-                onClick={handleReset} 
-                whileHover={{ scale: 1.05 }} 
-                whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-green-600 to-emerald-500 text-white px-12 py-6 rounded-2xl font-bold text-xl hover:shadow-2xl transition-all"
-              >
-                Calculate Again
-              </motion.button>
+              <AnimationCard
+                prediction={prediction}
+                onReset={handleReset} // RETAINS handleReset logic
+              /> {/* RETAINS AnimationCard component */}
             </motion.div>
           
-          // ===== FORM STATE (DEFAULT) =====
+          // FORM STATE
           ) : (
-            <motion.div 
-              key="form" 
-              initial={{ opacity: 0, y: 30 }} 
-              animate={{ opacity: 1, y: 0 }} 
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-4xl"
+              transition={{ duration: 0.4 }}
+              className="w-full max-w-2xl"
             >
-              {/* Form card wrapper */}
+              {/* ===== FORM CARD WRAPPER (Enhanced Glow) ===== */}
               <div className="relative group">
-                {/* Animated gradient border glow */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition duration-1000 animate-pulse"/>
                 
-                {/* Main form card */}
-                <div className="relative bg-white rounded-3xl p-14 shadow-2xl">
+                {/* Glowing border effect (Subtle, slow pulse) */}
+                <div className="absolute -inset-3 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000 animate-[pulse_5s_infinite]"></div>
+                
+                {/* Main form container (Clean White Card) */}
+                <div className="relative bg-white rounded-3xl p-10 sm:p-14 shadow-2xl border border-gray-100">
                   
-                  {/* ===== HEADER SECTION ===== */}
-                  <motion.div 
-                    className="flex flex-col items-center mb-12"
-                    initial={{ scale: 0, rotate: -180 }}
-                    animate={{ scale: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                  >
-                    {/* Logo component */}
-                    <DriveGreenLogo size="large" />
-                    
-                    {/* Main title */}
-                    <h1 className="mt-8 text-6xl font-black text-slate-900 tracking-tight">
-                      CO₂ Calculator
-                    </h1>
-                    
-                    {/* Subtitle with icons */}
-                    <div className="mt-5 flex items-center gap-3 text-slate-600 text-xl">
-                      <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                        <Sparkles className="w-6 h-6 text-emerald-500" />
-                      </motion.div>
-                      <span className="font-semibold">Advanced Vehicle Emission Analysis</span>
-                      <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-                        <Leaf className="w-6 h-6 text-green-600" />
-                      </motion.div>
-                    </div>
-                  </motion.div>
+                  {/* ===== HEADER WITH LOGO ===== */}
+                  <div className="flex flex-col items-center mb-10">
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 150, delay: 0.1 }}
+                    >
+                      <DriveGreenLogo size="large" />
+                    </motion.div>
+                    <h2 className="mt-6 text-5xl font-extrabold text-slate-900 tracking-tight">
+                      Eco-Score Calculator
+                    </h2>
+                  </div>
 
-                  {/* ===== FORM FIELDS SECTION ===== */}
-                  <div className="space-y-9">
+                  {/* Subtitle */}
+                  <div className="text-center mb-10">
+                    <p className="text-slate-600 text-xl font-medium flex items-center justify-center gap-3">
+                      <Sparkles className="w-5 h-5 text-cyan-500" /> 
+                      Predict CO₂ Emissions Using Advanced Metrics
+                      <Leaf className="w-5 h-5 text-emerald-600" />
+                    </p>
+                  </div>
+
+                  {/* ===== FORM (RETAINS handleSubmit logic) ===== */}
+                  <form onSubmit={handleSubmit} className="space-y-8">
                     
-                    {/* FUEL TYPE INPUT */}
+                    {/* FUEL TYPE */}
                     <motion.div 
-                      initial={{ opacity: 0, x: -40 }} 
-                      animate={{ opacity: 1, x: 0 }} 
+                      className="space-y-3"
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.2 }}
                     >
-                      {/* Label with icon */}
-                      <label className="flex items-center gap-3 text-xl font-bold text-green-600 mb-4">
-                        <Fuel className="w-7 h-7" />
+                      <label className="flex items-center gap-3 text-lg font-bold text-emerald-600">
+                        <Fuel className="w-6 h-6" />
                         Fuel Type
                       </label>
                       
-                      {/* Dropdown select */}
-                      <select 
-                        name="fuel_type" 
-                        value={formData.fuel_type} 
+                      <select
+                        name="fuel_type"
+                        value={form.fuel_type}
                         onChange={handleChange}
-                        className="w-full p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-3 border-gray-300 rounded-2xl text-slate-800 text-xl font-medium focus:ring-4 focus:ring-green-500/50 focus:border-green-500 transition-all hover:border-green-400 shadow-lg cursor-pointer"
+                        required
+                        className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg focus:ring-4 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-inner hover:border-emerald-400 cursor-pointer appearance-none"
+                        // Custom Select Arrow for a cleaner look
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.5rem center', backgroundSize: '1.2em' }}
                       >
-                        <option value="">Select fuel type</option>
+                        <option value="" disabled className="text-gray-400">Select fuel type</option>
                         <option value="X">⛽ Regular Gasoline</option>
                         <option value="Z">⭐ Premium Gasoline</option>
                         <option value="E">🌽 Ethanol (E85)</option>
@@ -249,134 +224,90 @@ const PredictionForm = () => {
                       </select>
                     </motion.div>
 
-                    {/* CYLINDERS INPUT */}
+                    {/* CYLINDERS */}
                     <motion.div 
-                      initial={{ opacity: 0, x: -40 }} 
-                      animate={{ opacity: 1, x: 0 }} 
+                      className="space-y-3"
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 }}
                     >
-                      {/* Label with icon */}
-                      <label className="flex items-center gap-3 text-xl font-bold text-slate-700 mb-4">
-                        <Settings className="w-7 h-7" />
+                      <label className="flex items-center gap-3 text-lg font-bold text-slate-700">
+                        <Settings className="w-6 h-6" />
                         Number of Cylinders
                       </label>
                       
-                      {/* Number input field */}
-                      <input 
-                        name="cylinders" 
-                        value={formData.cylinders} 
+                      <input
+                        name="cylinders"
+                        value={form.cylinders}
                         onChange={handleChange}
-                        type="number" 
-                        min="3" 
-                        max="16" 
-                        placeholder="e.g., 6 cylinders"
-                        className="w-full p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-3 border-gray-300 rounded-2xl text-slate-800 text-xl font-medium placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-lg"
+                        required
+                        type="number"
+                        min="3"
+                        max="16"
+                        className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-500 shadow-inner focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400"
+                        placeholder="e.g., 6 cylinders (3 to 16)"
                       />
                     </motion.div>
 
-                    {/* ENGINE SIZE INPUT */}
+                    {/* ENGINE SIZE */}
                     <motion.div 
-                      initial={{ opacity: 0, x: -40 }} 
-                      animate={{ opacity: 1, x: 0 }} 
+                      className="space-y-3"
+                      initial={{ opacity: 0, x: -30 }}
+                      animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
                     >
-                      {/* Label with icon */}
-                      <label className="flex items-center gap-3 text-xl font-bold text-slate-700 mb-4">
-                        <Gauge className="w-7 h-7" />
+                      <label className="flex items-center gap-3 text-lg font-bold text-slate-700">
+                        <Gauge className="w-6 h-6" />
                         Engine Size (Liters)
                       </label>
                       
-                      {/* Decimal number input */}
-                      <input 
-                        name="engine_size" 
-                        value={formData.engine_size} 
+                      <input
+                        name="engine_size"
+                        value={form.engine_size}
                         onChange={handleChange}
-                        type="number" 
-                        step="0.1" 
-                        min="0.9" 
-                        max="8.4" 
-                        placeholder="e.g., 2.0 liters"
-                        className="w-full p-6 bg-gradient-to-r from-gray-50 to-gray-100 border-3 border-gray-300 rounded-2xl text-slate-800 text-xl font-medium placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-lg"
+                        required
+                        type="number"
+                        step="0.1"
+                        min="0.9"
+                        max="8.4"
+                        className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-500 shadow-inner focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400"
+                        placeholder="e.g., 2.0 liters (0.9 to 8.4)"
                       />
                     </motion.div>
 
-                    {/* ===== SUBMIT BUTTON ===== */}
-                    <motion.button 
-                      onClick={handleSubmit} 
+                    {/* SUBMIT BUTTON */}
+                    <motion.button
                       whileHover={{ 
-                        scale: 1.03, 
-                        boxShadow: "0 25px 50px rgba(16, 185, 129, 0.6)" 
+                        scale: 1.02,
+                        boxShadow: "0 20px 40px rgba(16, 185, 129, 0.5)" // Enhanced shadow on hover
                       }}
-                      whileTap={{ scale: 0.97 }}
-                      // Disable button if form is incomplete
-                      disabled={!formData.fuel_type || !formData.cylinders || !formData.engine_size}
-                      className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-7 rounded-2xl font-black text-2xl shadow-2xl transition-all flex items-center justify-center gap-4 mt-12 group disabled:opacity-50 disabled:cursor-not-allowed"
+                      whileTap={{ scale: 0.98 }}
+                      type="submit"
+                      disabled={!isFormComplete} // RETAINS complete form check
+                      className="w-full relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-white py-6 rounded-xl font-extrabold text-2xl shadow-xl transition-all flex items-center justify-center gap-4 mt-12 group disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {/* Animated shine effect on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"/>
+                      {/* Shine effect (Slightly faster) */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
                       
-                      {/* Button icons and text */}
-                      <motion.div 
-                        animate={{ scale: [1, 1.2, 1] }} 
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <Zap className="w-8 h-8 relative z-10" />
-                      </motion.div>
-                      <span className="relative z-10">Calculate Emissions</span>
-                      <TrendingUp className="w-8 h-8 relative z-10" />
+                      <Car className="w-7 h-7 relative z-10" />
+                      <span className="relative z-10 tracking-wide">Predict Emissions</span>
+                      <TrendingUp className="w-7 h-7 relative z-10" />
                     </motion.button>
-                  </div>
+                  </form>
 
-                  {/* ===== FOOTER INFO SECTION ===== */}
-                  <div className="mt-12 pt-8 border-t-2 border-gray-200">
-                    <div className="flex items-center justify-between text-sm text-slate-600">
-                      {/* Left info badge */}
-                      <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-full">
-                        <motion.div 
-                          animate={{ scale: [1, 1.3, 1] }} 
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          <span className="w-3 h-3 bg-green-600 rounded-full block"></span>
-                        </motion.div>
-                        <span className="font-semibold">AI-Powered Prediction</span>
+                  {/* ===== FOOTER ===== */}
+                  <div className="mt-10 pt-6 border-t border-gray-200">
+                    <div className="flex items-center justify-between text-sm text-slate-500 font-light">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 bg-emerald-600 rounded-full block animate-ping-slow"></span>
+                        <span>AI-Powered Analysis</span>
                       </div>
-                      
-                      {/* Right info badge */}
-                      <div className="flex items-center gap-3 bg-cyan-50 px-4 py-2 rounded-full">
-                        <Activity className="w-4 h-4 text-cyan-600" /> 
-                        <span className="font-semibold">Real-time Analysis</span>
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-cyan-500" /> 
+                        <span>Real-time API Connection</span>
                       </div>
                     </div>
                   </div>
-
-                  {/* ===== DECORATIVE CORNER ELEMENTS ===== */}
-                  {/* Top-left corner accent */}
-                  <motion.div 
-                    className="absolute top-6 left-6 w-16 h-16 border-l-4 border-t-4 border-emerald-500/50 rounded-tl-2xl"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
-                  
-                  {/* Top-right corner accent */}
-                  <motion.div 
-                    className="absolute top-6 right-6 w-16 h-16 border-r-4 border-t-4 border-cyan-500/50 rounded-tr-2xl"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-                  />
-                  
-                  {/* Bottom-left corner accent */}
-                  <motion.div 
-                    className="absolute bottom-6 left-6 w-16 h-16 border-l-4 border-b-4 border-emerald-500/50 rounded-bl-2xl"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-                  />
-                  
-                  {/* Bottom-right corner accent */}
-                  <motion.div 
-                    className="absolute bottom-6 right-6 w-16 h-16 border-r-4 border-b-4 border-cyan-500/50 rounded-br-2xl"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
-                  />
                 </div>
               </div>
             </motion.div>
@@ -387,5 +318,4 @@ const PredictionForm = () => {
   );
 };
 
-// Export the main component for use in the application
 export default PredictionForm;
