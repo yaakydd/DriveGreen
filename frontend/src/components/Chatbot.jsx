@@ -1,31 +1,73 @@
+// File: frontend/src/components/Chatbot.jsx
+
+// ===== IMPORTS & SETUP =====
+
+// Import React hooks for state management, references, and side effects.
 import React, { useState, useRef, useEffect } from "react";
+// Import Framer Motion components for smooth UI animations.
 import { motion, AnimatePresence } from "framer-motion";
+// Import icons from lucide-react (Chat icon, Close icon, Send icon, Sparkles/Leaf for theming).
 import { MessageCircle, X, Send, Sparkles, Leaf } from "lucide-react";
 
 /**
- * Smart Chatbot Component (Arrow Function)
- * 
- * Features: Comprehensive CO2 knowledge base
+ * Smart Chatbot Component
+ * * Features: Comprehensive CO2 knowledge base.
+ * Theme: Deep Teal and Cyan (Tech/Water feel).
+ * Layout: Fixed to the bottom-right corner.
+ * UX: Includes an introductory tooltip on page load.
  */
 const Chatbot = () => {
+  // State to manage the visibility of the main chatbot window.
   const [isOpen, setIsOpen] = useState(false);
+  // State to manage the visibility of the introductory tooltip.
+  const [showTooltip, setShowTooltip] = useState(true);
+
+  // State to hold all messages (both user and bot). Initial message is the bot's greeting.
   const [messages, setMessages] = useState([
     { 
       role: "bot", 
       text: "Hi! 👋 I'm your CO₂ emissions expert. I can answer detailed questions about:\n\n• Fuel types (X, Z, E, D, N)\n• Emission levels & impacts\n• How our calculator works\n• Reducing your carbon footprint\n• Cost savings & comparisons\n\nAsk me anything!" 
     }
   ]);
+  // State for the text input field.
   const [input, setInput] = useState("");
+  // State to show the "Bot is typing..." indicator.
   const [isTyping, setIsTyping] = useState(false);
   
+  // Ref to automatically scroll the messages container to the bottom on new messages.
   const messagesEndRef = useRef(null);
 
+  // ===== EFFECT HOOKS =====
+
+  // Effect to scroll to the latest message whenever the 'messages' array updates.
   useEffect(() => {
+    // Scrolls the element referenced by messagesEndRef into view smoothly.
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Comprehensive knowledge base
+  // Effect to manage the initial tooltip display/timeout.
+  useEffect(() => {
+    // Set a timeout to automatically hide the tooltip after 5 seconds.
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 5000); 
+    
+    // Cleanup function: Clear the timeout if the component unmounts.
+    return () => clearTimeout(timer);
+  }, []); 
+
+  // Effect to hide the tooltip immediately when the chat window opens.
+  useEffect(() => {
+    if (isOpen) {
+      setShowTooltip(false);
+    }
+  }, [isOpen]);
+
+  // ===== KNOWLEDGE BASE (UNCHANGED FUNCTIONALITY) =====
+  
+  // The comprehensive knowledge base object for mapping keywords to detailed responses.
   const knowledgeBase = {
+    // Each entry contains 'keywords' for matching user input and a detailed 'response'.
     fuelTypes: {
       keywords: ["fuel", "type", "gasoline", "diesel", "ethanol", "gas", "x", "z", "e", "d", "n", "petrol"],
       response: `🔋 **Fuel Types Explained:**
@@ -62,7 +104,6 @@ const Chatbot = () => {
 
 💡 **Which is cleanest?** Natural Gas (N) < Diesel (D) < Ethanol (E) < Gasoline (X/Z)`
     },
-
     emissions: {
       keywords: ["emission", "co2", "carbon", "pollution", "level", "much", "high", "low"],
       response: `🌍 **CO₂ Emission Levels Explained:**
@@ -95,12 +136,10 @@ const Chatbot = () => {
 - Examples: Trucks, V8 engines, sports cars
 - Annual CO₂: >3.75 tons
 - Environmental impact: Very high
--cat >> frontend/src/components/Chatbot.jsx << 'EOF'
  Fuel cost: Very high
 
 📊 **Context:** Average global target is 95 g/km by 2030!`
     },
-
     calculator: {
       keywords: ["how", "work", "calculate", "predict", "algorithm", "model", "accuracy"],
       response: `🤖 **How Our CO₂ Calculator Works:**
@@ -137,7 +176,6 @@ const Chatbot = () => {
 
 🎯 **Typical accuracy:** ±10 g/km`
     },
-
     reduce: {
       keywords: ["reduce", "lower", "decrease", "improve", "save", "tips", "help", "less"],
       response: `♻️ **How to Reduce Your CO₂ Emissions:**
@@ -177,7 +215,6 @@ const Chatbot = () => {
 📊 **Real Example:**
 From 220 g/km → 180 g/km = $400/year savings`
     },
-
     engine: {
       keywords: ["engine", "size", "cylinder", "liter", "displacement", "4", "6", "8"],
       response: `⚙️ **Engine Size & Cylinders Explained:**
@@ -220,7 +257,6 @@ From 220 g/km → 180 g/km = $400/year savings`
 ⚖️ **Rule of Thumb:**
 Bigger engine = More power BUT higher emissions & fuel costs`
     },
-
     climate: {
       keywords: ["climate", "environment", "planet", "global", "warming", "impact", "earth"],
       response: `🌡️ **Climate Impact of Vehicle Emissions:**
@@ -261,7 +297,6 @@ Bigger engine = More power BUT higher emissions & fuel costs`
 
 💡 Every gallon saved = 20 lbs CO₂ prevented!`
     },
-
     money: {
       keywords: ["cost", "money", "price", "save", "expensive", "fuel", "economy", "budget"],
       response: `💰 **Emissions vs Fuel Costs:**
@@ -307,7 +342,6 @@ Choosing 150 g/km over 250 g/km = **$4,500 saved!**
 
 💡 **Pro Tip:** Calculate savings before buying!`
     },
-
     compare: {
       keywords: ["compare", "comparison", "difference", "better", "best", "worst", "vs", "versus"],
       response: `📊 **Vehicle Emission Comparisons:**
@@ -354,14 +388,17 @@ Match vehicle size to actual needs, not wants!`
     }
   };
 
-  // Find best matching response
+  // Function to find the best matching response from the knowledge base.
   const findBestMatch = (userInput) => {
+    // Converts input to lowercase for case-insensitive matching.
     const lowerInput = userInput.toLowerCase();
     
+    // Finds the first matching knowledge base entry based on keywords.
     const match = Object.entries(knowledgeBase).find(([key, data]) => 
       data.keywords.some(keyword => lowerInput.includes(keyword))
     );
     
+    // Returns the matched response or a generic fallback message.
     return match 
       ? match[1].response 
       : `I'd love to help! I specialize in:
@@ -378,24 +415,31 @@ Match vehicle size to actual needs, not wants!`
 Try rephrasing your question with these topics! 😊`;
   };
 
-  // Handle message send
+  // Handle message send logic.
   const handleSend = () => {
+    // Exit if the input is empty or just whitespace.
     if (!input.trim()) return;
 
+    // Create the user message object and add it to state.
     const userMessage = { role: "user", text: input };
     setMessages(prev => [...prev, userMessage]);
+    
+    // Clear the input and show the typing indicator.
     setInput("");
     setIsTyping(true);
 
+    // Simulate an AI response delay.
     setTimeout(() => {
-      const botResponse = findBestMatch(input);
+      const botResponse = findBestMatch(userMessage.text);
       const botMessage = { role: "bot", text: botResponse };
       
+      // Add the bot message and hide the typing indicator.
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1000);
+    }, 1000); 
   };
 
+  // Quick reply buttons available at the bottom of the chat.
   const quickReplies = [
     "Fuel types",
     "How it works",
@@ -403,29 +447,57 @@ Try rephrasing your question with these topics! 😊`;
     "Compare vehicles"
   ];
 
+  // ===== RENDER LOGIC (Layout and Spacing Fixes Applied) =====
   return (
     <>
-      {/* Floating Button */}
+      {/* 1. FLOATING BUTTON & TOOLTIP (Positioned bottom-right) */}
+      
+      {/* Tooltip to introduce the chatbot on page load */}
+      <AnimatePresence>
+        {showTooltip && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            // Layout Change: Fixed bottom-24 right-6
+            className="fixed bottom-24 right-6 p-3 w-64 bg-slate-800 text-white rounded-lg shadow-xl text-sm z-50 pointer-events-none"
+          >
+            <p className="font-semibold flex items-center gap-1 text-cyan-400">
+                <Leaf className="w-4 h-4" />
+                Hi there!
+            </p>
+            <p className="mt-1">I'm your CO₂ Expert. Click to chat!</p>
+            {/* Tailwind triangle/arrow for the tooltip (position adjusted for right side) */}
+            <div className="absolute bottom-[-6px] right-6 w-3 h-3 bg-slate-800 transform rotate-45" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Button (Positioned bottom-right) */}
       <motion.button
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full shadow-lg flex items-center justify-center text-white z-50"
+        // Layout Change: fixed bottom-6 right-6
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-full shadow-lg flex items-center justify-center text-white z-50"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <MessageCircle className="w-6 h-6" />
+        {/* Shows X when open, MessageCircle when closed */}
+        {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </motion.button>
 
-      {/* Chatbot Window */}
+      {/* 2. CHATBOT WINDOW (Positioned bottom-right) */}
+      
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 100, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.8 }}
+            // Layout Change: fixed bottom-24 right-6
             className="fixed bottom-24 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50"
           >
-            {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-4 rounded-t-2xl text-white">
+            {/* Header (Teal/Cyan Gradient) */}
+            <div className="bg-gradient-to-r from-teal-600 to-cyan-700 p-4 rounded-t-2xl text-white">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <Leaf className="w-6 h-6" />
@@ -446,20 +518,22 @@ Try rephrasing your question with these topics! 😊`;
               </div>
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+            {/* Messages Container */}
+            {/* Spacing Fix: Increased bottom padding (pb-2) to give scrolling content more room above Quick Replies. */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 pb-2">
               {messages.map((msg, idx) => (
                 <motion.div
                   key={idx}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
+                  // Ensures user messages align right, bot messages align left.
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   <div
-                    className={`max-w-[85%] p-3 rounded-lg whitespace-pre-line ${
+                    className={`max-w-[85%] p-3 rounded-xl whitespace-pre-line shadow-md ${
                       msg.role === "user"
-                        ? "bg-green-500 text-white"
-                        : "bg-white text-gray-800 border border-gray-200 shadow-sm"
+                        ? "bg-teal-500 text-white rounded-br-none" // User bubble styling
+                        : "bg-white text-gray-800 border border-gray-200 rounded-tl-none" // Bot bubble styling
                     }`}
                   >
                     {msg.text}
@@ -467,42 +541,46 @@ Try rephrasing your question with these topics! 😊`;
                 </motion.div>
               ))}
               
+              {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                  <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm rounded-tl-none">
                     <motion.div
                       animate={{ opacity: [0.5, 1, 0.5] }}
                       transition={{ repeat: Infinity, duration: 1 }}
                       className="flex items-center gap-2"
                     >
-                      <Sparkles className="w-4 h-4 text-green-500" />
+                      <Sparkles className="w-4 h-4 text-teal-500" />
                       Thinking...
                     </motion.div>
                   </div>
                 </div>
               )}
               
+              {/* Scroll anchor */}
               <div ref={messagesEndRef} />
             </div>
 
             {/* Quick Replies */}
-            <div className="p-2 bg-gray-100 flex gap-2 overflow-x-auto">
+            {/* Spacing Fix: Added margin-y (my-1) and horizontal padding (px-3) for cleaner separation. */}
+            <div className="py-2 px-3 bg-gray-100 flex gap-2 overflow-x-auto border-t">
               {quickReplies.map((q) => (
                 <button
                   key={q}
                   onClick={() => {
+                    // Sets input, then immediately triggers send.
                     setInput(q);
                     handleSend();
                   }}
-                  className="px-3 py-1 bg-white rounded-full text-sm text-gray-700 hover:bg-green-100 whitespace-nowrap border border-gray-300 transition-colors"
+                  className="px-3 py-1 bg-white rounded-full text-sm text-gray-700 hover:bg-teal-50 hover:text-teal-800 whitespace-nowrap border border-gray-300 transition-colors shadow-sm"
                 >
                   {q}
                 </button>
               ))}
             </div>
 
-            {/* Input */}
-            <div className="p-4 border-t bg-white rounded-b-2xl">
+            {/* Input Footer */}
+            <div className="p-3 border-t bg-white rounded-b-2xl">
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -510,12 +588,13 @@ Try rephrasing your question with these topics! 😊`;
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSend()}
                   placeholder="Ask about emissions..."
-                  className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handleSend}
-                  className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"
+                  className="bg-teal-500 text-white p-3 rounded-xl hover:bg-teal-600 transition-colors disabled:opacity-50"
+                  disabled={!input.trim()} // Disable button if input is empty
                 >
                   <Send className="w-5 h-5" />
                 </motion.button>
