@@ -271,7 +271,7 @@ const PredictionForm = () => {
                       border border-gray-100: Light gray border (1px solid) */}
                       
                   {/* ===== HEADER SECTION ===== */}
-                  <div className="flex flex-col items-center mb-12 px-8">
+                  <div className="flex flex-col items-center mb-10 px-10">
                     {/* flex flex-col: Vertical flex layout
                         items-center: Horizontally center children
                         mb-12: Bottom margin of 3rem (48px)
@@ -289,7 +289,7 @@ const PredictionForm = () => {
                       <DriveGreenLogo size="large" /> {/* Imported logo component */}
                     </motion.div>
 
-                    <h2 className="mt-7 text-5xl font-extrabold text-slate-900 tracking-tight text-center">
+                    <h2 className="mt-13 text-3xl font-extrabold text-slate-900 tracking-tight text-center">
                       Vehicle Carbon Emissions Predictor
                     </h2>
                     {/* mt-7: Top margin of 1.75rem (28px)
@@ -301,7 +301,7 @@ const PredictionForm = () => {
                   </div>
 
                   {/* Subtitle */}
-                  <div className="text-center mb-12 px-8">
+                  <div className="text-center mb-10 px-8">
                     {/* text-center: Center-align text
                         mb-12: Bottom margin of 3rem (48px)
                         px-8: Horizontal padding of 2rem (32px) */}
@@ -314,7 +314,7 @@ const PredictionForm = () => {
                           gap-3: Gap of 0.75rem (12px) between flex children */}
                       
                       <Leaf className="w-5 h-5 text-emerald-600" /> {/* Leaf icon, 20px, emerald color */}
-                      Predict CO₂ Emissions Using Advanced Metrics
+                      Find your car's carbon emissions value
                     </p>
                   </div>
 
@@ -322,13 +322,13 @@ const PredictionForm = () => {
                   <div className="px-8">
                     {/* px-8: Horizontal padding of 2rem (32px) - ENSURES all form content stays within borders */}
                     
-                    <form onSubmit={handleSubmit} className="space-y-7">
+                    <form onSubmit={handleSubmit} className="space-y-10">
                       {/* onSubmit: Calls handleSubmit when form is submitted
                           space-y-7: Vertical spacing of 1.75rem (28px) between form children - NICE spacing */}
                       
                       {/* ===== FUEL TYPE INPUT ===== */}
                       <motion.div
-                        className="space-y-3"
+                        className="space-y-4"
                         initial={{ opacity: 0, x: -30 }} // Start invisible, 30px left
                         animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
                         transition={{ delay: 0.15 }} // 150ms delay
@@ -457,9 +457,9 @@ const PredictionForm = () => {
                         type="submit" // Submit button type
                         whileHover={{
                           scale: 1.03, // Grow to 103% on hover
-                          boxShadow: "0 25px 50px rgba(16, 185, 129, 0.6)" // Large emerald shadow
+                          boxShadow: "0 25px 50px rgba(15, 141, 99, 0.6)" // Large emerald shadow
                         }}
-                        whileTap={{ scale: 0.97 }} // Shrink to 97% when clicked
+                        whileTap={{ scale: 0.90 }} // Shrink to 97% when clicked
                         disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
                         // Disabled when any required field is empty
                            // Uses logical NOT (!) to check for empty strings 
@@ -504,7 +504,7 @@ const PredictionForm = () => {
                               relative z-10: Above shine effect */}
                         </motion.div>
 
-                        <span className="relative z-10">Calculate Emissions</span>
+                        <span className="relative z-10">Calculate Emission</span>
                         {/* relative z-10: Above shine effect */}
                         
                         <TrendingUp className="w-8 h-8 relative z-10" />
@@ -521,7 +521,7 @@ const PredictionForm = () => {
                         border-gray-200: Light gray border (#e5e7eb)
                         px-8: Horizontal padding of 2rem (32px) - KEEPS footer within borders */}
                     
-                    <div className="flex items-center justify-between text-sm text-slate-600">
+                    <div className="flex items-center justify-between text-sl text-slate-600">
                       {/* flex items-center justify-between: Flex layout with space between
                           text-sm: Font size of 0.875rem (14px)
                           text-slate-600: Medium gray text */}
@@ -541,7 +541,7 @@ const PredictionForm = () => {
                             repeat: Infinity // Loop forever
                           }}
                         >
-                          <span className="w-3 h-3 bg-green-600 rounded-full block" />
+                          <span className="w-5 h-5 bg-green-600 rounded-full block" />
                           {/* w-3 h-3: 12px x 12px
                               bg-green-600: Emerald green dot (#16a34a)
                               rounded-full: Circular
@@ -550,16 +550,6 @@ const PredictionForm = () => {
                         
                         <span className="font-semibold">AI-Powered Prediction</span>
                         {/* font-semibold: Font weight of 600 */}
-                      </div>
-
-                      {/* Right info badge */}
-                      <div className="flex items-center gap-3 bg-cyan-50 px-4 py-2 rounded-full">
-                        {/* bg-cyan-50: Very light cyan background (#ecfeff) */}
-                        
-                        <Activity className="w-4 h-4 text-cyan-600" />
-                        {/* Activity icon, 16px, cyan color */}
-                        
-                        <span className="font-semibold">Real-time Analysis</span>
                       </div>
                     </div>
                   </div>
@@ -611,7 +601,3 @@ const PredictionForm = () => {
 };
 
 export default PredictionForm;
-
-// ====================================================================
-// END OF FILE
-// ====================================================================

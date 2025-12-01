@@ -88,7 +88,7 @@ const AnimationCard = ({ prediction, onReset }) => {
     }
   };
 
-  // The PDF generation function is complex and should remain outside of the card's animation focus.
+  // The PDF generation function is complex and is outside of the card's animation focus.
   const generateAndSharePDF = () => {
     try {
       const toastId = toast.loading("Generating PDF...");

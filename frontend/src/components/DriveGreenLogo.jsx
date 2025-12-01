@@ -1,7 +1,4 @@
 import { motion} from 'framer-motion'; // Import Framer Motion for animations
-// ====================================================================
-// DRIVE GREEN LOGO COMPONENT (from the Canvas)
-// ====================================================================
 
 // Define the functional component, accepting 'size' prop with a default value of "normal"
 const DriveGreenLogo = ({ size = "normal" }) => {

@@ -1,4 +1,4 @@
-explain the whole tailwind css styling and provide some guidance on it and how to change the values
+//explain the whole tailwind css styling and provide some guidance on it and how to change the values
 
 That's a great request. Tailwind CSS is highly efficient because it lets you style components directly within your JSX using a utility-first approach.
 
@@ -53,7 +53,7 @@ Wider Margins: Change right-6 to right-8.
 
 Lighter Color: Change bg-teal-500 to bg-teal-400.
 
-noo explain the whole tailwind css styling concept and how do i use it and how do i change the values
+//noo explain the whole tailwind css styling concept and how do i use it and how do i change the values
 
 This is a fantastic request, as understanding the core concept of Tailwind CSS is the key to using it effectively!
 
@@ -236,7 +236,7 @@ p-4	1.0rem	16px
 p-8	2.0rem	32px
 By using rem, Tailwind ensures that the visual rhythm of your application remains coherent even when the user customizes their browser settings.
 
-now explain the whole concept to a lame man
+//now explain the whole concept to a lame man
 
 That's a perfect request! When you're new to coding and design, terms like "utility-first" and "rem" sound like jargon.
 
@@ -378,5 +378,4 @@ Bot Message	justify-start, bg-white, text-gray-800, border, rounded-xl, rounded-
 Input/Footer	p-3, border-t, bg-white, rounded-b-2xl, flex, gap-2	Separates the input section with a top border, adds padding, and uses gap-2 for spacing between the text box and the send button.
 Interactivity	hover:bg-teal-600, hover:bg-teal-50, focus:ring-2, focus:ring-teal-500, transition-colors	Manages all the smooth visual feedback (hover effects, focus outlines, and slow color changes).
 
-Will read it later and won't add it to the main code structure 
 
