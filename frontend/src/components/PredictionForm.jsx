@@ -591,6 +591,7 @@ const PredictionForm = () => {
                     // border-b-4: Bottom border 4px solid
                     // border-teal-500/50: Teal border at 50% opacity
                     // rounded-br-2xl: Rounded bottom-right corner (16px)
+                    // corrected the errors here
                     initial={{ scale: 0 }} // Start scaled down
                     animate={{ scale: 1 }} // Scale up to normal size
                     transition={{ 

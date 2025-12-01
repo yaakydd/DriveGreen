@@ -378,5 +378,5 @@ Bot Message	justify-start, bg-white, text-gray-800, border, rounded-xl, rounded-
 Input/Footer	p-3, border-t, bg-white, rounded-b-2xl, flex, gap-2	Separates the input section with a top border, adds padding, and uses gap-2 for spacing between the text box and the send button.
 Interactivity	hover:bg-teal-600, hover:bg-teal-50, focus:ring-2, focus:ring-teal-500, transition-colors	Manages all the smooth visual feedback (hover effects, focus outlines, and slow color changes).
 
-
+Will read it later and won't add it to the main code structure 
 
