@@ -29,8 +29,8 @@ const NeonCar = () => {
   const drivePathVariants = React.useMemo(() => ({
     animate: {
       // Horizontal movement: Travels across full viewport width
-      // FIX 1: Start closer to the screen edge (-50vw instead of -150vw)
-      x: ["-50vw", "-80vw", "-20vw", "40vw", "100vw", "150vw"],
+      // FIX 1: Start closer to the screen edge (-40vw instead of -150vw)
+      x: ["-40vw", "-80vw", "-20vw", "40vw", "100vw", "150vw"],
       
       // Vertical wave motion
       y: ["-50vh", "-30vh", "-10vh", "5vh", "-15vh", "-40vh"],
