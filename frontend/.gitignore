@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# .gitignore
+venv/
+node_modules/
+dist/
+frontend/dist/
+__pycache__/
+*.pyc
+*.pkl
+*.joblib
+.DS_Store
+.env
+.env.local
+.env.*.local
+backend/utils/requirements.txt
+Emissions_Canada.csv

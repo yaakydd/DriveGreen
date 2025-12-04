@@ -85,7 +85,7 @@ const DriveGreenLogo = ({ size = "normal" }) => {
       </motion.div>
 
       {/* ===== TEXT LOGO (The words "Drive Green") ===== */}
-      <div className={`flex items-center font-bold tracking-tight ${text}`}>
+      <div className={`flex items-center font-bold tracking-tight ${text} `}>
         {/* flex items-center: Aligns text vertically, font-bold tracking-tight: Style for the text, ${text}: Inserts the dynamic text size class (e.g., text-3xl) */}
         <span className="text-slate-800">Drive</span>
         {/* The first word in dark gray */}

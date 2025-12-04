@@ -250,7 +250,7 @@ const PredictionForm = () => {
                     group: Enables group-hover utilities for child elements */}
                     
                 {/* Animated glowing border effect (positioned behind card) */}
-                <div className="absolute -inset-3 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000" />
+                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000" />
                 {/* absolute: Absolute positioning
                     -inset-3: Negative inset extends element 0.75rem (12px) outside parent
                     bg-gradient-to-r: Horizontal gradient (left to right)
@@ -262,16 +262,16 @@ const PredictionForm = () => {
                     transition duration-1000: 1 second smooth transition */}
 
                 {/* Main form card (white background) */}
-                <div className="relative bg-white rounded-3xl p-12 shadow-2xl border border-gray-100">
+                <div className="relative bg-white rounded-3xl p-20 shadow-2xl border border-gray-100">
                   {/* relative: Stacks above the glow effect
                       bg-white: White background (#ffffff)
                       rounded-3xl: Border radius of 1.5rem (24px)
-                      p-12: Padding of 3rem (48px) on all sides - INCREASED for better spacing
+                      p-12: Padding of 3rem (48px) on all sides
                       shadow-2xl: Extra large shadow for depth
                       border border-gray-100: Light gray border (1px solid) */}
                       
                   {/* ===== HEADER SECTION ===== */}
-                  <div className="flex flex-col items-center mb-10 px-10">
+                  <div className="flex flex-col items-center mt-84 border border-red-900">
                     {/* flex flex-col: Vertical flex layout
                         items-center: Horizontally center children
                         mb-12: Bottom margin of 3rem (48px)
@@ -289,7 +289,7 @@ const PredictionForm = () => {
                       <DriveGreenLogo size="large" /> {/* Imported logo component */}
                     </motion.div>
 
-                    <h2 className="mt-13 text-3xl font-extrabold text-slate-900 tracking-tight text-center">
+                    <h2 className="mt-3 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
                       Vehicle Carbon Emissions Predictor
                     </h2>
                     {/* mt-7: Top margin of 1.75rem (28px)
@@ -301,7 +301,7 @@ const PredictionForm = () => {
                   </div>
 
                   {/* Subtitle */}
-                  <div className="text-center mb-10 px-8">
+                  <div className="flex flex-col items-center mt-4 border border-blue-900">
                     {/* text-center: Center-align text
                         mb-12: Bottom margin of 3rem (48px)
                         px-8: Horizontal padding of 2rem (32px) */}
@@ -314,21 +314,21 @@ const PredictionForm = () => {
                           gap-3: Gap of 0.75rem (12px) between flex children */}
                       
                       <Leaf className="w-5 h-5 text-emerald-600" /> {/* Leaf icon, 20px, emerald color */}
-                      Find your car's carbon emissions value
+                      Determines your car's carbon emissions value
                     </p>
                   </div>
 
                   {/* ===== FORM SECTION ===== */}
-                  <div className="px-8">
+                  <div className="flex justify-center">
                     {/* px-8: Horizontal padding of 2rem (32px) - ENSURES all form content stays within borders */}
                     
-                    <form onSubmit={handleSubmit} className="space-y-10">
+                    <form onSubmit={handleSubmit} className="space-y-7 w-full max-w-sm">
                       {/* onSubmit: Calls handleSubmit when form is submitted
                           space-y-7: Vertical spacing of 1.75rem (28px) between form children - NICE spacing */}
                       
                       {/* ===== FUEL TYPE INPUT ===== */}
                       <motion.div
-                        className="space-y-4"
+                        className="space-y-3"
                         initial={{ opacity: 0, x: -30 }} // Start invisible, 30px left
                         animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
                         transition={{ delay: 0.15 }} // 150ms delay
@@ -351,7 +351,7 @@ const PredictionForm = () => {
                           value={form.fuel_type} // Controlled input value from state
                           onChange={handleChange} // Calls handleChange on selection
                           required // HTML5 validation - field must be filled
-                          className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg focus:ring-4 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-inner hover:border-emerald-400 cursor-pointer appearance-none"
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg focus:ring-4 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-inner hover:border-emerald-400 cursor-pointer appearance-none"
                           // w-full: Full width of parent
                           // p-5: Padding of 1.25rem (20px) on all sides
                           // bg-gray-50: Very light gray background (#f9fafb)
@@ -395,7 +395,7 @@ const PredictionForm = () => {
                         animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
                         transition={{ delay: 0.25 }} // 250ms delay (staggered after fuel type)
                       >
-                        <label className="flex items-center gap-3 text-lg font-bold text-slate-700">
+                        <label className="flex items-center gap-3 text-md font-bold text-slate-700">
                           {/* text-slate-700: Dark gray color (#334155) */}
                           
                           <Settings className="w-6 h-6" /> {/* Settings icon, 24px */}
@@ -410,8 +410,8 @@ const PredictionForm = () => {
                           type="number" // Number input type (shows numeric keyboard on mobile)
                           min="3" // Minimum value constraint
                           max="16" // Maximum value constraint
-                          placeholder="e.g., 6 cylinders" // Hint text when empty
-                          className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                          placeholder="e.g., 7" // Hint text when empty
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
                           // w-full: Full width of parent
                           // p-5: Padding of 1.25rem (20px) on all sides
                           // bg-gray-50: Very light gray background (#f9fafb)
@@ -447,8 +447,8 @@ const PredictionForm = () => {
                           step="0.1" // Allows decimal values in increments of 0.1
                           min="0.9" // Minimum value
                           max="8.4" // Maximum value
-                          placeholder="e.g., 2.0 liters" // Hint text
-                          className="w-full p-5 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                          placeholder="e.g. 1.0 " // Hint text
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
                         />
                       </motion.div>
 
@@ -464,7 +464,7 @@ const PredictionForm = () => {
                         // Disabled when any required field is empty
                            // Uses logical NOT (!) to check for empty strings 
                         
-                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-7 rounded-2xl font-black text-2xl shadow-2xl transition-all flex items-center justify-center gap-4 mt-10 group disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-7 rounded-2xl font-black text-2xl shadow-2xl transition-all flex items-center justify-center gap-4 mt-13 group disabled:opacity-50 disabled:cursor-not-allowed"
                         // w-full: Full width
                         // relative: Positioning context for shine effect
                         // overflow-hidden: Clips shine effect within button
@@ -549,6 +549,8 @@ const PredictionForm = () => {
                         </motion.div>
                         
                         <span className="font-semibold">AI-Powered Prediction</span>
+                        <p className="text-xs text-slate-400">Data provided by EPA & Transport Canada standards.</p>
+                   
                         {/* font-semibold: Font weight of 600 */}
                       </div>
                     </div>
@@ -557,7 +559,7 @@ const PredictionForm = () => {
                   {/* ===== DECORATIVE CORNER ELEMENTS ===== */}
                   {/* Top-left corner */}
                   <motion.div
-                    className="absolute top-6 left-6 w-16 h-16 border-l-4 border-t-4 border-emerald-500/50 rounded-tl-2xl"
+                    className="absolute top-6 left-6 w-16 h-16 border-l-4 border-t-4 border-emerald-700/50 rounded-tl-2xl"
                     // absolute top-6 left-6: Positioned 24px from top and left
                     // w-16 h-16: 64px x 64px
                     // border-l-4: Left border 4px solid
@@ -575,7 +577,7 @@ const PredictionForm = () => {
 
                   {/* Bottom-right corner */}
                   <motion.div
-                    className="absolute bottom-6 right-6 w-16 h-16 border-r-4 border-b-4 border-teal-500/50 rounded-br-2xl"
+                    className="absolute bottom-6 right-6 w-16 h-16 border-r-4 border-b-4 border-teal-700/50 rounded-br-2xl"
                     // absolute bottom-6 right-6: Positioned 24px from bottom and right
                     // border-r-4: Right border 4px solid
                     // border-b-4: Bottom border 4px solid
