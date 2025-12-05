@@ -139,7 +139,7 @@ const PredictionForm = () => {
   // ===== JSX RENDERING =====
   return (
     // Outer container for the entire page
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-sans">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-mono">
       {/* min-h-screen: Ensures div takes full viewport height (100vh)
           relative: Establishes positioning context for absolute children
           overflow-hidden: Prevents scrollbars from background animations
@@ -240,7 +240,7 @@ const PredictionForm = () => {
               animate={{ opacity: 1, y: 0 }} // Fade in and slide to position
               exit={{ opacity: 0, scale: 0.75 }} // Fade out and shrink to 75%
               transition={{ duration: 0.35 }} // 350ms transition
-              className="w-full max-w-3xl"
+              className="w-full max-w-3xl mx-auto justify-center"
               // w-full: Full width
               // max-w-3xl: Maximum width of 48rem (768px) - wider for better form layout
             >
@@ -262,7 +262,8 @@ const PredictionForm = () => {
                     transition duration-1000: 1 second smooth transition */}
 
                 {/* Main form card (white background) */}
-                <div className="relative bg-white rounded-3xl p-20 shadow-2xl border border-gray-100">
+                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 pt-20 pb-20 px-6 overflow-hidden">
+
                   {/* relative: Stacks above the glow effect
                       bg-white: White background (#ffffff)
                       rounded-3xl: Border radius of 1.5rem (24px)
@@ -270,8 +271,8 @@ const PredictionForm = () => {
                       shadow-2xl: Extra large shadow for depth
                       border border-gray-100: Light gray border (1px solid) */}
                       
-                  {/* ===== HEADER SECTION ===== */}
-                  <div className="flex flex-col items-center mt-84 border border-red-900">
+                                            {/* ===== HEADER SECTION ===== */}
+                  <div className=" flex flex-col items-center mb-12 px-8  border border-blue-900 overflow-hidden">
                     {/* flex flex-col: Vertical flex layout
                         items-center: Horizontally center children
                         mb-12: Bottom margin of 3rem (48px)
@@ -289,7 +290,7 @@ const PredictionForm = () => {
                       <DriveGreenLogo size="large" /> {/* Imported logo component */}
                     </motion.div>
 
-                    <h2 className="mt-3 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
+                    <h2 className="mt-4 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
                       Vehicle Carbon Emissions Predictor
                     </h2>
                     {/* mt-7: Top margin of 1.75rem (28px)
@@ -301,12 +302,12 @@ const PredictionForm = () => {
                   </div>
 
                   {/* Subtitle */}
-                  <div className="flex flex-col items-center mt-4 border border-blue-900">
+                  <div className="flex justify-center items-center mb-10 px-8 border-2 border-black-900">
                     {/* text-center: Center-align text
                         mb-12: Bottom margin of 3rem (48px)
                         px-8: Horizontal padding of 2rem (32px) */}
                     
-                    <p className="text-slate-600 text-xl font-medium flex items-center justify-center gap-3">
+                    <p className="text-slate-600 text-lg font-medium flex items-center justify-center gap-3">
                       {/* text-slate-600: Medium gray color (#475569)
                           text-xl: Font size of 1.25rem (20px)
                           font-medium: Font weight of 500
@@ -321,10 +322,11 @@ const PredictionForm = () => {
                   {/* ===== FORM SECTION ===== */}
                   <div className="flex justify-center">
                     {/* px-8: Horizontal padding of 2rem (32px) - ENSURES all form content stays within borders */}
-                    
-                    <form onSubmit={handleSubmit} className="space-y-7 w-full max-w-sm">
+
+                    <form onSubmit={handleSubmit} className="space-y-10 w-full max-w-md">
                       {/* onSubmit: Calls handleSubmit when form is submitted
                           space-y-7: Vertical spacing of 1.75rem (28px) between form children - NICE spacing */}
+
                       
                       {/* ===== FUEL TYPE INPUT ===== */}
                       <motion.div
@@ -448,7 +450,7 @@ const PredictionForm = () => {
                           min="0.9" // Minimum value
                           max="8.4" // Maximum value
                           placeholder="e.g. 1.0 " // Hint text
-                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                          className="min-w-sm p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
                         />
                       </motion.div>
 
