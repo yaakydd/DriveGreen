@@ -272,7 +272,7 @@ const PredictionForm = () => {
                       border border-gray-100: Light gray border (1px solid) */}
                       
                                             {/* ===== HEADER SECTION ===== */}
-                  <div className=" flex flex-col items-center mb-12 px-8  border border-blue-900 overflow-hidden">
+                  <div className=" flex flex-col items-center border border-blue-900  top-12 border border-blue-900 ">
                     {/* flex flex-col: Vertical flex layout
                         items-center: Horizontally center children
                         mb-12: Bottom margin of 3rem (48px)
@@ -290,7 +290,7 @@ const PredictionForm = () => {
                       <DriveGreenLogo size="large" /> {/* Imported logo component */}
                     </motion.div>
 
-                    <h2 className="mt-4 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
+                    <h2 className="mt-0 pt-4 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
                       Vehicle Carbon Emissions Predictor
                     </h2>
                     {/* mt-7: Top margin of 1.75rem (28px)
