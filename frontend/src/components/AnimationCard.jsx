@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 
 // ===== GAUGE COMPONENT =====
 // A reusable radial gauge for the score
+// ===== GAUGE COMPONENT =====
+// A reusable radial gauge for the score
 const EmissionGauge = ({ value, color, max = 350 }) => {
   const radius = 60;
   const stroke = 8;
@@ -15,20 +17,20 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
 
   return (
     <div className="relative flex items-center justify-center">
-      {/* Glow Effect behind the gauge */}
+      {/* Glow Effect behind the gauge - simplified for white bg */}
       <div 
-        className="absolute inset-0 rounded-full blur-[30px] opacity-20"
+        className="absolute inset-0 rounded-full blur-[40px] opacity-10"
         style={{ backgroundColor: color }}
       ></div>
 
       <svg
         height={radius * 2}
         width={radius * 2}
-        className="transform -rotate-90"
+        className="transform -rotate-90 relative z-10"
       >
         {/* Background Circle */}
         <circle
-          stroke="rgba(255,255,255,0.1)"
+          stroke="#e5e7eb" // gray-200
           strokeWidth={stroke}
           fill="transparent"
           r={normalizedRadius}
@@ -52,16 +54,16 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
         />
       </svg>
       {/* Center Text */}
-      <div className="absolute flex flex-col items-center">
+      <div className="absolute flex flex-col items-center z-20">
         <motion.span 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-4xl font-bold font-heading text-white"
+          className="text-4xl font-bold font-heading text-gray-900"
         >
           {value}
         </motion.span>
-        <span className="text-xs text-lum-text-dim uppercase tracking-wider">g/km</span>
+        <span className="text-xs text-gray-500 uppercase tracking-wider">g/km</span>
       </div>
     </div>
   );
@@ -121,22 +123,25 @@ const AnimationCard = ({ prediction, onReset }) => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="relative w-full max-w-md mx-auto"
+      className="relative w-full max-w-lg mx-auto"
     >
-      {/* Glass Container */}
-      <div className="relative overflow-hidden rounded-3xl bg-lum-deep/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50">
+      {/* White Card Container */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-white border border-gray-100 shadow-2xl shadow-emerald-900/10">
         
-        {/* Top Decorative Line */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-lum-accent to-transparent opacity-50"></div>
+        {/* Decorative Curved Corner - Top Left */}
+        <div className="absolute top-6 left-6 w-20 h-20 border-t-[6px] border-l-[6px] border-emerald-400 rounded-tl-3xl pointer-events-none opacity-80" />
+        
+        {/* Decorative Curved Corner - Bottom Right */}
+        <div className="absolute bottom-6 right-6 w-20 h-20 border-b-[6px] border-r-[6px] border-emerald-400 rounded-br-3xl pointer-events-none opacity-80" />
 
-        <div className="p-8 flex flex-col items-center text-center">
+        <div className="p-8 md:p-10 flex flex-col items-center text-center relative z-10">
           
           {/* Header */}
           <motion.div variants={itemVariants} className="mb-6">
-            <h2 className="text-2xl font-heading font-bold text-white mb-1">
+            <h2 className="text-2xl font-heading font-bold text-gray-900 mb-1">
               Analysis Complete
             </h2>
-            <p className="text-sm text-lum-text-dim">
+            <p className="text-sm text-gray-500 font-medium">
               Your vehicle's environmental footprint
             </p>
           </motion.div>
@@ -158,30 +163,28 @@ const AnimationCard = ({ prediction, onReset }) => {
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 1 }}
-              className="mt-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 mx-auto w-fit"
+              className="mt-5 px-5 py-2 rounded-full bg-gray-50 border border-gray-100 flex items-center gap-2 mx-auto w-fit shadow-sm"
             >
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: activeColor }}></div>
-              <span className="text-sm font-semibold tracking-wide text-white" style={{ color: activeColor }}>{category}</span>
+              <div className="w-2.5 h-2.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: activeColor }}></div>
+              <span className="text-sm font-bold tracking-wide" style={{ color: activeColor }}>{category}</span>
             </motion.div>
           </motion.div>
 
           {/* Interpretation */}
           <motion.div variants={itemVariants} className="mb-8 w-full">
-             <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-left relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: activeColor }}></div>
-                <p className="text-lum-text-dim text-sm leading-relaxed relative z-10">
+             <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100 text-left relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1.5 h-full rounded-l-2xl" style={{ backgroundColor: activeColor }}></div>
+                <p className="text-gray-600 text-sm leading-relaxed relative z-10 pl-2">
                   {interpretation}
                 </p>
-                {/* Subtle hover sheen */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
              </div>
           </motion.div>
 
           {/* Actions */}
-          <motion.div variants={itemVariants} className="flex gap-3 w-full">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 w-full">
             <button
               onClick={onReset}
-              className="flex-1 py-3.5 px-4 rounded-xl font-medium text-sm text-lum-text-dim hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-3.5 px-4 rounded-xl font-bold text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
             >
               <RefreshCw size={16} />
               Reset
@@ -189,7 +192,7 @@ const AnimationCard = ({ prediction, onReset }) => {
             
             <button
               onClick={generateAndSharePDF}
-              className="flex-[2] py-3.5 px-4 rounded-xl font-medium text-sm text-lum-base bg-lum-accent hover:bg-emerald-300 transition-all shadow-[0_0_20px_rgba(52,211,153,0.3)] hover:shadow-[0_0_30px_rgba(52,211,153,0.5)] flex items-center justify-center gap-2"
+              className="flex-[1.5] py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-[#6EE7B7] hover:bg-[#34D399] transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
             >
               <FileDown size={18} />
               Download Report
