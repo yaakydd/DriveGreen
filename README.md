@@ -8,3 +8,6 @@ Business Case and Requirements:
 2. To compare and evaluate the performance of six key models: Linear Regression, Random Forest, K-Nearest Neighbors,Support Vector Machine, Gradient Boosting and XGBoost
 3. To save and use the best model after evaluation to predict the CO2 emissions
 
+
+How to install 
+install requirements.txt
