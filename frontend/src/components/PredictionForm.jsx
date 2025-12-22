@@ -104,7 +104,7 @@ const PredictionForm = () => {
     "w-full p-3 bg-gray-50 border-[1.5px] border-emerald-100 rounded-2xl text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-300 shadow-inner hover:bg-white";
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 py-8 relative z-20">
+    <div className="w-full max-w-[95%] sm:max-w-xl md:max-w-2xl mx-auto py-4 md:py-8 relative z-20">
       {/* Reduced to max-w-xl for a cleaner, tighter card */}
       <AnimatePresence mode="wait">
         {loading ? (
@@ -147,7 +147,7 @@ const PredictionForm = () => {
               <div className="absolute bottom-6 right-6 w-24 h-24 border-b-[6px] border-r-[6px] border-emerald-400 rounded-br-3xl pointer-events-none opacity-80" />
 
               {/* Content Wrapper with padding */}
-              <div className="p-6 md:p-10 relative z-10 flex flex-col items-center">
+              <div className="p-5 sm:p-8 md:p-10 relative z-10 flex flex-col items-center">
                 {/* Header */}
                 <div className="text-center mb-6 w-full">
                   <motion.div
@@ -158,7 +158,7 @@ const PredictionForm = () => {
                   >
                     <DriveGreenLogo />
                   </motion.div>
-                  <h1 className="text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 tracking-tight">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 tracking-tight">
                     Vehicle Carbon Emissions Predictor
                   </h1>
                   <p className="text-emerald-700/80 text-sm font-medium flex items-center justify-center gap-2">

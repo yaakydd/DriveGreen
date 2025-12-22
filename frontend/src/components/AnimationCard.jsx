@@ -134,7 +134,7 @@ const AnimationCard = ({ prediction, onReset }) => {
         {/* Decorative Curved Corner - Bottom Right */}
         <div className="absolute bottom-6 right-6 w-20 h-20 border-b-[6px] border-r-[6px] border-emerald-400 rounded-br-3xl pointer-events-none opacity-80" />
 
-        <div className="p-8 md:p-10 flex flex-col items-center text-center relative z-10">
+        <div className="p-6 sm:p-8 md:p-10 flex flex-col items-center text-center relative z-10">
           
           {/* Header */}
           <motion.div variants={itemVariants} className="mb-6">

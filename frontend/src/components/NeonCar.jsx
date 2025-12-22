@@ -122,8 +122,8 @@ const NeonCar = () => {
 
       {/* Animated neon car wrapper */}
       <motion.div
-        className="absolute w-[400px] h-[150px] top-1/2 left-0 transform -translate-y-1/2"
-        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }}  // Center horizontally
+        className="absolute w-[280px] sm:w-[350px] md:w-[400px] h-[105px] sm:h-[130px] md:h-[150px] top-1/2 left-0 transform -translate-y-1/2 origin-center"
+        style={{ marginLeft: `-${CAR_WIDTH / 2}px` }}  // Note: alignment might need slight tweak for localized centering but motion handles main position
         variants={drivePathVariants}
         // FIX 2: Set initial position to match the new start of the animation path
         initial={{ x: "-50vw", y: "-50vh", rotate: -8 }}
@@ -160,7 +160,7 @@ const NeonCar = () => {
         ))}
 
         {/* ===== SVG CAR GRAPHIC ===== */}
-        <svg width={CAR_WIDTH} height="150" viewBox="0 0 350 100" className="drop-shadow-2xl absolute">
+        <svg width="100%" height="100%" viewBox="0 0 350 100" className="drop-shadow-2xl absolute">
           <defs>
             {/* Neon glow filter */}
             <filter id="luxuryNeon" x="-50%" y="-50%" width="200%" height="200%">
