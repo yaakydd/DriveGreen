@@ -524,7 +524,6 @@ const PredictionForm = () => {
           )}
         </AnimatePresence>
       </div>
-    </div>
   );
 };
 
