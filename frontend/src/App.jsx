@@ -12,7 +12,7 @@ export default function App() {
         <BackgroundParticles />
         <NeonCar />
       </div>
-      <main className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4">
+      <main className="relative z-10 min-h-screen w-full flex flex-col items-center justify-center py-8 px-4 md:p-6 lg:p-12 overflow-x-hidden">
         <PredictionForm />
       </main>
       <Chatbot />
