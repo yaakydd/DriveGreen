@@ -171,153 +171,77 @@ const PredictionForm = () => {
         {/* bg-cyan-500/20: Cyan color at 20% opacity
             clipPath: Creates ellipse glow on right side of screen */}
       </div>
+    </div>
+  );
 
-      {/* ===== ANIMATED BACKGROUND PARTICLES (always visible) ===== */}
-      <div className="absolute inset-0 pointer-events-none">
-        <AnimatedParticles />
-        {/* Renders floating particle animations in background
-            Always visible regardless of form/loading/results state */}
-      </div>
+  // Common styling for inputs/selects
+  // Adjusted padding for better fit
+  const inputClasses =
+    "w-full p-3 bg-gray-50 border-[1.5px] border-emerald-100 rounded-2xl text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all duration-300 shadow-inner hover:bg-white";
 
-      {/* ===== NEON CAR BACKGROUND (conditional) ===== */}
-      {!loading && !prediction && <NeonCar />}
-      {/* Conditional rendering: Only shows car when:
-          - NOT in loading state (!loading)
-          - AND NOT showing prediction results (!prediction)
-          - Hides during loading/results to reduce visual clutter */}
+  return (
+    <div className="w-full max-w-[95%] sm:max-w-xl md:max-w-2xl mx-auto py-4 md:py-8 relative z-20">
+      {/* Reduced to max-w-xl for a cleaner, tighter card */}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="spinner"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="flex flex-col items-center justify-center min-h-[400px] bg-white rounded-[2rem] border border-gray-100 shadow-xl"
+          >
+            <Spinner />
+            <p className="mt-8 text-emerald-600 animate-pulse font-heading text-xl tracking-wide">
+              Analyzing Carbon Data...
+            </p>
+          </motion.div>
+        ) : prediction ? (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <AnimationCard prediction={prediction} onReset={handleReset} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
+            className="relative w-full"
+          >
+            {/* White Card - Main Container */}
+            <div className="relative overflow-hidden bg-white border border-gray-100 rounded-[2.5rem] shadow-2xl shadow-emerald-900/10">
+              
+              {/* Decorative Curved Corner - Top Left */}
+              <div className="absolute top-6 left-6 w-24 h-24 border-t-[6px] border-l-[6px] border-emerald-400 rounded-tl-3xl pointer-events-none opacity-80" />
+              
+              {/* Decorative Curved Corner - Bottom Right */}
+              <div className="absolute bottom-6 right-6 w-24 h-24 border-b-[6px] border-r-[6px] border-emerald-400 rounded-br-3xl pointer-events-none opacity-80" />
 
-      {/* ===== MAIN CONTENT AREA ===== */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
-        {/* relative z-10: Positions above background layers (z-index: 10)
-            flex: Enables flexbox layout
-            items-center: Vertically centers flex children
-            justify-center: Horizontally centers flex children
-            min-h-screen: Minimum height of 100vh (full viewport)
-            p-6: Padding of 1.5rem (24px) on all sides */}
-            
-        <AnimatePresence mode="wait">
-          {/* AnimatePresence: Enables exit animations for children
-              mode="wait": Only one child visible at a time, waits for exit before entering */}
-          
-          {/* ===== LOADING STATE ===== */}
-          {loading ? (
-            <motion.div
-              key="spinner" // Unique key for AnimatePresence to track component
-              initial={{ opacity: 0, scale: 0.9 }} // Starting animation state
-              animate={{ opacity: 1, scale: 1 }} // Active/visible state
-              exit={{ opacity: 0, scale: 0.9 }} // Exiting animation state
-              transition={{ duration: 0.25 }} // Animation duration (250ms)
-              className="flex items-center justify-center w-full max-w-2xl"
-              // flex items-center justify-center: Centers spinner
-              // w-full: Full width of parent
-              // max-w-2xl: Maximum width of 42rem (672px)
-              >
-                <Spinner /> {/* Imported loading spinner component */}
-              </motion.div>
-
-          // ===== RESULTS STATE =====
-          ) : prediction ? (
-            <motion.div
-              key="result" // Unique key for AnimatePresence
-              initial={{ opacity: 0, y: 40 }} // Start invisible, 40px below
-              animate={{ opacity: 1, y: 0 }} // Fade in and slide to position
-              exit={{ opacity: 0, y: -40 }} // Fade out and slide up
-              transition={{ duration: 0.4 }} // 400ms transition
-              className="w-full max-w-2xl" // w-full: Full width of parent  
-            >
-              <AnimationCard 
-                prediction={prediction} // Pass prediction data as prop
-                onReset={handleReset} // Pass reset handler as prop
-              />
-              {/* Imported results display component */}
-            </motion.div>
-
-          // ===== FORM STATE (default) =====
-          ) : (
-            <motion.div
-              key="form" // Unique key for AnimatePresence
-              initial={{ opacity: 0, y: 30 }} // Start invisible, 30px below
-              animate={{ opacity: 1, y: 0 }} // Fade in and slide to position
-              exit={{ opacity: 0, scale: 0.75 }} // Fade out and shrink to 75%
-              transition={{ duration: 0.35 }} // 350ms transition
-              className="w-full max-w-3xl mx-auto justify-center"
-              // w-full: Full width
-              // max-w-3xl: Maximum width of 48rem (768px) - wider for better form layout
-            >
-              {/* ===== FORM CARD WRAPPER ===== */}
-              <div className="relative group">
-                {/* relative: Positioning context for absolute children
-                    group: Enables group-hover utilities for child elements */}
-                    
-                {/* Animated glowing border effect (positioned behind card) */}
-                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000" />
-                {/* absolute: Absolute positioning
-                    -inset-3: Negative inset extends element 0.75rem (12px) outside parent
-                    bg-gradient-to-r: Horizontal gradient (left to right)
-                    from-emerald-500/70 via-cyan-500/70 to-teal-500/70: Gradient colors at 70% opacity
-                    rounded-3xl: Border radius of 1.5rem (24px)
-                    blur-xl: Blur filter of 24px for glow effect
-                    opacity-30: 30% opacity in default state
-                    group-hover:opacity-60: 60% opacity when parent is hovered
-                    transition duration-1000: 1 second smooth transition */}
-
-                {/* Main form card (white background) */}
-                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 p-12 overflow-hidden">
-
-                  {/* relative: Stacks above the glow effect
-                      bg-white: White background (#ffffff)
-                      rounded-3xl: Border radius of 1.5rem (24px)
-                      p-12: Padding of 3rem (48px) on all sides
-                      shadow-2xl: Extra large shadow for depth
-                      border border-gray-100: Light gray border (1px solid) */}
-                      
-                                            {/* ===== HEADER SECTION ===== */}
-                  <div className="flex flex-col items-center mb-8 overflow-hidden">
-                    {/* flex flex-col: Vertical flex layout
-                        items-center: Horizontally center children
-                        mb-12: Bottom margin of 3rem (48px)
-                        px-8: Horizontal padding of 2rem (32px) - KEEPS content within borders */}
-                    
-                    <motion.div
-                      initial={{ scale: 0, rotate: -90 }} // Start tiny and rotated
-                      animate={{ scale: 1, rotate: 0 }} // Grow to full size and straighten
-                      transition={{ 
-                        type: "spring", // Spring physics animation
-                        stiffness: 150, // Spring stiffness (150 is moderate)
-                        delay: 0.1 // 100ms delay before animation starts
-                      }}
-                    >
-                      <DriveGreenLogo size="large" /> {/* Imported logo component */}
-                    </motion.div>
-
-                    <h2 className="mt-4 text-2xl font-extrabold text-slate-900 tracking-tight text-center">
-                      Vehicle Carbon Emissions Predictor
-                    </h2>
-                    {/* mt-7: Top margin of 1.75rem (28px)
-                        text-5xl: Font size of 3rem (48px)
-                        font-extrabold: Font weight of 800
-                        text-slate-900: Very dark gray color (#0f172a)
-                        tracking-tight: Slightly tighter letter spacing
-                        text-center: Center-aligned text */}
-                  </div>
-
-                  {/* Subtitle */}
-                  <div className="flex justify-center items-center mb-8">
-                    {/* text-center: Center-align text
-                        mb-12: Bottom margin of 3rem (48px)
-                        px-8: Horizontal padding of 2rem (32px) */}
-                    
-                    <p className="text-slate-600 text-lg font-medium flex items-center justify-center gap-3">
-                      {/* text-slate-600: Medium gray color (#475569)
-                          text-xl: Font size of 1.25rem (20px)
-                          font-medium: Font weight of 500
-                          flex items-center justify-center: Centered flex layout
-                          gap-3: Gap of 0.75rem (12px) between flex children */}
-                      
-                      <Leaf className="w-5 h-5 text-emerald-600" /> {/* Leaf icon, 20px, emerald color */}
-                      Determines your car's carbon emissions value
-                    </p>
-                  </div>
+              {/* Content Wrapper with padding */}
+              <div className="p-5 sm:p-8 md:p-10 relative z-10 flex flex-col items-center">
+                {/* Header */}
+                <div className="text-center mb-6 w-full">
+                  <motion.div
+                    className="inline-block mb-4 scale-100"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <DriveGreenLogo />
+                  </motion.div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-heading font-bold text-gray-900 mb-2 tracking-tight">
+                    Vehicle Carbon Emissions Predictor
+                  </h1>
+                  <p className="text-emerald-700/80 text-sm font-medium flex items-center justify-center gap-2">
+                    <Leaf size={14} className="text-emerald-500" />
+                    Determines your car's carbon emissions value
+                  </p>
+                </div>
 
                   {/* ===== FORM SECTION ===== */}
                   <div className="flex justify-center">
