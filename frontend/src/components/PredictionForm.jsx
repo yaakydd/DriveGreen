@@ -1,99 +1,175 @@
+// ===== FINAL MERGED PREDICTION FORM - FIXED & COMMENTED =====
+// File: frontend/src/components/PredictionForm.jsx
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+
+/* icons: all from lucide-react */
 import {
-  Leaf,
-  Gauge,
-  Settings,
-  Fuel,
-  Zap,
-  TrendingUp,
-  Info,
-  ChevronDown,
+  Leaf, // Icon for eco-friendliness
+  Gauge, // Icon for engine size/measurement
+  Settings, // Icon for cylinders/configuration
+  Fuel, // Icon for fuel type
+  Car, // Icon (unused but kept for context)
+  Sparkles, // Icon for emphasis/special feature
+  Activity, // Icon for real-time analysis
+  Zap, // Icon for speed/calculation
+  TrendingUp // Icon for prediction/trend
 } from "lucide-react";
 
-import Spinner from "./Spinner";
-import AnimationCard from "./AnimationCard";
-import DriveGreenLogo from "./DriveGreenLogo";
-import toast from "react-hot-toast";
-import AnimatedParticles from "./BackgroundParticles";
-import NeonCar from "./NeonCar";
+/* Local components */
+import Spinner from "./Spinner"; // Loading spinner component
+import AnimationCard from "./AnimationCard"; // Component to display the final prediction result
+import NeonCar from "./NeonCar"; // Animated background car component (previously fixed)
+import DriveGreenLogo from "./DriveGreenLogo"; // Logo component
+import AnimatedParticles from "./BackgroundParticles"; // Background particle animation component
+import toast from "react-hot-toast"; // External library for clean notifications
 
+/* API URL (env fallback) - Defines the backend endpoint */
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
+/**
+ * ===== COLOR SCHEME GUIDE =====
+ * - emerald-600/500/etc: Primary green (e.g., #10B981) - Use for eco focus, success.
+ * - teal-500/600/etc: Secondary teal (e.g., #14B8A6) - Use for supporting elements.
+ * - cyan-500/etc: Accent blue (e.g., #06B6D4) - Use for contrast, highlights.
+ * - slate-900/gray-950: Background dark shades - Use for dark mode theme.
+ * - text-white/slate-600: Text colors.
+ */
+
 const PredictionForm = () => {
+  // ===== STATE MANAGEMENT LOGIC =====
+  
+  // State for form inputs. The keys match the API's expected payload structure.
   const [form, setForm] = useState({
-    fuel_type: "",
-    cylinders: "",
-    engine_size: "",
+    fuel_type: "", // String for the selected fuel code (e.g., "X", "Z")
+    cylinders: "", // String (will be converted to Int before API call)
+    engine_size: "" // String (will be converted to Float before API call)
   });
 
-  const [prediction, setPrediction] = useState(null);
-  const [loading, setLoading] = useState(false);
+  // State to store the result from the API call (e.g., { co2_emissions: 250.5 })
+  const [prediction, setPrediction] = useState(null); 
+  
+  // State to manage the loading status (true when API request is active)
+  const [loading, setLoading] = useState(false); 
 
+  // ===== HANDLERS =====
+  
+  // Generic handler for all form inputs (select and text)
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    // Updates the `form` state by spreading previous values and overwriting
+    // the field whose `name` attribute matches the input's name (e.g., 'fuel_type').
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Handler for form submission
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevents default browser form submission
+
+    // Basic client-side validation check
     if (!form.fuel_type || !form.cylinders || !form.engine_size) {
-      toast.error("Please fill all fields for an accurate prediction.", {
-        icon: "🌱",
-      });
-      return;
+      toast.error("Please fill all fields.", { icon: "🚨" });
+      return; // Stop submission if validation fails
     }
 
-    setLoading(true);
-    setPrediction(null);
+    setLoading(true); // Start loading state
+    setPrediction(null); // Clear previous prediction
 
     try {
+      // Construct the payload, converting input strings to required numeric types
       const payload = {
         fuel_type: form.fuel_type,
-        cylinders: parseInt(form.cylinders, 10),
-        engine_size: parseFloat(form.engine_size),
+        cylinders: parseInt(form.cylinders, 10), // Convert string to integer
+        engine_size: parseFloat(form.engine_size) // Convert string to floating-point number
       };
 
+      // API call to the backend
       const res = await fetch(`${API_URL}/api/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        method: "POST", // HTTP method
+        headers: { "Content-Type": "application/json" }, // Specify JSON content
+        body: JSON.stringify(payload) // Send payload as JSON string
       });
 
       if (!res.ok) {
-        throw new Error("Prediction failed. Please try again.");
+        // Handle HTTP error statuses (4xx, 5xx)
+        let errMsg = "Prediction failed";
+        try {
+          const errBody = await res.json();
+          // Extract specific error message if available
+          errMsg = errBody.detail || errBody.message || errMsg;
+        } catch (parseErr) {
+          // Fallback if response isn't readable JSON
+        }
+        throw new Error(errMsg); // Throw error to be caught below
       }
 
-      const data = await res.json();
-      setPrediction(data);
-      toast.success("Carbon footprint analysis complete!");
+      const data = await res.json(); // Parse the successful JSON response
+      setPrediction(data); // Store the prediction result
+
+      // Show success notification
+      toast.success("Prediction successful!", {
+        icon: "🌍",
+        style: {
+          background: "#10b981", // Emerald-600 color
+          color: "#fff"
+        }
+      });
     } catch (err) {
       console.error(err);
-      toast.error(err.message || "Failed to calculate emissions.");
+      // Show error notification with message from the error object
+      toast.error(err.message || "Prediction failed. Check your inputs.", {
+        icon: "⚠️"
+      });
     } finally {
-      setLoading(false);
+      setLoading(false); // End loading state, regardless of success or failure
     }
   };
 
+  // Handler to clear results and reset the form
   const handleReset = () => {
-    setPrediction(null);
-    setLoading(false);
-    setForm({
+    setPrediction(null); // Clear prediction
+    setLoading(false); // Ensure loading is false
+    setForm({ // Reset form inputs to initial empty state
       fuel_type: "",
       cylinders: "",
-      engine_size: "",
+      engine_size: ""
     });
   };
 
-  // Reusable Input Component
-  const InputGroup = ({ label, icon: Icon, children }) => (
-    <div className="space-y-3 w-full">
-      <label className="flex items-center gap-3 text-sm font-bold text-emerald-700 uppercase tracking-widest pl-1">
-        <Icon className="w-4 h-4 text-emerald-600" />
-        {label}
-      </label>
-      <div className="relative group perspective-1000 w-full">
-        {children}
-        <div className="absolute inset-0 rounded-2xl ring-1 ring-emerald-500/20 group-hover:ring-emerald-500/40 pointer-events-none transition-all duration-300" />
+  // ===== JSX RENDERING =====
+  return (
+    // Outer container for the entire page
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-mono">
+      {/* min-h-screen: Ensures div takes full viewport height (100vh)
+          relative: Establishes positioning context for absolute children
+          overflow-hidden: Prevents scrollbars from background animations
+          bg-gradient-to-br: Background gradient direction (bottom-right)
+          from-gray-950 via-slate-900 to-gray-950: Dark gradient colors
+          font-sans: Uses system's sans-serif font family */}
+
+      {/* ===== AMBIENT BACKGROUND GLOWS ===== */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* absolute: Positioned relative to nearest relative parent
+            inset-0: Sets top, right, bottom, left all to 0 (full coverage)
+            pointer-events-none: Allows clicks to pass through to elements below */}
+        
+        {/* Left emerald glow */}
+        <div
+          className="absolute inset-0 bg-emerald-600/20 blur-[150px] opacity-15"
+          style={{ clipPath: "ellipse(60% 70% at 20% 50%)" }}
+        />
+        {/* bg-emerald-600/20: Emerald color at 20% opacity
+            blur-[150px]: Large blur radius (150px) for soft glow effect
+            opacity-15: Additional 15% opacity (combined with /20)
+            clipPath: CSS shape - creates ellipse glow on left side of screen */}
+        
+        {/* Right cyan glow */}
+        <div
+          className="absolute inset-0 bg-cyan-500/20 blur-[150px] opacity-15"
+          style={{ clipPath: "ellipse(60% 70% at 80% 50%)" }}
+        />
+        {/* bg-cyan-500/20: Cyan color at 20% opacity
+            clipPath: Creates ellipse glow on right side of screen */}
       </div>
 
       {/* ===== ANIMATED BACKGROUND PARTICLES (always visible) ===== */}
@@ -186,7 +262,7 @@ const PredictionForm = () => {
                     transition duration-1000: 1 second smooth transition */}
 
                 {/* Main form card (white background) */}
-                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 pt-20 pb-20 px-6 overflow-hidden">
+                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 p-12 overflow-hidden">
 
                   {/* relative: Stacks above the glow effect
                       bg-white: White background (#ffffff)
@@ -196,7 +272,7 @@ const PredictionForm = () => {
                       border border-gray-100: Light gray border (1px solid) */}
                       
                                             {/* ===== HEADER SECTION ===== */}
-                  <div className=" flex flex-col items-center mb-12 px-8  border border-blue-900 overflow-hidden">
+                  <div className="flex flex-col items-center mb-8 overflow-hidden">
                     {/* flex flex-col: Vertical flex layout
                         items-center: Horizontally center children
                         mb-12: Bottom margin of 3rem (48px)
@@ -226,7 +302,7 @@ const PredictionForm = () => {
                   </div>
 
                   {/* Subtitle */}
-                  <div className="flex justify-center items-center mb-10 px-8 border-2 border-black-900">
+                  <div className="flex justify-center items-center mb-8">
                     {/* text-center: Center-align text
                         mb-12: Bottom margin of 3rem (48px)
                         px-8: Horizontal padding of 2rem (32px) */}
@@ -243,132 +319,287 @@ const PredictionForm = () => {
                     </p>
                   </div>
 
-                {/* Form - with explicit width constraint */}
-                <form onSubmit={handleSubmit} className="space-y-5 w-full">
-                  <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="w-full"
-                  >
-                    <InputGroup label="Fuel Type" icon={Fuel}>
-                      <div className="relative w-full">
+                  {/* ===== FORM SECTION ===== */}
+                  <div className="flex justify-center">
+                    {/* px-8: Horizontal padding of 2rem (32px) - ENSURES all form content stays within borders */}
+
+                    <form onSubmit={handleSubmit} className="space-y-10 w-full max-w-md">
+                      {/* onSubmit: Calls handleSubmit when form is submitted
+                          space-y-7: Vertical spacing of 1.75rem (28px) between form children - NICE spacing */}
+
+                      
+                      {/* ===== FUEL TYPE INPUT ===== */}
+                      <motion.div
+                        className="space-y-4"
+                        initial={{ opacity: 0, x: -30 }} // Start invisible, 30px left
+                        animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
+                        transition={{ delay: 0.15 }} // 150ms delay
+                      >
+                        {/* space-y-3: Vertical spacing of 0.75rem (12px) between label and input */}
+                        
+                        <label className="flex items-center gap-3 text-lg font-bold text-emerald-600">
+                          {/* flex items-center: Horizontal flex with vertical centering
+                              gap-3: Gap of 0.75rem (12px) between icon and text
+                              text-lg: Font size of 1.125rem (18px)
+                              font-bold: Font weight of 700
+                              text-emerald-600: Emerald green color (#10b981) */}
+                          
+                          <Fuel className="w-6 h-6" /> {/* Fuel icon, 24px */}
+                          Fuel Type
+                        </label>
+
                         <select
-                          name="fuel_type"
-                          value={form.fuel_type}
-                          onChange={handleChange}
-                          required
-                          className={`${inputClasses} appearance-none cursor-pointer text-gray-700`}
+                          name="fuel_type" // Form field name (matches state key)
+                          value={form.fuel_type} // Controlled input value from state
+                          onChange={handleChange} // Calls handleChange on selection
+                          required // HTML5 validation - field must be filled
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg focus:ring-4 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-inner hover:border-emerald-400 cursor-pointer appearance-none"
+                          // w-full: Full width of parent
+                          // p-5: Padding of 1.25rem (20px) on all sides
+                          // bg-gray-50: Very light gray background (#f9fafb)
+                          // border border-gray-300: Gray border 1px solid (#d1d5db)
+                          // rounded-xl: Border radius of 0.75rem (12px)
+                          // text-slate-800: Dark gray text (#1e293b)
+                          // text-lg: Font size of 1.125rem (18px)
+                             // focus:ring-4: 4px ring appears on focus
+                              // focus:ring-teal-500/50: Teal ring at 50% opacity
+                              // focus:border-teal-500: Teal border on focus (#14b8a6)
+                              // transition-all: Smooth transitions for all properties
+                              // shadow-inner: Inset shadow for depth
+                              // hover:border-emerald-400: Emerald border on hover
+                              // cursor-pointer: Pointer cursor on hover
+                              // appearance-none: Removes default browser dropdown styling
+        
+
+                          style={{
+                            // Custom dropdown arrow SVG
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                            backgroundRepeat: "no-repeat", // Don't repeat the arrow
+                            backgroundPosition: "right 1.5rem center", // Position 24px from right, centered vertically
+                            backgroundSize: "1.2em" // Arrow size relative to font size
+                          }}
                         >
-                          <option
-                            value=""
-                            disabled
-                            className="text-gray-400"
-                          >
-                            Select fuel type
-                          </option>
-                          <option value="X" className="text-gray-900">
-                            Regular Gasoline
-                          </option>
-                          <option value="Z" className="text-gray-900">
-                            Premium Gasoline
-                          </option>
-                          <option value="E" className="text-gray-900">
-                            Ethanol (E85)
-                          </option>
-                          <option value="D" className="text-gray-900">
-                            Diesel
-                          </option>
-                          <option value="N" className="text-gray-900">
-                            Natural Gas
-                          </option>
+                          <option value="" disabled>Select fuel type</option> 
+                          {/* Placeholder option, disabled so it can't be re-selected */}
+                          
+                          <option value="X">Regular Gasoline</option>
+                          <option value="Z">Premium Gasoline</option>
+                          <option value="E">Ethanol (E85)</option>
+                          <option value="D">Diesel</option>
+                          <option value="N">Natural Gas</option>
                         </select>
-                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none w-5 h-5" />
-                      </div>
-                    </InputGroup>
-                  </motion.div>
+                      </motion.div>
 
-                  <div className="grid grid-cols-1 gap-5 w-full">
-                    <motion.div
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <InputGroup label="Number of Cylinders" icon={Settings}>
-                        <input
-                          name="cylinders"
-                          type="number"
-                          min="3"
-                          max="16"
-                          placeholder="e.g. 7"
-                          required
-                          value={form.cylinders}
-                          onChange={handleChange}
-                          className={inputClasses}
-                        />
-                      </InputGroup>
-                    </motion.div>
+                      {/* ===== CYLINDERS INPUT ===== */}
+                      <motion.div
+                        className="space-y-3"
+                        initial={{ opacity: 0, x: -30 }} // Start invisible, 30px left
+                        animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
+                        transition={{ delay: 0.25 }} // 250ms delay (staggered after fuel type)
+                      >
+                        <label className="flex items-center gap-3 text-md font-bold text-slate-700">
+                          {/* text-slate-700: Dark gray color (#334155) */}
+                          
+                          <Settings className="w-6 h-6" /> {/* Settings icon, 24px */}
+                          Number of Cylinders
+                        </label>
 
-                    <motion.div
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <InputGroup label="Engine Size (Liters)" icon={Gauge}>
                         <input
-                          name="engine_size"
-                          type="number"
-                          step="0.1"
-                          min="0.9"
-                          max="8.4"
-                          placeholder="e.g. 1.0"
-                          required
-                          value={form.engine_size}
-                          onChange={handleChange}
-                          className={inputClasses}
+                          name="cylinders" // Form field name
+                          value={form.cylinders} // Controlled input value
+                          onChange={handleChange} // Calls handleChange on input
+                          required // HTML5 validation
+                          type="number" // Number input type (shows numeric keyboard on mobile)
+                          min="3" // Minimum value constraint
+                          max="16" // Maximum value constraint
+                          placeholder="e.g., 7" // Hint text when empty
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                          // w-full: Full width of parent
+                          // p-5: Padding of 1.25rem (20px) on all sides
+                          // bg-gray-50: Very light gray background (#f9fafb)
+                          // border border-gray-300: Gray border 1px solid (#d1d5db)
+                          // rounded-xl: Border radius of 0.75rem (12px)
+                          // text-slate-800: Dark gray text (#1e293b)
+                          // text-lg: Font size of 1.125rem (18px)
+                          // placeholder-gray-400: Gray placeholder text (#9ca3af)
+                          // focus:ring-cyan-500/50: Cyan ring at 50% opacity on focus
+                          // focus:border-cyan-500: Cyan border on focus (#06b6d4)
+                          // hover:border-cyan-400: Cyan border on hover
                         />
-                      </InputGroup>
-                    </motion.div>
+                      </motion.div>
+
+                      {/* ===== ENGINE SIZE INPUT ===== */}
+                      <motion.div
+                        className="space-y-3"
+                        initial={{ opacity: 0, x: -30 }} // Start invisible, 30px left
+                        animate={{ opacity: 1, x: 0 }} // Fade in and slide to position
+                        transition={{ delay: 0.35 }} // 350ms delay (staggered after cylinders)
+                      >
+                        <label className="flex items-center gap-3 text-lg font-bold text-slate-700">
+                          <Gauge className="w-6 h-6" /> {/* Gauge icon, 24px */}
+                          Engine Size (Liters)
+                        </label>
+
+                        <input
+                          name="engine_size" // Form field name
+                          value={form.engine_size} // Controlled input value
+                          onChange={handleChange} // Calls handleChange on input
+                          required // HTML5 validation
+                          type="number" // Number input type
+                          step="0.1" // Allows decimal values in increments of 0.1
+                          min="0.9" // Minimum value
+                          max="8.4" // Maximum value
+                          placeholder="e.g. 1.0 " // Hint text
+                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                        />
+                      </motion.div>
+
+                      {/* ===== SUBMIT BUTTON ===== */}
+                      <motion.button
+                        type="submit" // Submit button type
+                        whileHover={{
+                          scale: 1.03, // Grow to 103% on hover
+                          boxShadow: "0 25px 50px rgba(15, 141, 99, 0.6)" // Large emerald shadow
+                        }}
+                        whileTap={{ scale: 0.90 }} // Shrink to 97% when clicked
+                        disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
+                        // Disabled when any required field is empty
+                           // Uses logical NOT (!) to check for empty strings 
+                        
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-7 rounded-2xl font-black text-2xl shadow-2xl transition-all flex items-center justify-center gap-4 mt-12 group disabled:opacity-50 disabled:cursor-not-allowed"
+                        // w-full: Full width
+                        // relative: Positioning context for shine effect
+                        // overflow-hidden: Clips shine effect within button
+                        // bg-gradient-to-r: Horizontal gradient
+                        // from-green-600 via-emerald-500 to-teal-500: Green gradient colors
+                        // text-white: White text
+                        // py-7: Vertical padding of 1.75rem (28px)
+                        // rounded-2xl: Border radius of 1rem (16px)
+                        // font-black: Font weight of 900 (heaviest)
+                        // text-2xl: Font size of 1.5rem (24px)
+                        // shadow-2xl: Extra large shadow
+                        // transition-all: Smooth transitions
+                        // flex items-center justify-center: Centered flex layout
+                        // gap-4: Gap of 1rem (16px) between flex children
+                        // mt-10: Top margin of 2.5rem (40px) - EXTRA spacing from inputs
+                        // group: Enables group-hover utilities
+                        // disabled:opacity-50: 50% opacity when disabled
+                        // disabled:cursor-not-allowed: "Not allowed" cursor when disabled
+                      >
+                        {/* Animated shine effect on hover */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
+                        {/* absolute inset-0: Covers entire button
+                            bg-gradient-to-r from-transparent via-white/30 to-transparent: White stripe
+                            translate-x-[-200%]: Start 200% left (off-screen)
+                            group-hover:translate-x-[200%]: Move 200% right on hover (across button)
+                            transition-transform duration-1000: 1 second smooth slide */}
+
+                        <motion.div 
+                          animate={{ scale: [1, 1.15, 1] }} // Pulse animation
+                          transition={{ 
+                            duration: 1.5, // 1.5 second cycle
+                            repeat: Infinity // Loop forever
+                          }}
+                        >
+                          <Zap className="w-8 h-8 relative z-10" /> 
+                          {/* Zap icon, 32px
+                              relative z-10: Above shine effect */}
+                        </motion.div>
+
+                        <span className="relative z-10">Calculate Emission</span>
+                        {/* relative z-10: Above shine effect */}
+                        
+                        <TrendingUp className="w-8 h-8 relative z-10" />
+                        {/* TrendingUp icon, 32px, above shine effect */}
+                      </motion.button>
+                    </form>
                   </div>
 
-                  <motion.button
-                    type="submit"
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    whileHover={{
-                      scale: 1.02,
-                      boxShadow: "0 10px 30px -10px rgba(52, 211, 153, 0.5)",
+                  {/* ===== FOOTER INFO SECTION ===== */}
+                  <div className="mt-12 pt-8 border-t-2 border-gray-200 px-8">
+                    {/* mt-12: Top margin of 3rem (48px)
+                        pt-8: Top padding of 2rem (32px)
+                        border-t-2: Top border 2px solid
+                        border-gray-200: Light gray border (#e5e7eb)
+                        px-8: Horizontal padding of 2rem (32px) - KEEPS footer within borders */}
+                    
+                    <div className="flex items-center justify-between text-sl text-slate-600">
+                      {/* flex items-center justify-between: Flex layout with space between
+                          text-sm: Font size of 0.875rem (14px)
+                          text-slate-600: Medium gray text */}
+                      
+                      {/* Left info badge */}
+                      <div className="flex items-center gap-3 bg-green-50 px-4 py-2 rounded-full">
+                        {/* flex items-center gap-3: Horizontal flex with 12px gap
+                            bg-green-50: Very light green background (#f0fdf4)
+                            px-4: Horizontal padding of 1rem (16px)
+                            py-2: Vertical padding of 0.5rem (8px)
+                            rounded-full: Fully rounded (pill shape) */}
+                        
+                        <motion.div 
+                          animate={{ scale: [1, 1.3, 1] }} // Pulse animation
+                          transition={{ 
+                            duration: 2, // 2 second cycle
+                            repeat: Infinity // Loop forever
+                          }}
+                        >
+                          <span className="w-5 h-5 bg-green-600 rounded-full block" />
+                          {/* w-3 h-3: 12px x 12px
+                              bg-green-600: Emerald green dot (#16a34a)
+                              rounded-full: Circular
+                              block: Block display for dimensions */}
+                        </motion.div>
+                        
+                        <span className="font-semibold">AI-Powered Prediction</span>
+                        <p className="text-xs text-slate-400">Data provided by EPA & Transport Canada standards.</p>
+                   
+                        {/* font-semibold: Font weight of 600 */}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ===== DECORATIVE CORNER ELEMENTS ===== */}
+                  {/* Top-left corner */}
+                  <motion.div
+                    className="absolute top-6 left-6 w-16 h-16 border-l-4 border-t-4 border-emerald-700/50 rounded-tl-2xl"
+                    // absolute top-6 left-6: Positioned 24px from top and left
+                    // w-16 h-16: 64px x 64px
+                    // border-l-4: Left border 4px solid
+                    // border-t-4: Top border 4px solid
+                    // border-emerald-500/50: Emerald border at
+                    // rounded-tl-2xl: Rounded top-left corner (16px)
+                    initial={{ scale: 0 }} // Start scaled down
+                    animate={{ scale: 1 }} // Scale up to normal size
+                    transition={{ 
+                      type: "spring", // Spring animation
+                      stiffness: 120, // Moderate stiffness
+                      delay: 0.5 // 500ms delay
                     }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={
-                      !form.fuel_type || !form.cylinders || !form.engine_size
-                    }
-                    className="w-full mt-4 py-3.5 rounded-full bg-[#6EE7B7] hover:bg-[#34D399] text-white font-bold font-heading text-lg shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed transition-all relative overflow-hidden"
-                  >
-                    <Zap className="w-6 h-6 fill-white stroke-white relative z-10" />
-                    <span className="relative z-10 text-white drop-shadow-sm">Calculate Emission</span>
-                    <TrendingUp className="w-5 h-5 text-white relative z-10 ml-1" />
-                  </motion.button>
-                </form>
-              </div>
+                  />
 
-              {/* No more blurred background blobs, kept it clean white as requested */}
-            </div>
-
-            {/* Footer */}
-            <div className="mt-4 flex items-center justify-start gap-3 w-full max-w-[95%] mx-auto pl-4">
-              <div className="w-8 h-8 rounded-full bg-[#10B981] flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                 <div className="w-3 h-3 bg-white rounded-full" />
+                  {/* Bottom-right corner */}
+                  <motion.div
+                    className="absolute bottom-6 right-6 w-16 h-16 border-r-4 border-b-4 border-teal-700/50 rounded-br-2xl"
+                    // absolute bottom-6 right-6: Positioned 24px from bottom and right
+                    // border-r-4: Right border 4px solid
+                    // border-b-4: Bottom border 4px solid
+                    // border-teal-500/50: Teal border at 50% opacity
+                    // rounded-br-2xl: Rounded bottom-right corner (16px)
+                    // corrected the errors here
+                    initial={{ scale: 0 }} // Start scaled down
+                    animate={{ scale: 1 }} // Scale up to normal size
+                    transition={{ 
+                      type: "spring", // Spring animation
+                      stiffness: 120, // Moderate stiffness
+                      delay: 0.6 // 600ms delay
+                    }}
+                  />
+                </div>
               </div>
-              <div className="text-left">
-                <span className="font-bold text-gray-700 text-sm block">AI-Powered Prediction</span>
-                <span className="text-[10px] text-gray-400 font-medium">Data provided by EPA & Transport Canada standards.</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
