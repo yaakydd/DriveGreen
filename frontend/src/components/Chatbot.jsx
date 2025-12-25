@@ -1,13 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
-  MessageCircle,
   X,
   Send,
-  Sparkles,
   Cpu,
-  Leaf,
-  Zap,
-  ChevronRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
