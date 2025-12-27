@@ -380,7 +380,6 @@ const AnimationCard = ({ prediction, onReset }) => {
           </div>
         </div>
       </motion.div>
-    </>
   );
 };
 
