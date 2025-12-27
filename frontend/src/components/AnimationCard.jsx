@@ -66,7 +66,7 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
   );
 };
 
-const AnimationCard = ({ prediction, onReset }) => {
+const AnimationCard = ({ prediction, formData, onReset }) => {
   const { predicted_co2_emissions, interpretation, category } = prediction;
   
   // ===== HELPER FUNCTIONS =====
@@ -131,145 +131,279 @@ const AnimationCard = ({ prediction, onReset }) => {
 
   const activeColor = getCategoryHex();
 
-  // ===== PDF GENERATION (Complete Logic from First Code) =====
+  // ===== PREMIUM PDF GENERATION =====
   const generateAndSharePDF = () => {
     try {
-      const toastId = toast.loading("Generating PDF...");
+      const toastId = toast.loading("Generating Premium Report...");
       const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 20;
+
+      // Colors
+      const activeColorHex = getCategoryHex();
       const [r, g, b] = getCategoryColor();
+      const darkColor = "#1e293b"; // Slate 800
+      const lightGray = "#f8fafc"; // Slate 50
+      const textDark = "#0f172a"; // Slate 900
+      const textGray = "#64748b"; // Slate 500
 
-      // ===== HEADER SECTION =====
-      doc.setFillColor(71, 85, 105);
-      doc.rect(0, 0, 210, 40, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont(undefined, 'bold');
-      doc.text("CO₂ Emissions Report", 105, 20, { align: 'center' });
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'normal');
-      doc.text("Vehicle Carbon Footprint Analysis", 105, 30, { align: 'center' });
+      // Helper for centered text
+      const centerText = (text, y, size = 12, style = "normal", color = textDark) => {
+        doc.setFontSize(size);
+        doc.setFont("helvetica", style);
+        doc.setTextColor(color);
+        doc.text(text, pageWidth / 2, y, { align: "center" });
+      };
 
-      // ===== DATE =====
-      const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      doc.setTextColor(100, 100, 100);
-      doc.setFontSize(10);
-      doc.text(`Generated: ${date}`, 105, 50, { align: 'center' });
+      // Helper to sanitize text for jsPDF (removes unsupported chars)
+      const sanitizeText = (str) => {
+        if (!str) return "";
+        return str
+          .replace(/₂/g, "2") // Replace subscript 2
+          .replace(/[^\x20-\x7E]/g, ""); // Remove non-printable ASCII
+      };
 
-      // ===== MAIN RESULT BOX =====
-      doc.setFillColor(r, g, b, 0.1);
-      doc.setDrawColor(r, g, b);
-      doc.setLineWidth(2);
-      doc.roundedRect(20, 60, 170, 50, 5, 5, 'FD');
-      doc.setTextColor(r, g, b);
-      doc.setFontSize(48);
-      doc.setFont(undefined, 'bold');
-      doc.text(`${predicted_co2_emissions}`, 105, 90, { align: 'center' });
-      doc.setFontSize(14);
-      doc.setTextColor(100, 100, 100);
-      doc.text("g/km", 105, 100, { align: 'center' });
+      // ===== HEADER =====
+      // Background header stripe
+      doc.setFillColor(lightGray);
+      doc.rect(0, 0, pageWidth, 60, "F");
 
-      // ===== CATEGORY BADGE =====
-      doc.setFillColor(r, g, b);
-      doc.roundedRect(70, 115, 70, 12, 3, 3, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text(category, 105, 123, { align: 'center' });
-
-      // ===== INTERPRETATION SECTION =====
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.text("Environmental Impact Assessment:", 20, 145);
-      doc.setFontSize(11);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(60, 60, 60);
-      const splitText = doc.splitTextToSize(interpretation, 170);
-      doc.text(splitText, 20, 155);
-
-      // ===== RECOMMENDATIONS SECTION =====
-      doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text("Recommendations:", 20, 190);
+      // App Logo / Branding
+      doc.setFontSize(22);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(16, 185, 129); // Emerald 500
+      doc.text("DriveGreen", margin, 25);
       
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(60, 60, 60);
-      
-      const recommendations = getRecommendations(category);
-      let yPosition = 200;
-      
-      recommendations.forEach((rec, index) => {
-        const recText = doc.splitTextToSize(`${index + 1}. ${rec}`, 165);
-        doc.text(recText, 25, yPosition);
-        yPosition += recText.length * 6;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(textGray);
+      doc.text("AI-Powered Carbon Footprint Analysis", margin, 32);
+
+      // Date Top Right
+      const date = new Date().toLocaleDateString("en-US", { 
+        year: "numeric", month: "long", day: "numeric" 
       });
+      doc.setFontSize(10);
+      doc.text(date, pageWidth - margin, 25, { align: "right" });
 
-      // ===== COMPARISON CHART =====
+      // Title
+      centerText("Vehicle Emissions Report", 50, 24, "bold", textDark);
+
+      // ===== MAIN SCORE CARD =====
+      const cardTop = 75;
+      const cardHeight = 55;
+      
+      // Card Background (Light Color Tint)
+      doc.setFillColor(r, g, b); // Active classification color
+      doc.setDrawColor(r, g, b); // Border color
+      doc.roundedRect(margin, cardTop, pageWidth - (margin * 2), cardHeight, 3, 3, "S"); // Border
+      doc.setFillColor(255, 255, 255);
+      doc.roundedRect(margin + 0.5, cardTop + 0.5, pageWidth - (margin * 2) - 1, cardHeight - 1, 3, 3, "F"); // White Fill
+
+      // Decorative left strip
+      doc.setFillColor(r, g, b);
+      doc.rect(margin, cardTop, 2, cardHeight, "F"); // Small strip
+
+      // Score Value
+      doc.setFontSize(42);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(r, g, b);
+      doc.text(`${predicted_co2_emissions}`, margin + 20, cardTop + 25);
+
+      // Score Unit
       doc.setFontSize(14);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text("Emission Comparison:", 20, yPosition + 5);
+      doc.setTextColor(textGray);
+      doc.text("g/km CO2", margin + 20, cardTop + 40); // Fixed CO2 symbol
+
+      // Category Badge (Right side of card)
+      doc.setFillColor(r, g, b);
+      doc.roundedRect(pageWidth - margin - 60, cardTop + 15, 40, 10, 2, 2, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.text(sanitizeText(category).toUpperCase(), pageWidth - margin - 40, cardTop + 21.5, { align: "center" });
+
+      // Short status text
+      doc.setTextColor(textGray);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(category === "Excellent" || category === "Good" 
+        ? "Your vehicle performs well!" 
+        : "Optimization recommended.", 
+        pageWidth - margin - 20, cardTop + 35, { align: "right" }
+      );
+
+      // ===== INTERPRETATION =====
+      let cursorY = cardTop + cardHeight + 15;
       
-      yPosition += 15;
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'normal');
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(textDark);
+      doc.text("Analysis Result", margin, cursorY);
       
-      const comparisons = [
-        { label: "Excellent (<120 g/km)", bar: category === "Excellent", color: [16, 185, 129] },
-        { label: "Good (120-160 g/km)", bar: category === "Good", color: [34, 197, 94] },
-        { label: "Average (160-200 g/km)", bar: category === "Average", color: [245, 158, 11] },
-        { label: "High (200-250 g/km)", bar: category === "High", color: [239, 68, 68] },
-        { label: "Very High (>250 g/km)", bar: category === "Very High", color: [220, 38, 38] }
+      cursorY += 8;
+      doc.setFontSize(10); 
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#334155"); 
+      
+      // Clean interpretation text
+      const cleanInterpretation = sanitizeText(interpretation);
+      const splitInterpretation = doc.splitTextToSize(cleanInterpretation, pageWidth - (margin * 2));
+      doc.text(splitInterpretation, margin, cursorY);
+      cursorY += (splitInterpretation.length * 5) + 15;
+
+      // ===== VEHICLE SPECIFICATIONS (NEW SECTION) =====
+      const getFuelLabel = (code) => {
+        const map = {
+          "X": "Regular Gasoline",
+          "Z": "Premium Gasoline",
+          "E": "Ethanol (E85)",
+          "D": "Diesel",
+          "N": "Natural Gas"
+        };
+        return map[code] || "Unknown";
+      };
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(textDark);
+      doc.text("Vehicle Specifications", margin, cursorY);
+      cursorY += 8;
+
+      // Check if formData is available
+      const fuelType = formData?.fuel_type ? getFuelLabel(formData.fuel_type) : "N/A";
+      const engineSize = formData?.engine_size ? `${formData.engine_size} Liters` : "N/A";
+      const cylinders = formData?.cylinders ? `${formData.cylinders} Cylinders` : "N/A";
+
+      const specs = [
+        { label: "Fuel Type", value: fuelType },
+        { label: "Engine Size", value: engineSize },
+        { label: "Cylinders", value: cylinders }
       ];
 
-      comparisons.forEach((comp) => {
-        doc.setTextColor(60, 60, 60);
-        doc.text(comp.label, 25, yPosition);
+      doc.setFontSize(10);
+      const colWidth = (pageWidth - (margin * 2)) / 3;
+      
+      specs.forEach((spec, i) => {
+        const xPos = margin + (i * colWidth);
         
-        if (comp.bar) {
-          doc.setFillColor(...comp.color);
-          doc.rect(100, yPosition - 3, 60, 4, 'F');
-          doc.setFontSize(8);
-          doc.setTextColor(...comp.color);
-          doc.text("← YOUR VEHICLE", 165, yPosition);
-          doc.setFontSize(9);
-        } else {
-          doc.setFillColor(220, 220, 220);
-          doc.rect(100, yPosition - 3, 30, 4, 'F');
-        }
-        yPosition += 8;
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(textGray);
+        doc.text(spec.label, xPos, cursorY);
+        
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(textDark);
+        doc.text(sanitizeText(spec.value), xPos, cursorY + 5);
       });
 
-      // ===== FOOTER =====
-      doc.setFillColor(71, 85, 105);
-      doc.rect(0, 280, 210, 17, 'F');
+      cursorY += 20;
+
+      // ===== COMPARISON CHART =====
+      if (cursorY > pageHeight - 80) {
+        doc.addPage();
+        cursorY = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(textDark);
+      doc.text("Emission Benchmarks", margin, cursorY);
+      cursorY += 10;
+
+      const comparisons = [
+        { label: "Excellent (<120)", range: [0, 120], color: [16, 185, 129] },
+        { label: "Good (120-160)", range: [120, 160], color: [34, 197, 94] },
+        { label: "Average (160-200)", range: [160, 200], color: [245, 158, 11] },
+        { label: "High (200-250)", range: [200, 250], color: [239, 68, 68] },
+        { label: "Very High (>250)", range: [250, 350], color: [220, 38, 38] }
+      ];
+
+      const chartWidth = 110; 
+      const chartStartX = margin + 35; 
       
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(9);
-      doc.text("CO₂ Emissions Predictor | Helping You Track Your Carbon Footprint", 105, 290, { align: 'center' });
+      comparisons.forEach((comp, i) => {
+         const isActive = category.startsWith(comp.label.split(" ")[0]);
+         
+         doc.setFontSize(8); 
+         doc.setFont("helvetica", isActive ? "bold" : "normal");
+         doc.setTextColor(isActive ? textDark : textGray);
+         doc.text(comp.label, margin, cursorY);
+
+         doc.setFillColor(241, 245, 249); 
+         doc.roundedRect(chartStartX, cursorY - 3, chartWidth, 3, 1, 1, "F"); 
+
+         const barColor = isActive ? comp.color : [203, 213, 225];
+         doc.setFillColor(...barColor);
+         
+         const widthPercent = ((i + 1) * 20); 
+         const barWidth = (chartWidth * widthPercent) / 100;
+         doc.roundedRect(chartStartX, cursorY - 3, barWidth, 3, 1, 1, "F");
+
+         if (isActive) {
+            doc.setFillColor(...comp.color);
+            doc.circle(chartStartX + barWidth, cursorY - 1.5, 2, "F");
+            doc.setFontSize(7);
+            doc.setTextColor(...comp.color);
+            doc.text("YOU", chartStartX + barWidth + 4, cursorY);
+         }
+
+         cursorY += 10; 
+      });
+
+      cursorY += 10;
+
+      // ===== RECOMMENDATIONS =====
+      if (cursorY > pageHeight - 60) {
+        doc.addPage();
+        cursorY = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(textDark);
+      doc.text("Recommendations", margin, cursorY);
+      cursorY += 8;
+
+      const recommendations = getRecommendations(category);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor("#334155");
+
+      recommendations.forEach((rec) => {
+        doc.setFillColor(r, g, b);
+        doc.circle(margin + 2, cursorY - 1, 1, "F");
+        doc.text(sanitizeText(rec), margin + 8, cursorY); // Clean each recommendation
+        cursorY += 6; 
+      });
+      
+      // ===== FOOTER =====
+      const footerY = pageHeight - 20;
+      doc.setDrawColor(226, 232, 240); 
+      doc.line(margin, footerY - 10, pageWidth - margin, footerY - 10);
+      
+      doc.setFontSize(8);
+      doc.setTextColor(textGray);
+      doc.text("Generated by DriveGreen AI", margin, footerY);
+      doc.text("www.drivegreen.com", pageWidth - margin, footerY, { align: "right" });
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      const filename = `co2-emission-report-${timestamp}.pdf`;
-      
-      doc.save(filename);
+      doc.save(`DriveGreen_Report_${timestamp}.pdf`);
 
       toast.dismiss(toastId);
-      toast.success("PDF downloaded successfully! Check your downloads folder.", {
+      toast.success("Premium Report Downloaded!", {
         icon: "📄",
-        duration: 4000,
         style: {
-          background: "#10b981",
-          color: "#fff"
-        }
+          borderRadius: '10px',
+          background: '#333',
+          color: '#fff',
+        },
       });
 
     } catch (error) {
       console.error("PDF generation error:", error);
-      toast.error("Failed to generate PDF. Please try again.", {
-        icon: "❌"
-      });
+      toast.dismiss();
+      toast.error("Failed to generate PDF");
     }
   };
 
@@ -383,32 +517,5 @@ const AnimationCard = ({ prediction, onReset }) => {
   );
 };
 
-// Demo wrapper
-export default function App() {
-  const [showResults, setShowResults] = React.useState(true);
-  
-  const samplePrediction = {
-    predicted_co2_emissions: 185,
-    category: "Average",
-    interpretation: "Your vehicle's emissions are in the average range. While not excessive, there's room for improvement through better driving habits and regular maintenance."
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-8 flex items-center justify-center">
-      {showResults && (
-        <AnimationCard 
-          prediction={samplePrediction}
-          onReset={() => setShowResults(false)}
-        />
-      )}
-      {!showResults && (
-        <button 
-          onClick={() => setShowResults(true)}
-          className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-all"
-        >
-          Show Results Again
-        </button>
-      )}
-    </div>
-  );
-}
+// Export AnimationCard as the default component to avoid wrapper background issues.
+export default AnimationCard;
