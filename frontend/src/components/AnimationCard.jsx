@@ -6,7 +6,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 // ===== GAUGE COMPONENT =====
 const EmissionGauge = ({ value, color, max = 350 }) => {
-  const radius = 80;
+  const radius = 77;
   const stroke = 9;
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
@@ -47,7 +47,7 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
           cy={radius}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset }}
-          transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
         />
       </svg>
       {/* Center Text */}
@@ -244,7 +244,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         
         doc.setFontSize(12);
         doc.setTextColor(textGray);
-        doc.text("g/km CO2", margin + 25, cursorY + 40);
+        doc.text("g/km", margin + 25, cursorY + 40);
 
         // Badge
         doc.setFillColor(r, g, b);
@@ -540,5 +540,4 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
   );
 };
 
-// Export AnimationCard as the default component to avoid wrapper background issues.
 export default AnimationCard;
