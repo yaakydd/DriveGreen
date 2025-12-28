@@ -131,344 +131,296 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const activeColor = getCategoryHex();
 
-  // ===== PREMIUM PDF GENERATION =====
-  // ===== PREMIUM PDF GENERATION =====
+  // ===== PREMIUM PDF GENERATION (REVERTED & REFINED) =====
   const generateAndSharePDF = () => {
     try {
-      const toastId = toast.loading("Generating Premium Report...");
+      const toastId = toast.loading("Generating Report...");
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
       const margin = 20;
 
-      // Theme Colors
+      // --- THEME ---
+      // Original Dark/Green Theme
       const themeColors = {
-        bg: [2, 6, 23],        // #020617 (Deepest Night)
-        cardBg: [15, 23, 42],  // #0f172a (Slate 900)
-        accent: [16, 185, 129],// #10b981 (Emerald 500) - Primary
-        accentLight: [52, 211, 153], // #34d399 (Emerald 400)
-        text: [248, 250, 252], // #f8fafc (Slate 50)
-        textDim: [148, 163, 184] // #94a3b8 (Slate 400)
+        bg: [2, 6, 23],        // #020617
+        cardBg: [15, 23, 42],  // #0f172a
+        accent: [16, 185, 129],// #10b981
+        text: [248, 250, 252], // #f8fafc
+        textDim: [148, 163, 184] // #94a3b8
       };
 
       const [r, g, b] = getCategoryColor();
 
-      // Sanitizer
       const sanitizeText = (str) => {
         if (!str) return "";
         return str.replace(/₂/g, "2").replace(/[^\x20-\x7E]/g, "");
       };
 
-      // Helper: Draw Background
-      const drawDarkBackground = () => {
+      // --- COVER PAGE ---
+      const drawCover = () => {
         doc.setFillColor(...themeColors.bg);
         doc.rect(0, 0, pageWidth, pageHeight, "F");
-      };
 
-      // Helper: Draw Decorative Accents
-      const drawAccents = () => {
-        // Abstract Curves/Circles
+        // Accents
         doc.setFillColor(...themeColors.accent);
-        doc.setGState(new doc.GState({ opacity: 0.1 })); // Low opacity
-        doc.circle(0, 0, 100, "F"); // Top-left corner
-        doc.circle(pageWidth, pageHeight * 0.4, 80, "F"); // Right side
-        doc.circle(0, pageHeight, 120, "F"); // Bottom-left
-        doc.setGState(new doc.GState({ opacity: 1.0 })); // Reset opacity
+        doc.setGState(new doc.GState({ opacity: 0.1 }));
+        doc.circle(0, 0, 100, "F");
+        doc.circle(pageWidth, pageHeight * 0.4, 80, "F");
+        doc.circle(0, pageHeight, 120, "F");
+        doc.setGState(new doc.GState({ opacity: 1.0 }));
+
+        // Strip
+        doc.setFillColor(...themeColors.accent);
+        doc.rect(margin, margin, 4, pageHeight - (margin * 2), "F");
+
+        // Title
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(48);
+        doc.setTextColor(...themeColors.text);
+        doc.text("DRIVE", margin + 15, 120);
+        doc.text("GREEN", margin + 15, 140);
+
+        // Date
+        const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+        doc.setFontSize(14);
+        doc.setTextColor(...themeColors.textDim);
+        doc.text(`Generated on ${date}`, margin + 15, 180);
+
+        // Footer
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...themeColors.text);
+        doc.text("DRIVEGREEN AI", margin + 15, pageHeight - margin - 10);
       };
 
-      // ===== COVER PAGE =====
-      drawDarkBackground();
-      drawAccents();
-
-      // Decorative Strip
-      doc.setFillColor(...themeColors.accent);
-      doc.rect(margin, margin, 4, pageHeight - (margin * 2), "F");
-
-      // Title Section
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(48);
-      doc.setTextColor(...themeColors.text);
-      doc.text("CARBON", margin + 15, 120);
-      doc.text("FOOTPRINT", margin + 15, 140);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(32);
-      doc.setTextColor(...themeColors.accentLight);
-      doc.text("REPORT", margin + 15, 160);
-
-      // Date & Meta
-      const date = new Date().toLocaleDateString("en-US", { 
-        year: "numeric", month: "long", day: "numeric" 
-      });
-      doc.setFontSize(14);
-      doc.setTextColor(...themeColors.textDim);
-      doc.text(`Generated on ${date}`, margin + 15, 180);
-
-      // Bottom Branding
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...themeColors.text);
-      doc.text("DRIVEGREEN AI", margin + 15, pageHeight - margin - 10);
-      
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...themeColors.textDim);
-      doc.text("Advanced Environmental Analysis", margin + 15, pageHeight - margin - 5);
-
-      // ===== INTERNAL CONTENT PAGE =====
-      doc.addPage();
-      
-      // Header Background (Slightly Lighter Dark)
-      doc.setFillColor(...themeColors.cardBg);
-      doc.rect(0, 0, pageWidth, 40, "F");
-      
-      // Header Text
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...themeColors.accent);
-      doc.text("DriveGreen", margin, 20);
-      
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...themeColors.textDim);
-      doc.text("Carbon Footprint Report", margin, 26);
-      
-      doc.text(date, pageWidth - margin, 20, { align: "right" });
-
-      // Title
-      doc.setFontSize(22);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(23, 23, 23); // Dark Text for white body usually, but let's keep it standard PDF white theme mostly or customizing?
-      // Wait, standard PDF usually has white background for readability. 
-      // User asked for "match design of project" which is dark.
-      // Let's TRY to make the PDF content pages "Light Mode" for printability BUT heavily branded, 
-      // OR full Dark Mode. 
-      // Standard reports are white. Let's stick to WHITE body for readability but GREEN/DARK accents.
-      // Re-reading user request: "match the design of the project". Project is DARK mode.
-      // RISK: Printing dark PDFs uses tons of ink. 
-      // COMPROMISE: White background for content, but deep headers/footers.
-      // Actually, let's stick to the previous white-bg content logic but use the new colors.
-      
-      // Reset logic for white content page to be safe & readable
-      const textDark = "#0f172a"; 
-      const textGray = "#64748b";
-      
-      doc.setFontSize(24);
-      doc.setTextColor(textDark);
-      doc.text("Vehicle Emissions Analysis", pageWidth / 2, 60, { align: "center" });
-
-      // ===== MAIN SCORE CARD =====
-      const cardTop = 75;
-      const cardHeight = 60;
-      
-      // Card Container
-      // White fill, Colored Border
-      doc.setFillColor(255, 255, 255); 
-      doc.setDrawColor(r, g, b); // Border matches category color
-      doc.setLineWidth(0.5);
-      doc.roundedRect(margin, cardTop, pageWidth - (margin * 2), cardHeight, 4, 4, "FD"); // Fill and Draw
-      
-      // Thick Left Accent Strip
-      doc.setFillColor(r, g, b); // Category color
-      doc.rect(margin, cardTop, 4, cardHeight, "F"); 
-      // Note: "F" fills without border, effectively overlaying the left side of the rounded rect. 
-      // To keep rounded corners on the left, we might need a clip path or just overlay a rect. 
-      // Ideally, for a "strip" look, a simple rect on top of the left edge works fine visually.
-
-      // Score Value
-      doc.setFontSize(48);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(r, g, b); // Colored Score
-      doc.text(`${predicted_co2_emissions}`, margin + 25, cardTop + 28);
-      
-      // Score Unit
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold"); // Slightly bolder for readability
-      doc.setTextColor(textGray);
-      doc.text("g/km CO2", margin + 25, cardTop + 45);
-
-      // Category Badge (Right side of card)
-      doc.setFillColor(r, g, b);
-      doc.roundedRect(pageWidth - margin - 75, cardTop + 20, 55, 12, 6, 6, "F"); // Pill shape
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text(sanitizeText(category).toUpperCase(), pageWidth - margin - 47.5, cardTop + 28, { align: "center" });
-
-      // Short status text
-      const statusText = category === "Excellent" || category === "Good" 
-        ? "Your vehicle performs well!" 
-        : "Optimization recommended.";
+      // --- CONTENT PAGE ---
+      const drawContent = () => {
+        doc.addPage();
         
-      doc.setTextColor(textGray);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(statusText, pageWidth - margin - 47.5, cardTop + 42, { align: "center" });
+        // Header
+        doc.setFillColor(...themeColors.cardBg);
+        doc.rect(0, 0, pageWidth, 40, "F");
+        
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...themeColors.accent);
+        doc.text("DriveGreen", margin, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...themeColors.textDim);
+        doc.text("Carbon Footprint Report", margin, 26);
+        
+        const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+        doc.text(date, pageWidth - margin, 20, { align: "right" });
 
-      // ===== INTERPRETATION =====
-      let cursorY = cardTop + cardHeight + 20;
-      doc.setFontSize(16);
-      doc.setTextColor(textDark);
-      doc.setFont("helvetica", "bold");
-      doc.text("Analysis Result", margin, cursorY);
-      
-      cursorY += 10;
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor("#334155");
-      const cleanInterpretation = sanitizeText(interpretation);
-      const splitText = doc.splitTextToSize(cleanInterpretation, pageWidth - (margin * 2));
-      doc.text(splitText, margin, cursorY);
-      
-      cursorY += (splitText.length * 6) + 10;
+        // Colors for body
+        const textDark = "#0f172a"; 
+        const textGray = "#64748b";
 
-      // Specs
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(textDark);
-      doc.text("Vehicle Specifications", margin, cursorY);
-      cursorY += 10;
-      
-      const getFuelLabel = (code) => {
-        const map = {
-          "X": "Regular Gasoline",
-          "Z": "Premium Gasoline",
-          "E": "Ethanol (E85)",
-          "D": "Diesel",
-          "N": "Natural Gas"
+        // Main Title
+        doc.setFontSize(24);
+        doc.setTextColor(textDark);
+        doc.text("Carbon Footprint Report", pageWidth / 2, 60, { align: "center" });
+
+        let cursorY = 75;
+
+        // 1. SCORE CARD
+        const cardHeight = 55; // Reduced height
+        doc.setFillColor(255, 255, 255); 
+        doc.setDrawColor(r, g, b);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(margin, cursorY, pageWidth - (margin * 2), cardHeight, 4, 4, "FD");
+        
+        doc.setFillColor(r, g, b);
+        doc.rect(margin, cursorY, 4, cardHeight, "F"); 
+
+        doc.setFontSize(42); // Slightly smaller
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(r, g, b);
+        doc.text(`${predicted_co2_emissions}`, margin + 25, cursorY + 25);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(textGray);
+        doc.text("g/km CO2", margin + 25, cursorY + 40);
+
+        // Badge
+        doc.setFillColor(r, g, b);
+        doc.roundedRect(pageWidth - margin - 65, cursorY + 15, 45, 10, 5, 5, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.text(sanitizeText(category).toUpperCase(), pageWidth - margin - 42.5, cursorY + 21, { align: "center" });
+
+        doc.setTextColor(textGray);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        const statusText = category === "Excellent" || category === "Good" ? "Performing well!" : "Optimization needed.";
+        doc.text(statusText, pageWidth - margin - 42.5, cursorY + 35, { align: "center" });
+
+        cursorY += cardHeight + 15;
+
+        // 2. VEHICLE SPECS (New Grid Design) - Placed BEFORE Analysis
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(textDark);
+        doc.text("Vehicle Specifications", margin, cursorY);
+        cursorY += 8;
+
+        const getFuelLabel = (code) => {
+            const map = { "X": "Regular Gas", "Z": "Premium Gas", "E": "Ethanol", "D": "Diesel", "N": "Natural Gas" };
+            return map[code] || code;
         };
-        return map[code] || "Unknown";
-      };
+        const specs = [
+            { l: "FUEL TYPE", v: getFuelLabel(formData.fuel_type) },
+            { l: "CYLINDERS", v: formData.cylinders },
+            { l: "ENGINE SIZE", v: formData.engine_size + " L" }
+        ];
 
-      const fuel = formData?.fuel_type ? getFuelLabel(formData.fuel_type) : "N/A";
-      const engine = formData?.engine_size ? formData.engine_size + "L" : "N/A";
-      const cyl = formData?.cylinders ? formData.cylinders + " Cylinders" : "N/A";
-      
-      const specs = [
-        { l: "Fuel Type", v: fuel },
-        { l: "Engine Size", v: engine },
-        { l: "Cylinders", v: cyl }
-      ];
-      
-      specs.forEach((item, i) => {
-         const x = margin + (i * 55); // Increased spacing
-         doc.setFontSize(10);
-         doc.setTextColor("#64748b");
-         doc.text(item.l, x, cursorY);
-         doc.setFontSize(12);
-         doc.setTextColor(textDark);
-         doc.text(sanitizeText(String(item.v)), x, cursorY + 6);
-      });
-      cursorY += 25;
-
-      // ===== BENCHMARKS CHART =====
-      if (cursorY > pageHeight - 100) { doc.addPage(); cursorY = 20; }
-
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(textDark);
-      doc.text("Emission Benchmarks", margin, cursorY);
-      cursorY += 12;
-
-      const comparisons = [
-        { label: "Excellent (<120)", range: [0, 120], color: [16, 185, 129] },
-        { label: "Good (120-160)", range: [120, 160], color: [34, 197, 94] },
-        { label: "Average (160-200)", range: [160, 200], color: [245, 158, 11] },
-        { label: "High (200-250)", range: [200, 250], color: [239, 68, 68] },
-        { label: "Very High (>250)", range: [250, 350], color: [220, 38, 38] }
-      ];
-
-      const chartWidth = 110; 
-      const chartStartX = margin + 45; 
-      
-      comparisons.forEach((comp, i) => {
-         const isActive = category.startsWith(comp.label.split(" ")[0]);
-         
-         doc.setFontSize(9); 
-         doc.setFont("helvetica", isActive ? "bold" : "normal");
-         doc.setTextColor(isActive ? textDark : "#94a3b8");
-         doc.text(comp.label, margin, cursorY);
-
-         // Bar Background
-         doc.setFillColor(241, 245, 249); 
-         doc.roundedRect(chartStartX, cursorY - 3, chartWidth, 4, 1, 1, "F"); 
-
-         // Progress Bar
-         const barColor = isActive ? comp.color : [203, 213, 225];
-         doc.setFillColor(...barColor);
-         const widthPercent = ((i + 1) * 20); 
-         const barWidth = (chartWidth * widthPercent) / 100;
-         doc.roundedRect(chartStartX, cursorY - 3, barWidth, 4, 1, 1, "F");
-
-         // "YOU" Indicator
-         if (isActive) {
-            doc.setFillColor(...comp.color);
-            doc.circle(chartStartX + barWidth, cursorY - 1, 3, "F");
+        let gridX = margin;
+        const boxWidth = (pageWidth - (margin * 2) - 10) / 3; // Tight spacing
+        
+        specs.forEach((item) => {
+            doc.setFillColor(248, 250, 252); // Light gray
+            doc.roundedRect(gridX, cursorY, boxWidth, 20, 2, 2, "F");
+            
             doc.setFontSize(8);
-            doc.setTextColor(...comp.color);
-            doc.text("YOU", chartStartX + barWidth + 5, cursorY);
-         }
+            doc.setTextColor(textGray);
+            doc.text(item.l, gridX + 5, cursorY + 8);
+            
+            doc.setFontSize(11);
+            doc.setTextColor(textDark);
+            doc.setFont("helvetica", "bold");
+            doc.text(String(item.v), gridX + 5, cursorY + 16);
+            
+            gridX += boxWidth + 5;
+        });
+        cursorY += 30;
 
-         cursorY += 12; 
-      });
-
-      cursorY += 10;
-
-      // Recommendations
-      if (cursorY > pageHeight - 60) { doc.addPage(); cursorY = 20; }
-      
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(textDark);
-      doc.text("Recommendations", margin, cursorY);
-      cursorY += 10;
-
-      const recs = getRecommendations(category);
-      recs.forEach(rec => {
-        doc.setFillColor(...themeColors.accent);
-        doc.circle(margin + 2, cursorY - 2, 2, "F");
-        doc.setFontSize(11);
+        // 3. ANALYSIS RESULT
+        doc.setFontSize(14);
+        doc.setTextColor(textDark);
+        doc.setFont("helvetica", "bold");
+        doc.text("Analysis Result", margin, cursorY);
+        cursorY += 8;
+        
+        doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         doc.setTextColor("#334155");
-        doc.text(sanitizeText(rec), margin + 8, cursorY);
+        const cleanInterpretation = sanitizeText(interpretation);
+        const splitText = doc.splitTextToSize(cleanInterpretation, pageWidth - (margin * 2));
+        doc.text(splitText, margin, cursorY);
+        cursorY += (splitText.length * 5) + 15; 
+
+        // 4. RECOMMENDATIONS
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(textDark);
+        doc.text("Recommendations", margin, cursorY);
         cursorY += 8;
-      });
 
-      // Footer
-      const footerY = pageHeight - 15;
-      doc.setDrawColor(226, 232, 240);
-      doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
-      doc.setFontSize(9);
-      doc.setTextColor("#94a3b8");
-      doc.text("DriveGreen AI Analysis", margin, footerY);
+        const recs = getRecommendations(category);
+        recs.forEach(rec => {
+            doc.setFillColor(...themeColors.accent);
+            doc.circle(margin + 2, cursorY - 1.5, 1.5, "F");
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor("#334155");
+            doc.text(sanitizeText(rec), margin + 8, cursorY);
+            cursorY += 6; // Tight spacing
+        });
+        cursorY += 10;
 
-      // ===== BACK PAGE =====
-      doc.addPage();
-      drawDarkBackground();
-      drawAccents(); // Re-apply background
-      
-      // Centered Message
-      doc.setFontSize(24);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(...themeColors.text);
-      doc.text("Driving Towards", pageWidth / 2, pageHeight / 2 - 10, { align: "center" });
-      
-      doc.setTextColor(...themeColors.accent);
-      doc.text("A Greener Future", pageWidth / 2, pageHeight / 2 + 5, { align: "center" });
+        // 5. EMISSION BENCHMARKS (Placed AFTER Recommendations)
+        // Ensure it fits
+        if (cursorY + 40 > pageHeight) { 
+            // If strictly one page, we might squash it or it sits at bottom
+            // Let's rely on concise spacing above.
+        }
 
-      // URL
-      doc.setFontSize(12);
-      doc.setFont("helvetica", "normal");
-      doc.setTextColor(...themeColors.textDim);
-      doc.text("www.drivegreen.com", pageWidth / 2, pageHeight - 30, { align: "center" });
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(textDark);
+        doc.text("Emission Benchmarks", margin, cursorY);
+        cursorY += 10;
 
-      // Save
+        const ranges = [
+            { l: "Exc (<120)", w: 30, c: [16, 185, 129] },
+            { l: "Good", w: 20, c: [34, 197, 94] },
+            { l: "Avg", w: 20, c: [245, 158, 11] },
+            { l: "High", w: 15, c: [239, 68, 68] },
+            { l: "V.High", w: 15, c: [220, 38, 38] }
+        ];
+
+        let barX = margin;
+        const totalBarWidth = pageWidth - (margin * 2);
+        
+        ranges.forEach((range, i) => {
+             const segWidth = (totalBarWidth * range.w) / 100;
+             doc.setFillColor(...range.c);
+             doc.rect(barX, cursorY, segWidth, 6, "F");
+             
+             // Legend below bar
+             doc.setFontSize(7);
+             doc.setTextColor(textGray);
+             doc.text(range.l, barX, cursorY + 9);
+             
+             barX += segWidth;
+        });
+
+        // Marker
+        const percentage = Math.min(Math.max(predicted_co2_emissions, 0), 350) / 350;
+        const markerX = margin + (totalBarWidth * percentage);
+        doc.setFillColor(r, g, b);
+        doc.triangle(markerX, cursorY - 1, markerX - 3, cursorY - 5, markerX + 3, cursorY - 5, "F");
+        doc.setFontSize(8);
+        doc.setTextColor(r, g, b);
+        doc.text("YOU", markerX, cursorY - 7, { align: "center" });
+
+        // Footer
+        doc.setDrawColor(226, 232, 240);
+        doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+        doc.setFontSize(8);
+        doc.setTextColor("#94a3b8");
+        doc.text("DriveGreen AI Analysis - Drive towards a greener future.", margin, pageHeight - 10);
+      };
+
+      // --- BACK PAGE ---
+      const drawBackPage = () => {
+        doc.addPage();
+        drawCover(); // Use same style as cover
+        
+        // Overlay to change text
+        doc.setFillColor(...themeColors.bg);
+        doc.rect(margin, 100, pageWidth - (margin * 2), 200, "F"); // Mask previous text areas
+        
+        // Re-draw center text
+        doc.setFontSize(24);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...themeColors.text);
+        doc.text("Driving Towards", pageWidth / 2, pageHeight / 2 - 10, { align: "center" });
+        
+        doc.setTextColor(...themeColors.accent);
+        doc.text("A Greener Future", pageWidth / 2, pageHeight / 2 + 5, { align: "center" });
+
+        // URL
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(...themeColors.textDim);
+        doc.text("www.drivegreen.com", pageWidth / 2, pageHeight - 30, { align: "center" });
+      };
+
+      // --- EXECUTE ---
+      drawCover();
+      drawContent(); // Single page content
+      drawBackPage(); // Restored Back Page
+
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
       doc.save(`DriveGreen_Report_${timestamp}.pdf`);
       
       toast.dismiss(toastId);
-      toast.success("Report Downloaded Successfully!");
+      toast.success("Report Ready!");
 
     } catch (error) {
       console.error(error);
