@@ -1,6 +1,3 @@
-// ===== FINAL MERGED PREDICTION FORM - FIXED & COMMENTED =====
-// File: frontend/src/components/PredictionForm.jsx
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
