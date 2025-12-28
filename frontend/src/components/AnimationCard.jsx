@@ -1,13 +1,13 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FileDown, RefreshCw } from "lucide-react";
+import { FileDown, RefreshCw, FileText } from "lucide-react";
 import jsPDF from "jspdf";
 import toast, { Toaster } from "react-hot-toast";
 
 // ===== GAUGE COMPONENT =====
 const EmissionGauge = ({ value, color, max = 350 }) => {
-  const radius = 75;
-  const stroke = 10;
+  const radius = 80;
+  const stroke = 9;
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (Math.min(value, max) / max) * circumference;
@@ -16,7 +16,7 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
     <div className="relative flex items-center justify-center">
       {/* Glow Effect */}
       <div 
-        className="absolute inset-0 rounded-full blur-[40px] opacity-10"
+        className="absolute inset-0 rounded-full blur-[40px] opacity-20"
         style={{ backgroundColor: color }}
       ></div>
 
@@ -27,7 +27,7 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
       >
         {/* Background Circle */}
         <circle
-          stroke="rgba(255,255,255,0.1)" // visible on dark bg
+          stroke="rgba(255,255,255,0.1)"
           strokeWidth={stroke}
           fill="transparent"
           r={normalizedRadius}
@@ -51,16 +51,17 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
         />
       </svg>
       {/* Center Text */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+      <div className="absolute flex flex-col items-center z-20">
         <motion.span 
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.8 }}
-          className="text-2xl font-bold font-heading text-white"
+          className="text-3xl sm:text-4xl font-bold text-white drop-shadow-lg"
+          style={{ textShadow: `0 0 20px ${color}80` }}
         >
           {value}
         </motion.span>
-        <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold mt-1">g/km</span>
+        <span className="text-xs text-gray-500 uppercase tracking-wider">g/km</span>
       </div>
     </div>
   );
@@ -83,7 +84,7 @@ const AnimationCard = ({ prediction, onReset }) => {
 
   const getCategoryHex = () => {
     switch(category) {
-      case "Excellent": return "#10b981";
+      case "Excellent": return "#085e41ff";
       case "Good": return "#34d399";
       case "Average": return "#facc15";
       case "High": return "#f87171";
@@ -147,7 +148,7 @@ const AnimationCard = ({ prediction, onReset }) => {
       doc.text("CO₂ Emissions Report", 105, 20, { align: 'center' });
       doc.setFontSize(12);
       doc.setFont(undefined, 'normal');
-      doc.text("Vehicle Carbon Footprint Analysis", 105, 30, { align: 'center' });
+      doc.text("Your Vehicle Carbon's Footprint Analysis", 105, 30, { align: 'center' });
 
       // ===== DATE =====
       const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -248,7 +249,7 @@ const AnimationCard = ({ prediction, onReset }) => {
       
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(9);
-      doc.text("CO₂ Emissions Predictor | Helping You Track Your Carbon Footprint", 105, 290, { align: 'center' });
+      doc.text("DriveGreen | Helping You Track Your Vehicle's Carbon Footprint", 105, 290, { align: 'center' });
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
       const filename = `co2-emission-report-${timestamp}.pdf`;
@@ -256,8 +257,8 @@ const AnimationCard = ({ prediction, onReset }) => {
       doc.save(filename);
 
       toast.dismiss(toastId);
-      toast.success("PDF downloaded successfully! Check your downloads folder.", {
-        icon: "📄",
+      toast.success("Downloading PDF...", {
+        icon: <FileText size={20} className="text-green-500" />,
         duration: 4000,
         style: {
           background: "#10b981",
@@ -289,7 +290,7 @@ const AnimationCard = ({ prediction, onReset }) => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
   };
 
-  // ===== UI RENDER (Second Code UI) =====
+  
   return (
     <motion.div
       variants={containerVariants}
@@ -307,10 +308,10 @@ const AnimationCard = ({ prediction, onReset }) => {
         }}
       >
         
-        <div className="p-6 sm:p-8 md:p-10 flex flex-col items-center text-center relative z-10">
+        <div className="p-5 sm:p-6 md:p-10 flex flex-col items-center text-center relative z-10">
           
           {/* Header */}
-          <motion.div variants={itemVariants} className="mb-6">
+          <motion.div variants={itemVariants} className="mb-5">
             <h2 className="text-2xl font-heading font-bold text-white mb-1">
               Analysis Complete
             </h2>
@@ -321,7 +322,7 @@ const AnimationCard = ({ prediction, onReset }) => {
 
           {/* Main Visual: Gauge */}
           <motion.div 
-            className="mb-8 relative"
+            className="mb-5 relative"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -380,36 +381,7 @@ const AnimationCard = ({ prediction, onReset }) => {
           </div>
         </div>
       </motion.div>
-    </>
   );
 };
 
-// Demo wrapper
-export default function App() {
-  const [showResults, setShowResults] = React.useState(true);
-  
-  const samplePrediction = {
-    predicted_co2_emissions: 185,
-    category: "Average",
-    interpretation: "Your vehicle's emissions are in the average range. While not excessive, there's room for improvement through better driving habits and regular maintenance."
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-8 flex items-center justify-center">
-      {showResults && (
-        <AnimationCard 
-          prediction={samplePrediction}
-          onReset={() => setShowResults(false)}
-        />
-      )}
-      {!showResults && (
-        <button 
-          onClick={() => setShowResults(true)}
-          className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold hover:bg-emerald-600 transition-all"
-        >
-          Show Results Again
-        </button>
-      )}
-    </div>
-  );
-}
+export default AnimationCard;
