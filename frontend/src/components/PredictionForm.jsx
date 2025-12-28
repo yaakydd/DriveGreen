@@ -1,3 +1,6 @@
+// ===== FINAL MERGED PREDICTION FORM - FIXED & COMMENTED =====
+// File: frontend/src/components/PredictionForm.jsx
+
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -224,7 +227,6 @@ const PredictionForm = () => {
             >
               <AnimationCard 
                 prediction={prediction} // Pass prediction data as prop
-                formData={form} // Pass vehicle specs for the report
                 onReset={handleReset} // Pass reset handler as prop
               />
               {/* Imported results display component */}
@@ -448,7 +450,7 @@ const PredictionForm = () => {
                           min="0.9" // Minimum value
                           max="8.4" // Maximum value
                           placeholder="e.g. 1.0 " // Hint text
-                          className="w-full p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
+                          className="min-w-sm p-4 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-lg placeholder-gray-400 focus:ring-4 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
                         />
                       </motion.div>
 
