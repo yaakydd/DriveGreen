@@ -1,387 +1,684 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Leaf,
-  Gauge,
-  Settings,
-  Fuel,
-  Zap,
-  TrendingUp
-} from "lucide-react";
+1. What is Tailwind CSS?
+Tailwind is a utility-first CSS framework that gives you low-level utility classes to build custom designs without leaving your HTML.
 
-/* Mock components for demo */
-const Spinner = () => (
-  <div className="flex items-center justify-center">
-    <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+Key Benefits:
+
+No custom CSS needed
+
+Consistent design system
+
+Faster development
+
+Responsive by default
+
+Highly customizable
+
+2. Setup & Installation
+For React/Vite Project:
+bash
+# Create new project
+npm create vite@latest my-app -- --template react
+
+# Install Tailwind
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+Configure tailwind.config.js:
+javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      // Add custom colors, fonts, etc.
+      colors: {
+        'custom-green': '#10b981',
+        'custom-blue': '#3b82f6',
+      },
+      fontFamily: {
+        'mono': ['JetBrains Mono', 'monospace'],
+      },
+    },
+  },
+  plugins: [],
+}
+Add Tailwind to CSS (index.css or App.css):
+css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+3. Core Concepts
+Utility-First Approach
+Instead of writing custom CSS classes, you use utility classes directly in HTML:
+
+jsx
+// ❌ Traditional CSS
+<div className="card">Content</div>
+
+// ✅ Tailwind
+<div className="bg-white p-6 rounded-lg shadow-lg">Content</div>
+Breakdown of a Utility Class:
+text
+bg-emerald-500   hover:bg-emerald-600
+│    │      │      │      │    │
+│    │      │      │      │    └─── Variant (600 = darker)
+│    │      │      │      └─── Color (emerald)
+│    │      │      └─── State (hover)
+│    │      └─── Shade (500 = medium)
+│    └─── Property (background-color)
+└─── Category (background)
+4. Utility Classes Breakdown
+Layout & Box Model
+Class	What it does	Example
+flex	Display: flex	flex
+grid	Display: grid	grid grid-cols-3
+block	Display: block	block
+hidden	Display: none	hidden
+w-full	Width: 100%	w-full
+h-screen	Height: 100vh	h-screen
+p-4	Padding: 1rem	p-4
+m-4	Margin: 1rem	m-4
+gap-4	Gap between items	gap-4
+Spacing Scale (REM-based)
+text
+0    = 0px    (0rem)
+0.5  = 2px    (0.125rem)
+1    = 4px    (0.25rem)
+2    = 8px    (0.5rem)
+3    = 12px   (0.75rem)
+4    = 16px   (1rem)      ← Base unit
+5    = 20px   (1.25rem)
+6    = 24px   (1.5rem)
+8    = 32px   (2rem)
+10   = 40px   (2.5rem)
+12   = 48px   (3rem)
+16   = 64px   (4rem)
+20   = 80px   (5rem)
+24   = 96px   (6rem)
+5. Layout & Positioning
+Flexbox Made Easy
+jsx
+<div className="flex">               // display: flex
+  <div className="flex-1">Item 1</div> // flex: 1 1 0%
+  <div className="flex-none">Item 2</div> // flex: none
+</div>
+
+<div className="flex flex-col">      // flex-direction: column
+<div className="flex items-center">  // align-items: center
+<div className="flex justify-between"> // justify-content: space-between
+<div className="flex justify-center items-center"> // center both axes
+Grid System
+jsx
+<div className="grid grid-cols-3 gap-4">  // 3 equal columns
+  <div>Column 1</div>
+  <div>Column 2</div>
+  <div>Column 3</div>
+</div>
+
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+  {/* Responsive columns */}
+</div>
+Positioning
+jsx
+<div className="relative">           // position: relative
+  <div className="absolute top-0 left-0">Absolute</div>
+  <div className="fixed top-4 right-4">Fixed</div>
+  <div className="sticky top-0">Sticky</div>
+</div>
+Centering Elements
+jsx
+// Center horizontally
+<div className="mx-auto">Centered</div>
+
+// Center in both directions (flex)
+<div className="flex items-center justify-center h-screen">
+  Centered
+</div>
+
+// Center in both directions (grid)
+<div className="grid place-items-center h-screen">
+  Centered
+</div>
+6. Typography & Text
+Font Properties
+jsx
+<h1 className="text-4xl font-bold">Title</h1>
+<p className="text-lg font-medium text-gray-600">
+  Paragraph text
+</p>
+
+// Font sizes
+text-xs    // 0.75rem  (12px)
+text-sm    // 0.875rem (14px)
+text-base  // 1rem     (16px) ← Default
+text-lg    // 1.125rem (18px)
+text-xl    // 1.25rem  (20px)
+text-2xl   // 1.5rem   (24px)
+text-3xl   // 1.875rem (30px)
+text-4xl   // 2.25rem  (36px)
+text-5xl   // 3rem     (48px)
+text-6xl   // 3.75rem  (60px)
+
+// Font weights
+font-thin      // 100
+font-extralight // 200
+font-light     // 300
+font-normal    // 400 ← Default
+font-medium    // 500
+font-semibold  // 600
+font-bold      // 700
+font-extrabold // 800
+font-black     // 900
+Text Alignment & Decoration
+jsx
+<p className="text-left">Left aligned</p>
+<p className="text-center">Centered</p>
+<p className="text-right">Right aligned</p>
+
+<p className="underline">Underlined</p>
+<p className="line-through">Strikethrough</p>
+<p className="uppercase">UPPERCASE</p>
+<p className="lowercase">lowercase</p>
+<p className="capitalize">Capitalized text</p>
+
+<p className="truncate">Long text that gets truncated...</p>
+<p className="whitespace-nowrap">No wrap text</p>
+Line Height & Letter Spacing
+jsx
+<p className="leading-tight">Tight line height</p>
+<p className="leading-normal">Normal line height</p>
+<p className="leading-loose">Loose line height</p>
+
+<p className="tracking-tight">Tight letter spacing</p>
+<p className="tracking-normal">Normal letter spacing</p>
+<p className="tracking-wide">Wide letter spacing</p>
+7. Colors & Backgrounds
+Color System
+Tailwind includes a comprehensive color palette with shades from 50-950:
+
+jsx
+// Text colors
+text-gray-500    // Medium gray
+text-emerald-600 // Emerald green
+text-red-500     // Red
+text-blue-500    // Blue
+
+// Background colors
+bg-white         // White
+bg-gray-100      // Light gray
+bg-emerald-500   // Emerald
+bg-gradient-to-r // Gradient
+
+// Border colors
+border-gray-300
+border-emerald-500
+
+// Custom colors (add to tailwind.config.js)
+text-custom-green
+bg-custom-blue
+Color Opacity
+jsx
+text-black/50        // 50% opacity
+bg-white/20          // 20% opacity
+border-emerald-500/30 // 30% opacity
+Gradients
+jsx
+// Linear gradients
+<div className="bg-gradient-to-r from-emerald-500 to-cyan-500">
+<div className="bg-gradient-to-br from-purple-500 via-pink-500 to-red-500">
+
+// Gradient directions
+to-r     // left to right
+to-l     // right to left
+to-t     // bottom to top
+to-b     // top to bottom (default)
+to-tr    // bottom-left to top-right
+to-br    // top-left to bottom-right
+Background Images & Effects
+jsx
+// Background images
+<div className="bg-cover bg-center bg-no-repeat" 
+     style={{backgroundImage: 'url(/image.jpg)'}}>
+
+// Background blend modes
+<div className="bg-blend-multiply">
+
+// Background size/position
+bg-cover    // cover
+bg-contain  // contain
+bg-center   // center center
+bg-top      // top center
+bg-right    // center right
+8. Spacing & Sizing
+Padding & Margin
+jsx
+// Padding (all sides)
+p-0, p-1, p-2, p-3, p-4, p-5, p-6, p-8, p-10, p-12, p-16, p-20, p-24
+
+// Padding (specific sides)
+pt-4    // padding-top
+pr-4    // padding-right
+pb-4    // padding-bottom
+pl-4    // padding-left
+px-4    // padding-left & right
+py-4    // padding-top & bottom
+
+// Margin (same pattern as padding)
+m-4, mt-4, mr-4, mb-4, ml-4, mx-4, my-4
+
+// Negative margins
+-mt-4, -mx-4
+Width & Height
+jsx
+// Width
+w-0, w-1, w-2, w-4, w-8, w-12, w-16, w-20, w-24
+w-1/2    // 50%
+w-1/3    // 33.333%
+w-2/3    // 66.666%
+w-1/4    // 25%
+w-full   // 100%
+w-screen // 100vw
+w-min    // min-content
+w-max    // max-content
+w-fit    // fit-content
+
+// Height
+h-0, h-4, h-8, h-12, h-16, h-20, h-24
+h-1/2, h-1/3, h-2/3, h-1/4
+h-full   // 100%
+h-screen // 100vh
+
+// Min/Max dimensions
+min-h-screen // min-height: 100vh
+max-w-md     // max-width: 28rem
+max-w-xl     // max-width: 36rem
+max-w-2xl    // max-width: 42rem
+max-w-3xl    // max-width: 48rem
+max-w-4xl    // max-width: 56rem
+max-w-5xl    // max-width: 64rem
+max-w-6xl    // max-width: 72rem
+max-w-7xl    // max-width: 80rem
+9. Borders & Effects
+Borders
+jsx
+// Border width
+border, border-0, border-2, border-4, border-8
+
+// Border sides
+border-t, border-r, border-b, border-l
+border-t-2, border-r-4
+
+// Border radius
+rounded, rounded-sm, rounded-md, rounded-lg, rounded-xl, rounded-2xl, rounded-3xl
+rounded-full  // 9999px (circle)
+rounded-t-lg, rounded-br-xl // specific corners
+
+// Border styles
+border-solid  // default
+border-dashed
+border-dotted
+border-double
+border-none
+
+// Border colors
+border-gray-300
+border-emerald-500/50
+Shadows & Effects
+jsx
+// Shadows
+shadow-sm    // small
+shadow       // medium (default)
+shadow-md    // medium-dark
+shadow-lg    // large
+shadow-xl    // extra large
+shadow-2xl   // 2x large
+shadow-inner // inner shadow
+shadow-none  // no shadow
+
+// Opacity
+opacity-0, opacity-25, opacity-50, opacity-75, opacity-100
+
+// Blend modes
+mix-blend-normal, mix-blend-multiply
+
+// Filters
+blur-sm, blur, blur-md, blur-lg, blur-xl, blur-2xl, blur-3xl
+brightness-50, brightness-100, brightness-150
+contrast-50, contrast-100, contrast-150
+grayscale, sepia
+Transforms & Transitions
+jsx
+// Transforms
+scale-0, scale-50, scale-75, scale-90, scale-95, scale-100, scale-105, scale-110, scale-125, scale-150
+rotate-0, rotate-45, rotate-90, rotate-180
+translate-x-4, translate-y-4, -translate-x-4, -translate-y-4
+
+// Transitions
+transition, transition-all, transition-colors, transition-opacity, transition-transform
+duration-75, duration-100, duration-150, duration-200, duration-300, duration-500, duration-700, duration-1000
+ease-linear, ease-in, ease-out, ease-in-out
+delay-75, delay-100, delay-150, delay-200, delay-300, delay-500, delay-700, delay-1000
+10. Responsive Design
+Breakpoints
+Tailwind uses a mobile-first breakpoint system:
+
+jsx
+// Mobile first (default)
+<div className="text-sm">Small on mobile</div>
+
+// Responsive modifiers
+<div className="text-sm md:text-base lg:text-lg xl:text-xl">
+  Responsive text
+</div>
+
+<div className="w-full md:w-1/2 lg:w-1/3 xl:w-1/4">
+  Responsive width
+</div>
+
+<div className="block md:flex">
+  Stack on mobile, flex on desktop
+</div>
+Breakpoint Ranges:
+Prefix	Min-width	CSS
+sm:	640px	@media (min-width: 640px)
+md:	768px	@media (min-width: 768px)
+lg:	1024px	@media (min-width: 1024px)
+xl:	1280px	@media (min-width: 1280px)
+2xl:	1536px	@media (min-width: 1536px)
+Responsive Patterns
+jsx
+// Hide/show elements
+<div className="hidden md:block">Visible on medium+</div>
+<div className="block md:hidden">Visible only on mobile</div>
+
+// Responsive grid
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+
+// Responsive spacing
+<div className="p-4 md:p-6 lg:p-8">
+
+// Responsive typography
+<h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl">
+11. Animation & Transitions
+With Framer Motion (Recommended)
+jsx
+import { motion } from 'framer-motion';
+
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  exit={{ opacity: 0, y: -20 }}
+  transition={{ duration: 0.3 }}
+  className="bg-white p-6 rounded-lg shadow-lg"
+>
+  Animated content
+</motion.div>
+Tailwind Animation Classes
+jsx
+// Animation
+animate-spin      // infinite spin
+animate-ping      // ping effect
+animate-pulse     // pulse effect
+animate-bounce    // bounce effect
+
+// Hover effects
+hover:scale-105   // scale on hover
+hover:shadow-lg   // shadow on hover
+hover:bg-emerald-600 // color change on hover
+
+// Focus states
+focus:ring-2 focus:ring-emerald-500 focus:outline-none
+
+// Active states
+active:scale-95
+
+// Group hover
+<div className="group">
+  <div className="group-hover:opacity-100 opacity-0">
+    Visible on parent hover
+  </div>
+</div>
+12. Common Patterns
+Card Component
+jsx
+const Card = ({ children }) => (
+  <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+    {children}
   </div>
 );
-
-const AnimationCard = ({ prediction, onReset }) => (
-  <div className="bg-white rounded-2xl p-8 shadow-2xl">
-    <h2 className="text-2xl font-bold mb-4">Result: {prediction.co2_emissions} g/km</h2>
-    <button onClick={onReset} className="px-6 py-2 bg-emerald-500 text-white rounded-lg">
-      Reset
-    </button>
-  </div>
-);
-
-const DriveGreenLogo = ({ size }) => (
-  <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-    DG
-  </div>
-);
-
-const AnimatedParticles = () => null;
-const NeonCar = () => null;
-
-const API_URL = "http://127.0.0.1:8000";
-
-const PredictionForm = () => {
-  const [form, setForm] = useState({
-    fuel_type: "",
-    cylinders: "",
-    engine_size: ""
-  });
-
-  const [prediction, setPrediction] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
-
-  const handleSubmit = async () => {
-    if (!form.fuel_type || !form.cylinders || !form.engine_size) {
-      alert("Please fill all fields.");
-      return;
+Button Component
+jsx
+const Button = ({ children, primary = false }) => (
+  <button className={`
+    px-6 py-3 rounded-lg font-medium transition-all duration-200
+    ${primary 
+      ? 'bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95' 
+      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
     }
-
-    setLoading(true);
-    setPrediction(null);
-
-    try {
-      const payload = {
-        fuel_type: form.fuel_type,
-        cylinders: parseInt(form.cylinders, 10),
-        engine_size: parseFloat(form.engine_size)
-      };
-
-      const res = await fetch(`${API_URL}/api/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        throw new Error("Prediction failed");
-      }
-
-      const data = await res.json();
-      setPrediction(data);
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Prediction failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReset = () => {
-    setPrediction(null);
-    setLoading(false);
-    setForm({
-      fuel_type: "",
-      cylinders: "",
-      engine_size: ""
-    });
-  };
-
-  return (
-    <div className="h-screen overflow-hidden relative bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-mono">
-
-      {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0 bg-emerald-600/20 blur-[150px] opacity-15"
-          style={{ clipPath: "ellipse(60% 70% at 20% 50%)" }}
-        />
-        <div
-          className="absolute inset-0 bg-cyan-500/20 blur-[150px] opacity-15"
-          style={{ clipPath: "ellipse(60% 70% at 80% 50%)" }}
-        />
-      </div>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <AnimatedParticles />
-      </div>
-
-      {!loading && !prediction && <NeonCar />}
-
-      {/* MAIN CONTENT - CENTERED */}
-      <div className="relative z-10 flex items-center justify-center h-full p-4">
-            
-        <AnimatePresence mode="wait">
-          
-          {loading ? (
-            <motion.div
-              key="spinner"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.25 }}
-              className="flex items-center justify-center w-full"
-            >
-              <Spinner />
-            </motion.div>
-
-          ) : prediction ? (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -40 }}
-              transition={{ duration: 0.4 }}
-              className="w-full max-w-lg"
-            >
-              <AnimationCard 
-                prediction={prediction}
-                onReset={handleReset}
-              />
-            </motion.div>
-
-          ) : (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.75 }}
-              transition={{ duration: 0.35 }}
-              className="w-full max-w-md"
-            >
-              <div className="relative group">
-                    
-                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000" />
-
-                <div className="relative bg-white rounded-3xl shadow-2xl border border-gray-100 p-6 overflow-hidden">
-                      
-                  {/* HEADER */}
-                  <div className="flex flex-col items-center mb-4">
-                    <motion.div
-                      initial={{ scale: 0, rotate: -90 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ 
-                        type: "spring",
-                        stiffness: 150,
-                        delay: 0.1
-                      }}
-                    >
-                      <DriveGreenLogo size="large" />
-                    </motion.div>
-
-                    <h2 className="mt-3 text-xl font-extrabold text-slate-900 tracking-tight text-center">
-                      Vehicle Carbon Emissions
-                    </h2>
-                    
-                    <p className="mt-2 text-slate-600 text-sm font-medium flex items-center gap-2">
-                      <Leaf className="w-4 h-4 text-emerald-600" />
-                      Predict your car's carbon emissions
-                    </p>
-                  </div>
-
-                  {/* FORM FIELDS */}
-                  <div className="space-y-4">
-                    
-                    {/* FUEL TYPE */}
-                    <motion.div
-                      className="space-y-2"
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.15 }}
-                    >
-                      <label className="flex items-center gap-2 text-sm font-bold text-emerald-600">
-                        <Fuel className="w-5 h-5" />
-                        Fuel Type
-                      </label>
-
-                      <select
-                        name="fuel_type"
-                        value={form.fuel_type}
-                        onChange={handleChange}
-                        className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-sm focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-inner hover:border-emerald-400 cursor-pointer appearance-none"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                          backgroundRepeat: "no-repeat",
-                          backgroundPosition: "right 1rem center",
-                          backgroundSize: "1.2em"
-                        }}
-                      >
-                        <option value="">Select fuel type</option>
-                        <option value="X">Regular Gasoline</option>
-                        <option value="Z">Premium Gasoline</option>
-                        <option value="E">Ethanol (E85)</option>
-                        <option value="D">Diesel</option>
-                        <option value="N">Natural Gas</option>
-                      </select>
-                    </motion.div>
-
-                    {/* CYLINDERS */}
-                    <motion.div
-                      className="space-y-2"
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.25 }}
-                    >
-                      <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <Settings className="w-5 h-5" />
-                        Number of Cylinders
-                      </label>
-
-                      <input
-                        name="cylinders"
-                        value={form.cylinders}
-                        onChange={handleChange}
-                        type="number"
-                        min="3"
-                        max="16"
-                        placeholder="e.g., 7"
-                        className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-sm placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
-                      />
-                    </motion.div>
-
-                    {/* ENGINE SIZE */}
-                    <motion.div
-                      className="space-y-2"
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.35 }}
-                    >
-                      <label className="flex items-center gap-2 text-sm font-bold text-slate-700">
-                        <Gauge className="w-5 h-5" />
-                        Engine Size (Liters)
-                      </label>
-
-                      <input
-                        name="engine_size"
-                        value={form.engine_size}
-                        onChange={handleChange}
-                        type="number"
-                        step="0.1"
-                        min="0.9"
-                        max="8.4"
-                        placeholder="e.g., 1.0"
-                        className="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl text-slate-800 text-sm placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-inner"
-                      />
-                    </motion.div>
-
-                    {/* SUBMIT BUTTON */}
-                    <motion.button
-                      onClick={handleSubmit}
-                      whileHover={{
-                        scale: 1.02,
-                        boxShadow: "0 20px 40px rgba(15, 141, 99, 0.5)"
-                      }}
-                      whileTap={{ scale: 0.98 }}
-                      disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
-                      className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-3.5 rounded-xl font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 mt-6 group disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-
-                      <Zap className="w-5 h-5 relative z-10" />
-                      <span className="relative z-10">Calculate Emission</span>
-                      <TrendingUp className="w-5 h-5 relative z-10" />
-                    </motion.button>
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <div className="flex items-center justify-center">
-                      <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full">
-                        <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                        <span className="text-xs font-semibold text-slate-600">AI-Powered</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* DECORATIVE CORNERS */}
-                  <motion.div
-                    className="absolute top-4 left-4 w-12 h-12 border-l-4 border-t-4 border-emerald-700/50 rounded-tl-2xl"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 120, delay: 0.5 }}
-                  />
-
-                  <motion.div
-                    className="absolute bottom-4 right-4 w-12 h-12 border-r-4 border-b-4 border-teal-700/50 rounded-br-2xl"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 120, delay: 0.6 }}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+  `}>
+    {children}
+  </button>
+);
+Form Input
+jsx
+const Input = ({ label, type = "text" }) => (
+  <div className="space-y-2">
+    <label className="block text-sm font-medium text-gray-700">
+      {label}
+    </label>
+    <input
+      type={type}
+      className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 
+                focus:outline-none transition-all"
+    />
+  </div>
+);
+Modal/Overlay
+jsx
+const Modal = ({ isOpen, onClose, children }) => (
+  <div className={`fixed inset-0 z-50 ${isOpen ? 'block' : 'hidden'}`}>
+    {/* Backdrop */}
+    <div 
+      className="absolute inset-0 bg-black/50"
+      onClick={onClose}
+    />
+    
+    {/* Modal */}
+    <div className="relative z-10 flex items-center justify-center min-h-screen p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+        {children}
       </div>
     </div>
-  );
-};
+  </div>
+);
+Navigation Bar
+jsx
+const Navbar = () => (
+  <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between h-16">
+        {/* Logo */}
+        <div className="flex items-center">
+          <span className="text-xl font-bold text-emerald-600">
+            DriveGreen
+          </span>
+        </div>
+        
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center space-x-8">
+          <a href="#" className="text-gray-700 hover:text-emerald-600 transition-colors">
+            Home
+          </a>
+          <a href="#" className="text-gray-700 hover:text-emerald-600 transition-colors">
+            About
+          </a>
+          <button className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition-colors">
+            Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+);
+13. Best Practices
+1. Component Composition
+jsx
+// ❌ Don't repeat long class strings
+<div className="bg-white p-6 rounded-lg shadow-lg border border-gray-200 ...">
 
-export default PredictionForm;
+// ✅ Extract to components
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white p-6 rounded-lg shadow-lg ${className}`}>
+    {children}
+  </div>
+);
 
+// Usage
+<Card className="border border-gray-200">
+  Content
+</Card>
+2. Use @apply for Reused Styles
+css
+/* In your CSS file */
+.btn-primary {
+  @apply px-6 py-3 bg-emerald-600 text-white rounded-lg 
+         hover:bg-emerald-700 transition-colors duration-200;
+}
 
-✅ All Issues Fixed! Here are the changes:
-1. Removed Excessive Spacing
-javascript// BEFORE
-className="space-y-10 w-full max-w-md"  // 10 = 2.5rem spacing
-className="space-y-3"                    // Labels to inputs
-className="mb-10"                        // Large bottom margins
-className="pt-20 pb-20 px-6"            // Huge padding
+.btn-secondary {
+  @apply px-6 py-3 bg-gray-100 text-gray-800 rounded-lg 
+         hover:bg-gray-200 transition-colors duration-200;
+}
+3. Responsive Design Order
+jsx
+// Correct order: mobile first, then responsive
+<div className="text-sm md:text-base lg:text-lg">✅
 
-// AFTER
-className="space-y-4"                    // 4 = 1rem spacing (reduced)
-className="space-y-2"                    // Tighter label spacing
-className="mb-4"                         // Smaller margins
-className="p-6"                          // Compact padding
-2. Removed Vertical Scrolling
-javascript// BEFORE
-className="min-h-screen relative overflow-hidden..."
+// Wrong order
+<div className="lg:text-lg md:text-base text-sm">❌
+4. Keep Class Names Readable
+jsx
+// Use line breaks for complex classes
+<button className="
+  px-6 py-3 
+  bg-gradient-to-r from-emerald-500 to-cyan-500 
+  text-white font-semibold 
+  rounded-lg shadow-lg 
+  hover:shadow-xl hover:scale-105 
+  transition-all duration-300 
+  focus:outline-none focus:ring-2 focus:ring-emerald-500
+">
+  Button
+</button>
+5. Use className Libraries for Dynamic Classes
+jsx
+import clsx from 'clsx'; // or classnames
 
-// AFTER
-className="h-screen overflow-hidden relative..."
-// Changed min-h-screen to h-screen and added overflow-hidden
-3. Made All Inputs Same Width
-javascript// ALL inputs and button now have:
-className="w-full ..."
-// w-full ensures 100% width of parent container
-// Container is max-w-md for consistency
-4. Fixed Reload Issue (Form Disappears)
-javascript// The issue was that state wasn't being reset on reload
-// Now using proper AnimatePresence with unique keys:
-key="form"     // For form state
-key="spinner"  // For loading state  
-key="result"   // For result state
+const Button = ({ variant, size, disabled }) => (
+  <button className={clsx(
+    'px-4 py-2 rounded-lg transition-colors',
+    {
+      'bg-emerald-600 text-white': variant === 'primary',
+      'bg-gray-200 text-gray-800': variant === 'secondary',
+      'px-6 py-3 text-lg': size === 'large',
+      'opacity-50 cursor-not-allowed': disabled,
+    }
+  )}>
+    Button
+  </button>
+);
+6. Customize Theme
+javascript
+// tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        'brand': {
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e', // Your brand color
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+        }
+      },
+      fontFamily: {
+        'sans': ['Inter', 'system-ui', 'sans-serif'],
+      },
+      spacing: {
+        '128': '32rem',
+        '144': '36rem',
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      }
+    },
+  },
+}
+14. Cheat Sheet
+Quick Reference
+Category	Common Classes
+Layout	flex, grid, block, hidden, relative, absolute, fixed, sticky
+Flexbox	flex-col, flex-row, items-center, justify-between, gap-4
+Grid	grid-cols-3, grid-rows-2, gap-4, col-span-2
+Spacing	p-4, m-4, px-4, py-4, mt-4, mb-4
+Sizing	w-full, h-screen, max-w-md, min-h-screen
+Typography	text-lg, font-bold, text-center, text-gray-600
+Colors	bg-white, text-emerald-600, border-gray-300
+Borders	border, border-2, rounded-lg, rounded-full
+Effects	shadow-lg, shadow-inner, blur, opacity-50
+Transitions	transition-all, duration-300, ease-in-out
+Responsive	sm:, md:, lg:, xl:, 2xl:
+Common Component Templates
+jsx
+// Centered container
+<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-// This ensures proper mounting/unmounting
-5. Faster Load Times
-javascript// REMOVED heavy animations:
-- Removed pulsing animations on mount
-- Reduced animation delays from 0.5s/0.6s to 0.15s/0.25s/0.35s
-- Simplified transitions
+// Card
+<div className="bg-white rounded-xl shadow-lg p-6">
 
-// BEFORE
-transition={{ delay: 0.5 }}
-animate={{ scale: [1, 1.3, 1] }}  // Continuous pulse
+// Button
+<button className="px-6 py-3 bg-emerald-600 text-white rounded-lg 
+                   hover:bg-emerald-700 transition-colors">
 
-// AFTER  
-transition={{ delay: 0.15 }}      // Faster
-// Removed continuous animations
-6. Other Improvements
+// Input
+<input className="w-full px-4 py-3 border border-gray-300 rounded-lg 
+                  focus:ring-2 focus:ring-emerald-500 focus:outline-none">
 
-Reduced font sizes (text-2xl → text-xl, text-lg → text-sm)
-Removed <form> tag (not supported in artifacts), used button onClick instead
-Compact header/footer spacing
-Smaller icon sizes (w-6 → w-5, w-8 → w-5)
-Reduced padding throughout (py-7 → py-3.5, p-4 → p-3)
-Removed unnecessary borders/decorations
+// Badge
+<span className="inline-flex items-center px-3 py-1 rounded-full 
+                 text-sm font-medium bg-emerald-100 text-emerald-800">
 
-The form now fits perfectly on screen with no scrolling! 🎉Claude is AI and can make mistakes. Please double-check responses.
+// Alert
+<div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-800">
+Useful Commands
+bash
+# Check Tailwind classes are being detected
+npx tailwindcss -o output.css --watch
+
+# Generate config
+npx tailwindcss init --full
+
+# Purge unused styles (for production)
+npx tailwindcss -o build.css --minify
+Next Steps
+Practice: Build small components first
+
+Use DevTools: Inspect elements to see applied classes
+
+Reference: Keep Tailwind Docs open
+
+Customize: Modify tailwind.config.js for your brand
+
+Learn Patterns: Study well-designed Tailwind projects
+
+This guide covers 90% of what you'll need daily. Start with the basics, practice regularly, and soon you'll be building beautiful interfaces faster than ever! 🚀
+
