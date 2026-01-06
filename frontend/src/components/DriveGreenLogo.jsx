@@ -1,7 +1,7 @@
 import { motion} from 'framer-motion'; // Import Framer Motion for animations
 
 // Define the functional component, accepting 'size' prop with a default value of "normal"
-const DriveGreenLogo = ({ size = "normal" }) => {
+const DriveGreenLogo = ({ size = "large" }) => {
   // Define configuration objects for different logo sizes (in Tailwind utility units)
   const sizes = {
     small: { logo: 40, text: "text-2xl" }, // 40px logo width/height, text size 2xl
