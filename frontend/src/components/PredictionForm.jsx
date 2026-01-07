@@ -1,6 +1,3 @@
-// ===== FIXED PREDICTION FORM - COMPACT DESIGN =====
-// File: frontend/src/components/PredictionForm.jsx
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -11,7 +8,10 @@ import {
   Settings,
   Fuel,
   Zap,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  AlertCircle,
+  AlertTriangle
 } from "lucide-react";
 
 /* Local components */
@@ -45,7 +45,7 @@ const PredictionForm = () => {
     e.preventDefault();
 
     if (!form.fuel_type || !form.cylinders || !form.engine_size) {
-      toast.error("Please fill all fields.", { icon: "🚨" });
+      toast.error("Please fill all fields.", { icon: <AlertCircle className="w-5 h-5 text-red-500" /> });
       return;
     }
 
@@ -80,7 +80,7 @@ const PredictionForm = () => {
       setPrediction(data);
 
       toast.success("Prediction successful!", {
-        icon: "🌍",
+        icon: <Globe className="w-5 h-5 text-green-500" />,
         style: {
           background: "#10b981",
           color: "#fff"
@@ -89,7 +89,7 @@ const PredictionForm = () => {
     } catch (err) {
       console.error(err);
       toast.error(err.message || "Prediction failed. Check your inputs.", {
-        icon: "⚠️"
+        icon: <AlertTriangle className="w-5 h-5 text-red-500" />
       });
     } finally {
       setLoading(false);
@@ -302,7 +302,7 @@ const PredictionForm = () => {
                         }}
                         whileTap={{ scale: 0.95 }}
                         disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
-                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-sm md:text-base shadow-xl transition-all flex items-center justify-center gap-2 mt-3 md:mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-slate py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-sm md:text-base shadow-sm transition-all flex items-center justify-center gap-2 mt-3 md:mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {/* Animated shine effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
@@ -314,7 +314,6 @@ const PredictionForm = () => {
                             repeat: Infinity
                           }}
                         >
-                          <Zap className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
                         </motion.div>
 
                         <span className="relative z-10">Calculate Emission</span>
@@ -355,7 +354,7 @@ const PredictionForm = () => {
                   {/* Decorative corner elements */}
                   {/* Top-left corner */}
                   <motion.div
-                    className="absolute top-4 left-4 w-9 h-9 md:top-4 md:left-4 md:w-10 md:h-10 border-l-4 border-t-4 border-emerald-600/50 rounded-tl-lg"
+                    className="absolute top-4 left-4 w-14 h-14 md:top-4 md:left-4 md:w-16 md:h-16 border-l-5 border-t-5 border-emerald-400/70 rounded-tl-lg"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 
@@ -367,7 +366,7 @@ const PredictionForm = () => {
 
                   {/* Bottom-right corner */}
                   <motion.div
-                    className="absolute bottom-4 right-4 w-9 h-9 md:bottom-4 md:right-4 md:w-16 md:h-16 border-r-[4px] border-b-[-4px] border-teal-600/50 rounded-br-lg"
+                    className="absolute bottom-4 right-4 w-14 h-14 md:bottom-4 md:right-4 md:w-16 md:h-16 border-r-5 border-b-5 border-emerald-400/70 rounded-br-lg"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 
