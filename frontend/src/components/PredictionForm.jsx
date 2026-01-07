@@ -139,7 +139,7 @@ const PredictionForm = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.25 }}
-              className="flex items-center justify-center w-full max-w-2xl"
+              className="flex items-center justify-center w-full max-w-3xl"
             >
               <Spinner />
             </motion.div>
@@ -173,10 +173,10 @@ const PredictionForm = () => {
               {/* Form card wrapper */}
               <div className="relative group">
                 {/* Animated glowing border */}
-                <div className="absolute -inset-1 md:-inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-30 group-hover:opacity-60 transition duration-1000" />
+                <div className="absolute -inset-1 md:-inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition duration-1000" />
 
                 {/* Main form card */}
-                <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-gray-100 py-6 px-5 md:py-8 md:px-8 overflow-hidden">
+                <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-gray-100 py-4 px-5 md:py-6 md:px-8 overflow-hidden">
 
                   {/* Header section */}
                   <div className="flex flex-col items-center mb-4 md:mb-6">
@@ -195,14 +195,12 @@ const PredictionForm = () => {
                     <h2 className="mt-3 text-lg md:text-xl font-bold text-slate-900 tracking-tight text-center">
                       Vehicle Carbon Emissions Predictor
                     </h2>
-                  </div>
 
-                  {/* Subtitle */}
-                  <div className="flex justify-center items-center mb-4 md:mb-6">
-                    <p className="text-slate-600 text-sm md:text-base font-medium flex items-center justify-center gap-2 text-center">
-                      <Leaf className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0" />
-                      Determines your car's carbon emissions value
-                    </p>
+                    {/* Subtitle */}
+                      <p className="mt-1 md:mt-2 text-slate-600 text-sm md:text-base font-medium flex items-center gap-2">
+                        <Leaf className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0" />
+                        Determines your vehicle's carbon emissions value
+                      </p>
                   </div>
 
                   {/* Form section */}
@@ -246,12 +244,12 @@ const PredictionForm = () => {
 
                       {/* Cylinders input */}
                       <motion.div
-                        className="space-y-1 md:space-y-2"
+                        className="space-y-2 md:space-y-2"
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.25 }}
                       >
-                        <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-slate-700">
+                        <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
                           <Settings className="w-4 h-4 md:w-5 md:h-5" />
                           Number of Cylinders
                         </label>
@@ -264,19 +262,19 @@ const PredictionForm = () => {
                           type="number"
                           min="3"
                           max="16"
-                          placeholder="Enter value (3-16)"
+                          placeholder="Enter value between 3-16"
                           className="w-full p-3 md:p-3.5 bg-gray-50 border border-gray-300 rounded-lg md:rounded-xl text-slate-800 text-sm md:text-base placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-sm"
                         />
                       </motion.div>
 
                       {/* Engine size input */}
                       <motion.div
-                        className="space-y-1 md:space-y-2"
+                        className="space-y-2 md:space-y-2"
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.35 }}
                       >
-                        <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-slate-700">
+                        <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
                           <Gauge className="w-4 h-4 md:w-5 md:h-5" />
                           Engine Size (Liters)
                         </label>
@@ -290,7 +288,7 @@ const PredictionForm = () => {
                           step="0.1"
                           min="0.9"
                           max="8.4"
-                          placeholder="Enter value (0.9-8.4)"
+                          placeholder="Enter value between 0.9-8.4"
                           className="w-full p-3 md:p-3.5 bg-gray-50 border border-gray-300 rounded-lg md:rounded-xl text-slate-800 text-sm md:text-base placeholder-gray-400 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all hover:border-cyan-400 shadow-sm"
                         />
                       </motion.div>
@@ -357,7 +355,7 @@ const PredictionForm = () => {
                   {/* Decorative corner elements */}
                   {/* Top-left corner */}
                   <motion.div
-                    className="absolute top-2 left-2 w-8 h-8 md:top-3 md:left-3 md:w-10 md:h-10 border-l-2 border-t-2 border-emerald-700/50 rounded-tl-lg"
+                    className="absolute top-4 left-4 w-9 h-9 md:top-4 md:left-4 md:w-10 md:h-10 border-l-4 border-t-4 border-emerald-600/50 rounded-tl-lg"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 
@@ -369,7 +367,7 @@ const PredictionForm = () => {
 
                   {/* Bottom-right corner */}
                   <motion.div
-                    className="absolute bottom-2 right-2 w-8 h-8 md:bottom-3 md:right-3 md:w-10 md:h-10 border-r-2 border-b-2 border-teal-700/50 rounded-br-lg"
+                    className="absolute bottom-4 right-4 w-9 h-9 md:bottom-4 md:right-4 md:w-16 md:h-16 border-r-[4px] border-b-[-4px] border-teal-600/50 rounded-br-lg"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 

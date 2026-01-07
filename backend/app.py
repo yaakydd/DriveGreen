@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers.predict_router import predict_router
+from routers.prediction_router import predict_router
 
 app = FastAPI(
     title="CO2 Emissions Prediction API",
