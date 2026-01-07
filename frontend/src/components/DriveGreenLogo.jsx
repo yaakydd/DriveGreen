@@ -6,7 +6,7 @@ const DriveGreenLogo = ({ size = "large" }) => {
   const sizes = {
     small: { logo: 40, text: "text-2xl" }, // 40px logo width/height, text size 2xl
     normal: { logo: 56, text: "text-3xl" }, // 56px logo width/height, text size 3xl
-    large: { logo: 72, text: "text-4xl" }  // 72px logo width/height, text size 4xl
+    large: { logo: 72, text: "text-5xl" }  // 72px logo width/height, text size 5xl
   };
 
   // Destructure the logo size and text size based on the 'size' prop
