@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Loader2, Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 /**
  * Spinner Component (Arrow Function)
@@ -61,23 +61,13 @@ const Spinner = () => {
         }}
       >
         <p className="text-white text-xl font-semibold flex items-center justify-center gap-2">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ 
-              repeat: Infinity, 
-              duration: 1.5, 
-              ease: "linear" 
-            }}
-          >
-            <Loader2 className="w-6 h-6" />
-          </motion.div>
-          Analyzing emissions...
+          Analyzing emissions
         </p>
         <p className="text-gray-300 text-sm mt-2">
           Processing your vehicle data
         </p>
-        
-        {/* Progress Dots */}
+
+        {/* Progress Dots 
         <div className="flex justify-center gap-2 mt-4">
           {[0, 1, 2].map((i) => (
             <motion.div
@@ -96,6 +86,7 @@ const Spinner = () => {
             />
           ))}
         </div>
+        */}
       </motion.div>
     </div>
   );
