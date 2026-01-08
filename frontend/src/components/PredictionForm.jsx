@@ -49,8 +49,14 @@ const PredictionForm = () => {
       return;
     }
 
-    setLoading(true);
+    // ⭐ KEY FIX: Clear prediction first, then set loading
+    // This ensures a clean state transition
     setPrediction(null);
+    
+    // ⭐ Use setTimeout to ensure state update completes before setting loading
+    setTimeout(() => {
+      setLoading(true);
+    }, 0);
 
     try {
       const payload = {
@@ -58,6 +64,10 @@ const PredictionForm = () => {
         cylinders: parseInt(form.cylinders, 10),
         engine_size: parseFloat(form.engine_size)
       };
+
+      // ⭐ KEY FIX: Track both API call and minimum display time
+      const minimumLoadingTime = 800; // Show spinner for at least 800ms
+      const startTime = Date.now();
 
       const res = await fetch(`${API_URL}/api/predict`, {
         method: "POST",
@@ -77,6 +87,17 @@ const PredictionForm = () => {
       }
 
       const data = await res.json();
+
+      // ⭐ KEY FIX: Calculate elapsed time and wait if needed
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = minimumLoadingTime - elapsedTime;
+
+      if (remainingTime > 0) {
+        // Wait for the remaining time to ensure smooth UX
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
+      // Now set the prediction
       setPrediction(data);
 
       toast.success("Prediction successful!", {
@@ -91,14 +112,22 @@ const PredictionForm = () => {
       toast.error(err.message || "Prediction failed. Check your inputs.", {
         icon: <AlertTriangle className="w-5 h-5 text-red-500" />
       });
+      
+      // ⭐ On error, still clear loading state
+      setLoading(false);
     } finally {
+      // ⭐ KEY FIX: Only set loading to false in the finally block
       setLoading(false);
     }
   };
 
   const handleReset = () => {
+    // ⭐ KEY FIX: Reset in the correct order
+    // First clear prediction and loading state
     setPrediction(null);
     setLoading(false);
+    
+    // Then reset form
     setForm({
       fuel_type: "",
       cylinders: "",
@@ -302,7 +331,7 @@ const PredictionForm = () => {
                         }}
                         whileTap={{ scale: 0.95 }}
                         disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
-                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-slate py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-sm md:text-base shadow-sm transition-all flex items-center justify-center gap-2 mt-3 md:mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full relative overflow-hidden bg-gradient-to-r from-green-600 via-emerald-500 to-teal-500 text-white py-3 md:py-3.5 rounded-xl md:rounded-2xl font-bold text-sm md:text-base shadow-sm transition-all flex items-center justify-center gap-2 mt-3 md:mt-4 group disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {/* Animated shine effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />

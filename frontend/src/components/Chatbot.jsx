@@ -12,7 +12,7 @@ const knowledgeBase = [
   {
     keywords: ["hello", "hi", "hey"],
     response:
-      "Greetings! I'm your Eco-Copilot. Ready to optimize your journey? 🌱",
+      "Greetings! I'm your Eco-Copilot. Ready to optimize your journey? ",
   },
   {
     keywords: ["app", "do", "help"],
@@ -49,7 +49,7 @@ const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
-      text: "Systems online. How can I assist your eco-journey today?",
+      text: "System online. How can I assist your eco-journey today?",
       sender: "bot",
     },
   ]);
@@ -87,9 +87,9 @@ const Chatbot = () => {
   };
 
   const quickPrompts = [
-    "Reduce emissions",
-    "How it works",
-    "What do colors mean?",
+    "How to reduce emissions",
+    "How the site works",
+    "What do the colors mean?",
   ];
 
   return (
