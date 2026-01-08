@@ -12,15 +12,13 @@ export default {
         'lum-highlight': '#5eead4', // Teal 300
         'lum-text-light': '#f8fafc', // Slate 50
         'lum-text-dim': '#cbd5e1', // Slate 300
+        navy: "#112A46"
       },
       fontFamily: {
         heading: ['Outfit', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
       },
-      backgroundImage: {
-        'aurora-gradient': 'linear-gradient(to top right, #0f172a, #022c22)',
-      }
-    }
+    },
   },
   plugins: [],
 }

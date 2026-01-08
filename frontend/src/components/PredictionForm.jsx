@@ -7,7 +7,6 @@ import {
   Gauge,
   Settings,
   Fuel,
-  Zap,
   TrendingUp,
   Globe,
   AlertCircle,
@@ -49,11 +48,11 @@ const PredictionForm = () => {
       return;
     }
 
-    // ⭐ KEY FIX: Clear prediction first, then set loading
+    //  Reset flow: Clear prediction first, then set loading
     // This ensures a clean state transition
     setPrediction(null);
-    
-    // ⭐ Use setTimeout to ensure state update completes before setting loading
+
+    // setTimeout is used to ensure state update completes before setting loading
     setTimeout(() => {
       setLoading(true);
     }, 0);
@@ -65,7 +64,7 @@ const PredictionForm = () => {
         engine_size: parseFloat(form.engine_size)
       };
 
-      // ⭐ KEY FIX: Track both API call and minimum display time
+      // Track both API call and minimum display time
       const minimumLoadingTime = 800; // Show spinner for at least 800ms
       const startTime = Date.now();
 
@@ -88,7 +87,7 @@ const PredictionForm = () => {
 
       const data = await res.json();
 
-      // ⭐ KEY FIX: Calculate elapsed time and wait if needed
+      // Calculate elapsed time and wait if needed
       const elapsedTime = Date.now() - startTime;
       const remainingTime = minimumLoadingTime - elapsedTime;
 
@@ -97,11 +96,11 @@ const PredictionForm = () => {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
 
-      // Now set the prediction
+      // Prediction is set only after ensuring minimum loading time
       setPrediction(data);
 
       toast.success("Prediction successful!", {
-        icon: <Globe className="w-5 h-5 text-green-500" />,
+        icon: <Globe className="w-5 h-5 text-blue-700" />,
         style: {
           background: "#10b981",
           color: "#fff"
@@ -112,17 +111,17 @@ const PredictionForm = () => {
       toast.error(err.message || "Prediction failed. Check your inputs.", {
         icon: <AlertTriangle className="w-5 h-5 text-red-500" />
       });
-      
-      // ⭐ On error, still clear loading state
+
+      // When there's an error, still clear loading state
       setLoading(false);
     } finally {
-      // ⭐ KEY FIX: Only set loading to false in the finally block
+      // Only set loading to false in the finally block
       setLoading(false);
     }
   };
 
   const handleReset = () => {
-    // ⭐ KEY FIX: Reset in the correct order
+    // Reset in the correct order
     // First clear prediction and loading state
     setPrediction(null);
     setLoading(false);
@@ -327,7 +326,7 @@ const PredictionForm = () => {
                         type="submit"
                         whileHover={{
                           scale: 1.02,
-                          boxShadow: "0 20px 40px rgba(15, 141, 99, 0.5)"
+                          boxShadow: "0 20px 40px rgba(15, 141, 99, 0.7)"
                         }}
                         whileTap={{ scale: 0.95 }}
                         disabled={!form.fuel_type || !form.cylinders || !form.engine_size}
@@ -383,7 +382,7 @@ const PredictionForm = () => {
                   {/* Decorative corner elements */}
                   {/* Top-left corner */}
                   <motion.div
-                    className="absolute top-4 left-4 w-14 h-14 md:top-4 md:left-4 md:w-16 md:h-16 border-l-5 border-t-5 border-emerald-400/70 rounded-tl-lg"
+                    className="absolute top-4 left-4 w-14 h-14 md:top-4 md:left-4 md:w-16 md:h-16 border-l-5 border-t-5 border-emerald-400/70 rounded-tl-2xl"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 
@@ -395,7 +394,7 @@ const PredictionForm = () => {
 
                   {/* Bottom-right corner */}
                   <motion.div
-                    className="absolute bottom-4 right-4 w-14 h-14 md:bottom-4 md:right-4 md:w-16 md:h-16 border-r-5 border-b-5 border-emerald-400/70 rounded-br-lg"
+                    className="absolute bottom-4 right-4 w-14 h-14 md:bottom-4 md:right-4 md:w-16 md:h-16 border-r-5 border-b-5 border-emerald-400/70 rounded-br-2xl"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ 
