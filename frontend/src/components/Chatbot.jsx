@@ -104,18 +104,18 @@ const Chatbot = () => {
             className="fixed bottom-20 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-24 sm:w-[360px] h-[75vh] sm:h-[550px] bg-white border border-gray-200 rounded-3xl shadow-2xl flex flex-col z-50 overflow-hidden"
           >
             {/* Header */}
-            <div className="p-4 bg-white border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 bg-cyan-500 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
                   <Cpu size={16} className="text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="font-heading font-bold text-gray-900 text-sm tracking-wide">
+                  <h3 className="font-heading font-bold text-white-900 text-sm tracking-wide">
                     Eco-Copilot
                   </h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 mt-0.5 rounded-full bg-white animate-pulse"></span>
+                    <span className="text-[10px] mt-1 text-slate-500 font-medium uppercase tracking-wider">
                       Online
                     </span>
                   </div>
@@ -123,7 +123,7 @@ const Chatbot = () => {
               </div>
               <button
                 onClick={toggleChat}
-                className="p-2 hover:bg-gray-50 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-white/80 rounded-full transition-colors text-[#112A46] hover:text-gray-600"
               >
                 <X size={18} />
               </button>
@@ -200,7 +200,7 @@ const Chatbot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask Eco-Copilot..."
-                  className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition-all"
+                  className="flex-1 bg-gray-70 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition-all"
                 />
                 <button
                   onClick={handleSend}
