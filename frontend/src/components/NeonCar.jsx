@@ -1,13 +1,12 @@
-// ===== NEON CAR COMPONENT WITH SEAMLESS LOOP =====
+import React from "react";
+import { motion } from "framer-motion"; //Import Framer Motion for animations
+// NEON CAR COMPONENT WITH SEAMLESS LOOP 
 // This component renders an animated neon car with:
 // - Continuous horizontal movement (looped path)
-// - Vertical wave motion
+// - Vertical wave motion(Up and Down movement)
 // - Wheel spinning animation
 // - Smoke puffs emitted from exhaust pipes
 // - SVG graphic styled with neon glow effects
-
-import React from "react";
-import { motion } from "framer-motion";
 
 const NeonCar = () => {
   // Define color constants for consistent styling
@@ -17,23 +16,23 @@ const NeonCar = () => {
   const SMOKE_COLOR = "rgba(140, 140, 140, 0.9)"; // Exhaust smoke
   
   // Animation and sizing constants
-  const CAR_WIDTH = 400;                    // Width of SVG container
+  const CAR_WIDTH = 350;                    // Width of SVG container
   const DURATION = 35;                      // Total animation duration (seconds)
-  const PUFF_SIZE = 64;                     // Smoke puff size (64px)
+  // const PUFF_SIZE = 64;                     // Smoke puff size (64px)
 
   // State: Tracks all active smoke puffs currently being animated
-  const [puffs, setPuffs] = React.useState([]);
+  const [puffs, setPuffs] = useState([]);
 
-  // ===== SEAMLESS HORIZONTAL LOOP WITH VERTICAL WAVE =====
+  // SEAMLESS HORIZONTAL LOOP WITH VERTICAL WAVE 
   // useMemo: Prevents recalculating the animation sequence on every render
-  const drivePathVariants = React.useMemo(() => ({
+  const drivePathVariants = useMemo(() => ({
     animate: {
       // Horizontal movement: Travels across full viewport width
       // FIX 1: Start closer to the screen edge (-40vw instead of -150vw)
-      x: ["-40vw", "-80vw", "-20vw", "40vw", "100vw", "150vw"],
+      x: ["-30vw", "-60vw", "-20vw", "40vw", "100vw", "150vw"],
       
       // Vertical wave motion
-      y: ["-50vh", "-30vh", "-10vh", "5vh", "-15vh", "-40vh"],
+      y: ["-40vh", "-30vh", "-10vh", "5vh", "-15vh", "-40vh"],
       
       // Car tilt based on motion curve
       rotate: [-8, -3, 2, -1, -5, -10],
@@ -55,7 +54,7 @@ const NeonCar = () => {
           repeat: Infinity,
           repeatType: "loop"
         },
-        // Rotation synchronized with wave
+        // Rotation synchronized with wave (rotation is in the same real time as the wave motion)
         rotate: { 
           duration: DURATION, 
           ease: "easeInOut",
@@ -67,10 +66,10 @@ const NeonCar = () => {
     }
   }), [DURATION]);
 
-  // ===== WHEEL SPINNING ANIMATION =====
+  // WHEEL SPINNING ANIMATION 
   const wheelSpinVariants = {
     animate: {
-      rotate: 360,                     // Full rotation
+      rotate: 360, // Full rotation
       transition: { 
         duration: 0.5,
         ease: "linear",
@@ -79,9 +78,9 @@ const NeonCar = () => {
     }
   };
 
-  // ===== FUNCTION: Emit a smoke puff =====
+  //  FUNCTION: Emit a smoke puff 
   // useCallback ensures stable reference for interval
-  const emitPuff = React.useCallback(() => {
+  const emitPuff = useCallback(() => {
     const newId = Date.now() + Math.random();     // Unique ID per puff
     const offset = Math.random() > 0.5 ? 1 : 2;   // Random exhaust pipe
     const randomRotation = Math.random() * 20 - 10; // -10° to +10°
@@ -94,13 +93,13 @@ const NeonCar = () => {
     }, 4500);
   }, []);
 
-  // ===== AUTO-EMISSION INTERVAL =====
+  // AUTO-EMISSION INTERVAL 
   React.useEffect(() => {
     const interval = setInterval(emitPuff, 450); // New puff every 450ms
     return () => clearInterval(interval);        // Cleanup on unmount
   }, [emitPuff]);
 
-  // ===== SMOKE ANIMATION =====
+  // SMOKE ANIMATION 
   const puffVariants = {
     initial: { opacity: 0.95, scale: 0.3, x: 0, y: 0 },
     animate: {
@@ -125,8 +124,8 @@ const NeonCar = () => {
         className="absolute w-[280px] sm:w-[350px] md:w-[400px] h-[105px] sm:h-[130px] md:h-[150px] top-1/2 left-0 transform -translate-y-1/2 origin-center"
         style={{ marginLeft: `-${CAR_WIDTH / 2}px` }}  // Note: alignment might need slight tweak for localized centering but motion handles main position
         variants={drivePathVariants}
-        // FIX 2: Set initial position to match the new start of the animation path
-        initial={{ x: "-50vw", y: "-50vh", rotate: -8 }}
+        // Set initial position to match the new start of the animation path
+        initial={{ x: "-30vw", y: "-40vh", rotate: -8 }}
         animate="animate"
       >
 
@@ -146,7 +145,7 @@ const NeonCar = () => {
               transform: `rotate(${puff.randomRotation}deg)`
             }}
           >
-            {/* CO₂ Label */}
+            {/* CO2 Label */}
             <span
               className="text-base font-black text-white"
               style={{
@@ -159,7 +158,7 @@ const NeonCar = () => {
           </motion.div>
         ))}
 
-        {/* ===== SVG CAR GRAPHIC ===== */}
+        {/* SVG CAR GRAPHIC  */}
         <svg width="100%" height="100%" viewBox="0 0 350 100" className="drop-shadow-2xl absolute">
           <defs>
             {/* Neon glow filter */}

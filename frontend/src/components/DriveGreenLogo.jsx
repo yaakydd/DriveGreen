@@ -1,6 +1,4 @@
-import { motion} from 'framer-motion'; // Import Framer Motion for animations
-
-// Define the functional component, accepting 'size' prop with a default value of "normal"
+// Define the functional component, accepting 'size' prop with a default value of "large"
 const DriveGreenLogo = ({ size = "large" }) => {
   // Define configuration objects for different logo sizes (in Tailwind utility units)
   const sizes = {
@@ -14,12 +12,11 @@ const DriveGreenLogo = ({ size = "large" }) => {
   // Define a utility class for the primary green color
   const colorClass = "text-green-600";
 
-  // The component returns a container that centers the icon and text
+  // The component returns a container that centers the text logo
   return (
-    <div className="flex items-center gap-3">
-      {/* flex: Enable flexbox, items-center: Vertically align items, gap-3: Space between icon and text */}
-      
-      {/* ===== TEXT LOGO (The words "Drive Green") ===== */}
+    <div className="flex items-center ">
+      {/* flex: Enable flexbox, items-center: Vertically align items */} 
+      {/*  TEXT LOGO (The words "Drive Green") */}
       <div className={`flex items-center font-bold tracking-tight ${text} `}>
         {/* flex items-center: Aligns text vertically, font-bold tracking-tight: Style for the text, ${text}: Inserts the dynamic text size class (e.g., text-3xl) */}
         <span className="text-slate-800">Drive</span>
