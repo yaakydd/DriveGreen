@@ -682,3 +682,83 @@ Learn Patterns: Study well-designed Tailwind projects
 
 This guide covers 90% of what you'll need daily. Start with the basics, practice regularly, and soon you'll be building beautiful interfaces faster than ever! 🚀
 
+
+# Combine transformed numerical features + categorical into one DataFrame that is X
+X = pd.concat([transformed_numerical_features, emissions_data[[categorical_feature]]], axis=1)
+y = transformed_target_variable.copy()
+
+
+# One-Hot Encode the categorical feature
+
+encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+encoded_categorical_feature = encoder.fit_transform(X[[categorical_feature]])
+
+# Convert encoded columns into a DataFrame
+encoded_cat_df = pd.DataFrame(
+    encoded_categorical_feature,
+    columns=encoder.get_feature_names_out([categorical_feature]),
+    index=X.index
+)
+
+# Merge numerical and encoded categorical columns
+X_encoded = pd.concat([X.drop(columns=[categorical_feature]), encoded_cat_df], axis=1)
+
+
+#Spliting the data into training and testing
+
+X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
+
+
+# Scale Numerical Features
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+
+# Define Models
+
+models = {
+    'Linear Regression': LinearRegression(),
+    'KNN': KNeighborsRegressor(n_neighbors=5),
+    'Random Forest': RandomForestRegressor(n_estimators=100, random_state=42),
+    'SVM (RBF)': SVR(kernel='rbf'),
+    'Gradient Boosting': GradientBoostingRegressor(n_estimators=100, random_state=42),
+    'XGBoost': XGBRegressor(n_estimators=100, learning_rate=0.1, random_state=42)
+}
+
+# Train and evaluate models
+results = {}
+
+for name, model in models.items():
+    model.fit(X_train_scaled, y_train)
+    predicted_y = model.predict(X_test_scaled)
+
+    mae = mean_absolute_error(y_test, predicted_y)
+    rmse = mean_squared_error(y_test, predicted_y, squared=False)
+    r2 = r2_score(y_test, predicted_y)
+
+    results[name] = {'MAE': mae, 'RMSE': rmse, 'R2': r2}
+    print(f"{name} → MAE: {mae:.2f}, RMSE: {rmse:.2f}, R²: {r2:.2f}")
+
+# Convert results dictionary to a DataFrame
+results_df = pd.DataFrame(results).T.reset_index().rename(columns={'index': 'Model'})
+
+# Create folder to save models
+os.makedirs("model", exist_ok=True)
+
+# Select best model based on highest R²
+best_model_name = results_df.loc[results_df['R2'].idxmax(), 'Model']
+print("Best model:", best_model_name)
+
+# Retrieve best model object from the dictionary
+best_model = models[best_model_name]
+
+# Save model + encoder + scaler
+joblib.dump(best_model, f"model/{best_model_name.replace(' ', '_').lower()}_model.pkl")
+joblib.dump(encoder, "model/encoder.pkl")
+joblib.dump(scaler, "model/scaler.pkl")
+
+print(" Model, encoder, and scaler saved successfully!")
+
+

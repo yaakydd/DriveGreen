@@ -1,10 +1,10 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { FileDown, RefreshCw, FileText } from "lucide-react";
+import { FileDown, RefreshCw } from "lucide-react";
 import jsPDF from "jspdf";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
-// ===== GAUGE COMPONENT =====
+//  GAUGE COMPONENT
 const EmissionGauge = ({ value, color, max = 350 }) => {
   const radius = 77;
   const stroke = 9;
@@ -70,7 +70,7 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
 const AnimationCard = ({ prediction, formData, onReset }) => {
   const { predicted_co2_emissions, interpretation, category } = prediction;
   
-  // ===== HELPER FUNCTIONS =====
+  //  HELPER FUNCTIONS 
   const getCategoryColor = () => {
     switch(category) {
       case "Excellent": return [16, 185, 129];
@@ -84,7 +84,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const getCategoryHex = () => {
     switch(category) {
-      case "Excellent": return "#085e41ff";
+      case "Excellent": return "#055037ff";
       case "Good": return "#34d399";
       case "Average": return "#facc15";
       case "High": return "#f87171";
@@ -132,7 +132,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const activeColor = getCategoryHex();
 
-  // ===== PREMIUM PDF GENERATION (REVERTED & REFINED) =====
+  // PREMIUM PDF GENERATION (REVERTED & REFINED) 
   const generateAndSharePDF = () => {
     try {
       const toastId = toast.loading("Generating Report...");
@@ -141,7 +141,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
       const pageHeight = doc.internal.pageSize.height;
       const margin = 20;
 
-      // --- THEME ---
+      // THEME 
       // Original Dark/Green Theme
       const themeColors = {
         bg: [2, 6, 23],        // #020617
@@ -158,7 +158,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         return str.replace(/₂/g, "2").replace(/[^\x20-\x7E]/g, "");
       };
 
-      // --- COVER PAGE ---
+      // COVER PAGE 
       const drawCover = () => {
         doc.setFillColor(...themeColors.bg);
         doc.rect(0, 0, pageWidth, pageHeight, "F");
@@ -195,7 +195,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         doc.text("DRIVEGREEN AI", margin + 15, pageHeight - margin - 10);
       };
 
-      // --- CONTENT PAGE ---
+      // CONTENT PAGE 
       const drawContent = () => {
         doc.addPage();
         
@@ -387,7 +387,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         doc.text("DriveGreen AI Analysis - Drive towards a greener future.", margin, pageHeight - 10);
       };
 
-      // --- BACK PAGE ---
+      //  BACK PAGE 
       const drawBackPage = () => {
         doc.addPage();
         drawCover(); // Use same style as cover
@@ -412,7 +412,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         doc.text("www.drivegreen.com", pageWidth / 2, pageHeight - 30, { align: "center" });
       };
 
-      // --- EXECUTE ---
+      //  EXECUTE 
       drawCover();
       drawContent(); // Single page content
       drawBackPage(); // Restored Back Page
@@ -430,7 +430,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
     }
   };
 
-  // ===== ANIMATION VARIANTS =====
+  // ANIMATION VARIANTS 
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95, y: 20 },
     visible: { 
@@ -460,7 +460,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
         className="relative overflow-hidden rounded-[2.5rem] border border-white/10 shadow-2xl shadow-black/50"
         style={{
           background: `radial-gradient(circle at top right, ${activeColor}40, #171717 60%)`, // localized glow + dark base
-          backgroundColor: '#171717' // fallback
+          backgroundColor: '#171717' // fallback color
         }}
       >
         

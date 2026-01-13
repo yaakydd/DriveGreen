@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {  Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 
 /**
  * Spinner Component (Arrow Function)

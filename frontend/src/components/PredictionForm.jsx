@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-/* icons: all from lucide-react */
+/* icons: all imported from lucide-react */
 import {
   Leaf,
   Gauge,

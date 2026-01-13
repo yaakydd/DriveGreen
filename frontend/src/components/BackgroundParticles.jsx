@@ -1,5 +1,3 @@
-// File: BackgroundParticles.jsx
-
 // Import the React library essentials.
 import React, { memo } from "react"; 
 // Import 'memo' which is crucial for performance. It's a Higher-Order Component 
@@ -29,18 +27,17 @@ const AnimatedParticles = () => { // <-- Function definition starts here
   // Total vertical distance the particles will travel (150vh ensures they travel far past the bottom edge).
   const TRAVEL_VH = 150; 
   
-  // Base color for the "CO₂" text elements (pure white).
+  // Base color for the "CO2" text elements (pure white).
   const CO2_BASE_COLOR = "#FFF"; 
   
-  // Glow color for the "CO₂" text, creating a neon effect.
+  // Glow color for the "CO2" text, creating a neon effect.
   const CO2_GLOW_COLOR = "#00F9FF"; 
 
   // The component returns JSX wrapped in a React Fragment (<>...</>).
   return (
     <>
-      {/* ==================================================================== */}
       {/* 1. FLOATING PARTICLE RENDERING LOGIC                 */}
-      {/* ==================================================================== */}
+
 
       {/* Create an array of 35 items and map over it to render 35 individual particles. */}
       {[...Array(35)].map((_, i) => {
@@ -106,11 +103,9 @@ const AnimatedParticles = () => { // <-- Function definition starts here
         );
       })}
 
-      {/* ==================================================================== */}
       {/* 2. CO2 ICON RENDERING LOGIC                      */}
-      {/* ==================================================================== */}
 
-      {/* Create an array of 12 items to render 12 twinkling "CO₂" icons. */}
+      {/* Create an array of 12 items to render 12 twinkling "CO2" icons. */}
       {[...Array(12)].map((_, i) => {
         // Randomly set the size of the icon container (12px to 22px).
         const size = Math.random() * 10 + 12;
@@ -162,7 +157,7 @@ const AnimatedParticles = () => { // <-- Function definition starts here
   );
 };
 
-// <--- THIS IS THE CRITICAL CHANGE!
+
 // Use React.memo to prevent the component from re-rendering and resetting the animation 
 // whenever the parent component's state (e.g., form input) changes.
-export default memo(AnimatedParticles); // <-- EXPORT THE MEMOIZED COMPONENT
+export default memo(AnimatedParticles); // EXPORT THE MEMOIZED COMPONENT
