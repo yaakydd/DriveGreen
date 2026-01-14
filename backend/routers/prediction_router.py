@@ -17,20 +17,18 @@ except ImportError:
     XGBRegressor = Any  # type: ignore
 
 """
-=============================================================================
-PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API 
-=============================================================================
+PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API ENDPOINTS
 
 This file handles all prediction-related API endpoints for a CO2 emissions
 prediction system.
 
 WHAT THIS FILE DOES:
---------------------
+
 Takes vehicle specifications (fuel type, engine size, cylinders) from the
 frontend and returns predicted CO2 emissions with a human-readable interpretation.
 
 COMPLETE FLOW OF THE WEBSITE:
-------------------------------
+
 1. User fills out a form on the website with vehicle details
 2. Frontend sends data to this API
 3. Pydantic validates the input (checks types and ranges)
@@ -49,15 +47,14 @@ Input:  {"fuel_type": "X", "engine_size": 2.0, "cylinders": 4}
 Output: {"predicted_co2_emissions": 139.86, "category": "Good", ...}
 """
 
-# =============================================================================
 # SECTION 1: CREATING ROUTER INSTANCE
-# =============================================================================
+
 # This creates a router object that will handle all /predict endpoints
 predict_router = APIRouter()
 
-# =============================================================================
+
 # SECTION 2: GLOBAL VARIABLES FOR MODEL COMPONENTS
-# =============================================================================
+
 # These variables store our machine learning components
 # They start as None and get loaded when the server starts
 # Using proper type hints tells Pylance what methods these objects have
@@ -66,17 +63,17 @@ model: Optional[Any] = None      # XGBoost trained model
 encoder: Optional[Any] = None    # OneHotEncoder for fuel_type
 scaler: Optional[Any] = None     # StandardScaler for all features
 
-# =============================================================================
+
 # SECTION 3: FILE PATHS
-# =============================================================================
+
 # These paths point to where our saved model files are stored
 model_path = "model/xgboost_model.pkl"
 encoder_path = "model/encoder.pkl"
 scaler_path = "model/scaler.pkl"
 
-# =============================================================================
+
 # SECTION 4: LOADING THE MODEL
-# =============================================================================
+
 # This block runs ONCE when the server starts
 # It loads the trained XGBoost model from disk into memory
 
@@ -92,9 +89,8 @@ except Exception as e:
     # If anything goes wrong, print the error but don't crash
     print(f"✗ Could not load model: {e}")
 
-# =============================================================================
 # SECTION 5: LOADING THE ENCODER
-# =============================================================================
+# This block loads the OneHotEncoder used during training
 # The encoder converts categorical data (fuel type) into numbers
 # Example: "X" → [1, 0, 0, 0, 0]
 
@@ -115,9 +111,8 @@ try:
 except Exception as e:
     print(f"✗ Could not load encoder: {e}")
 
-# =============================================================================
 # SECTION 6: LOADING THE SCALER
-# =============================================================================
+# This block loads the StandardScaler used during training
 # The scaler standardizes features to have mean=0 and std=1
 # This helps the model make better predictions
 
@@ -130,15 +125,14 @@ try:
 except Exception as e:
     print(f"✗ Could not load scaler: {e}")
 
-# =============================================================================
 # SECTION 7: INPUT VALIDATION SCHEMA
-# =============================================================================
+# This block defines the input validation schema for our API
 class PredictionInput(BaseModel):
     """
     This class defines what valid input looks like for our API.
     
     COMPLETE BEGINNER EXPLANATION:
-    ------------------------------
+
     Think of this like a strict form validator. Before we do any prediction,
     we check that:
     1. All required fields are present
@@ -146,19 +140,19 @@ class PredictionInput(BaseModel):
     3. Values are within acceptable ranges
     
     WHY WE NEED THIS:
-    -----------------
+
     - Prevents crashes from bad data
     - Ensures predictions are reliable
     - Gives users clear error messages
     
     VALIDATION RULES:
-    -----------------
+
     - fuel_type: Must be exactly one of ["X", "Z", "E", "D", "N"]
     - engine_size: Must be between 0.9 and 8.4 liters
     - cylinders: Must be between 3 and 16
     
     WHY THESE SPECIFIC RANGES?
-    --------------------------
+
     During training, our model learned from real vehicle data that had:
     - Engine sizes from 0.9L to 8.4L
     - Cylinder counts from 3 to 16
@@ -168,9 +162,9 @@ class PredictionInput(BaseModel):
     "extrapolation" and it's bad for machine learning.
     
     REAL-WORLD EXAMPLES:
-    --------------------
-    ✓ Valid:   {"fuel_type": "X", "engine_size": 2.0, "cylinders": 4}
-    ✗ Invalid: {"fuel_type": "Q", "engine_size": 15.0, "cylinders": 2}
+
+    Valid:   {"fuel_type": "X", "engine_size": 2.0, "cylinders": 4}
+    Invalid: {"fuel_type": "Q", "engine_size": 15.0, "cylinders": 2}
                      ↑                ↑                    ↑
                    Wrong letter    Too big           Too small
     """
@@ -190,17 +184,17 @@ class PredictionInput(BaseModel):
         Custom validator for engine_size field.
         
         WHAT THIS DOES:
-        ---------------
+
         Before accepting any engine_size value, this function checks if it's
         within the safe range of 0.9 to 8.4 liters.
         
         PARAMETERS:
-        -----------
+
         cls: The class itself (PredictionInput) - automatically provided
         v: The value being validated (the engine_size number)
         
         REAL-WORLD CONTEXT:
-        -------------------
+
         - 0.9L: Tiny city cars (Fiat 500, Smart ForTwo)
         - 2.0L: Standard sedans (Honda Civic, Toyota Corolla)
         - 4.0L: Large SUVs and trucks
@@ -222,11 +216,11 @@ class PredictionInput(BaseModel):
         Custom validator for cylinders field.
         
         WHAT THIS DOES:
-        ---------------
+
         Checks if the number of cylinders is within 3 to 16.
         
         REAL-WORLD CONTEXT:
-        -------------------
+
         - 3 cylinders: Small economy cars (Ford Fiesta, Mitsubishi Mirage)
         - 4 cylinders: Most common (sedans, compact SUVs)
         - 6 cylinders: Mid-size cars, SUVs
@@ -248,20 +242,20 @@ class PredictionInput(BaseModel):
             }
         }
 
-# =============================================================================
+
 # SECTION 8: OUTPUT SCHEMA
-# =============================================================================
+
 class PredictionOutput(BaseModel):
     """
     Defines the structure of our API response.
     
     COMPLETE BEGINNER EXPLANATION:
-    ------------------------------
+
     This ensures that every prediction response has the exact same format,
     making it easy for the frontend to display the results.
     
     FIELDS EXPLAINED:
-    -----------------
+
     - predicted_co2_emissions: The number (e.g., 139.86)
     - unit: Always "g/km" (grams per kilometer)
     - interpretation: Human-readable explanation
@@ -274,19 +268,19 @@ class PredictionOutput(BaseModel):
     category: str                    # "Excellent", "Good", "Average", "High", "Very High"
     color: str                       # Hex color code like "#10b981"
 
-# =============================================================================
+
 # SECTION 9: PREPROCESSING FUNCTION
-# =============================================================================
+
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     """
-    ⚠️ MOST CRITICAL FUNCTION IN THIS FILE ⚠️
+    MOST CRITICAL FUNCTION IN THIS FILE 
     
     This function transforms raw user input into the exact format our
     machine learning model expects.
     
-    ==========================================================================
-    🎓 COMPLETE BEGINNER EXPLANATION
-    ==========================================================================
+
+    COMPLETE BEGINNER EXPLANATION
+
     
     Imagine you're teaching a student (the model) math. During training,
     you always wrote numbers in a specific way:
@@ -300,12 +294,12 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     That's what this function does - it formats new data exactly like
     the training data.
     
-    ==========================================================================
-    📊 THE COMPLETE PIPELINE
-    ==========================================================================
+ 
+     THE COMPLETE PIPELINE
+
     
     TRAINING PIPELINE (what happened when we built the model):
-    -----------------------------------------------------------
+
     1. Load raw data from CSV
     2. Log transform: engine_size → log(engine_size)
     3. Log transform: cylinders → log(cylinders)
@@ -315,7 +309,7 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     7. Train XGBoost model on log(CO2) as target
     
     PREDICTION PIPELINE (what happens now):
-    ----------------------------------------
+
     1. Receive: fuel_type="X", engine_size=2.0, cylinders=4
     2. Log transform engine_size and cylinders
     3. One-hot encode fuel_type
@@ -324,9 +318,9 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     6. Model predicts log(CO2)
     7. Reverse: exp(log(CO2)) → actual CO2
     
-    ==========================================================================
-    🔬 REAL-WORLD EXAMPLE WALKTHROUGH
-    ==========================================================================
+
+    REAL-WORLD EXAMPLE WALKTHROUGH
+
     
     INPUT: fuel_type="X", engine_size=2.0, cylinders=4
     
@@ -410,9 +404,9 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     ==========================================================================
     """
     
-    # -------------------------------------------------------------------------
+
     # STEP 1: LOG TRANSFORMATION
-    # -------------------------------------------------------------------------
+
     # Apply natural logarithm to numerical features
     # This is safe because engine_size ∈ [0.9, 8.4] and cylinders ∈ [3, 16]
     # All values are > 0, so np.log() won't cause errors
@@ -425,13 +419,12 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
         raise ValueError(f"Log transform error: {e}. Engine size and cylinders must be positive.")
     
     # Print debug information to console
-    print(f"\n🔧 Preprocessing:")
-    print(f"   📥 Original: engine={engine_size}L, cylinders={cylinders}")
-    print(f"   📊 Log transformed: log(engine)={log_engine_size:.4f}, log(cylinders)={log_cylinders:.4f}")
+    print(f"\n Preprocessing:")
+    print(f"   Original: engine={engine_size}L, cylinders={cylinders}")
+    print(f"   Log transformed: log(engine)={log_engine_size:.4f}, log(cylinders)={log_cylinders:.4f}")
     
-    # -------------------------------------------------------------------------
+
     # STEP 2: CREATE DATAFRAME
-    # -------------------------------------------------------------------------
     # Create a pandas DataFrame with one row
     # Column names MUST match what the encoder expects
     
@@ -441,9 +434,9 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
         "fuel_type": fuel_type               # Original categorical value
     }])
     
-    # -------------------------------------------------------------------------
+
     # STEP 3: ONE-HOT ENCODING
-    # -------------------------------------------------------------------------
+
     # Check if encoder is loaded (fixes Pylance warning)
     if encoder is None:
         raise ValueError("Encoder not loaded. Cannot perform one-hot encoding.")
@@ -460,13 +453,13 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     )
     
     # Print debug information
-    print(f"   🏷️  Fuel type '{fuel_type}' encoded as:")
+    print(f"       Fuel type '{fuel_type}' encoded as:")
     print(f"       Columns: {list(cat_encoded_df.columns)}")
     print(f"       Values: {cat_encoded_df.values[0]}")
     
-    # -------------------------------------------------------------------------
+
     # STEP 4: COMBINE FEATURES
-    # -------------------------------------------------------------------------
+
     # Concatenate numerical features + categorical features horizontally
     # axis=1 means "add columns side by side"
     
@@ -476,9 +469,9 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     print(f"   🔗 Combined features: {list(combined.columns)}")
     print(f"       Shape: {combined.shape} (1 row, {combined.shape[1]} columns)")
     
-    # -------------------------------------------------------------------------
+
     # STEP 5: STANDARDIZATION
-    # -------------------------------------------------------------------------
+
     # Check if scaler is loaded (fixes Pylance warning)
     if scaler is None:
         raise ValueError("Scaler not loaded. Cannot perform feature scaling.")
@@ -492,9 +485,9 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     # Return the final preprocessed array ready for model prediction
     return scaled_input
 
-# =============================================================================
+
 # SECTION 10: INTERPRETATION FUNCTION
-# =============================================================================
+
 def interpret_emissions(co2_value: float) -> tuple:
     """
     Converts a numerical CO2 value into human-readable categories.
@@ -507,7 +500,7 @@ def interpret_emissions(co2_value: float) -> tuple:
     This function assigns categories based on EU emission standards.
     
     CATEGORIES EXPLAINED:
-    ---------------------
+
     - Excellent (< 120 g/km):
       * Hybrid cars, electric vehicles with small gas engines
       * Examples: Toyota Prius, Honda Insight
@@ -534,11 +527,11 @@ def interpret_emissions(co2_value: float) -> tuple:
       * Very high fuel costs, major environmental impact
     
     RETURNS:
-    --------
+
     tuple of (interpretation_text, category_label, hex_color)
     
     EXAMPLE:
-    --------
+
     Input:  co2_value = 145
     Output: (
         "Good! This vehicle has moderate emissions...",
@@ -553,7 +546,7 @@ def interpret_emissions(co2_value: float) -> tuple:
             "environmentally friendly. You'll save money on fuel and "
             "contribute less to climate change.",
             "Excellent",
-            "#10b981"  # Emerald green
+            "#09422f"  # Emerald green
         )
     elif co2_value < 160:
         return (
@@ -576,7 +569,7 @@ def interpret_emissions(co2_value: float) -> tuple:
             "High. This vehicle produces above-average emissions. "
             "Expect higher fuel costs and greater environmental impact.",
             "High",
-            "#ef4444"  # Red
+            "#f74f4f"  # Red
         )
     else:
         return (
@@ -587,23 +580,22 @@ def interpret_emissions(co2_value: float) -> tuple:
             "#dc2626"  # Dark red
         )
 
-# =============================================================================
+
 # SECTION 11: MAIN PREDICTION ENDPOINT
-# =============================================================================
+
 @predict_router.post("/predict", response_model=PredictionOutput)
 async def predict_emissions(input_data: PredictionInput):
     """
-    🎯 MAIN API ENDPOINT - This is where predictions happen!
+    MAIN API ENDPOINT - This is where predictions happen!
     
-    ==========================================================================
-    🎓 COMPLETE BEGINNER EXPLANATION
-    ==========================================================================
+
+    COMPLETE BEGINNER EXPLANATION
     
     This is the main function that handles prediction requests. When a user
     clicks "Predict" on the website, their data comes here.
     
     COMPLETE FLOW:
-    --------------
+   
     1. Frontend sends: {"fuel_type": "X", "engine_size": 2.0, "cylinders": 4}
     2. FastAPI receives the request
     3. Pydantic validates input (checks types and ranges)
@@ -614,12 +606,12 @@ async def predict_emissions(input_data: PredictionInput):
     8. interpret_emissions() assigns category and color
     9. Return JSON response to frontend
     
-    ==========================================================================
-    📊 REAL EXAMPLE
-    ==========================================================================
+
+    REAL EXAMPLE
+
     
     REQUEST:
-    --------
+
     POST http://localhost:8000/api/predict
     Content-Type: application/json
     
@@ -630,7 +622,7 @@ async def predict_emissions(input_data: PredictionInput):
     }
     
     RESPONSE:
-    ---------
+
     {
       "predicted_co2_emissions": 139.86,
       "unit": "g/km",
@@ -639,12 +631,11 @@ async def predict_emissions(input_data: PredictionInput):
       "color": "#22c55e"
     }
     
-    ==========================================================================
+
     """
     
-    # -------------------------------------------------------------------------
+
     # STEP 1: CHECK IF ALL COMPONENTS LOADED
-    # -------------------------------------------------------------------------
     # If any component failed to load, we can't make predictions
     # Return HTTP 503 (Service Unavailable) error
     
@@ -657,16 +648,14 @@ async def predict_emissions(input_data: PredictionInput):
     try:
         # Print a nice header in the console for debugging
         print(f"\n{'='*60}")
-        print(f"🚗 NEW PREDICTION REQUEST")
+        print(f" NEW PREDICTION REQUEST")
         print(f"{'='*60}")
-        print(f"   📥 Input:")
+        print(f"      Input:")
         print(f"      Fuel type: {input_data.fuel_type}")
         print(f"      Engine size: {input_data.engine_size} L")
         print(f"      Cylinders: {input_data.cylinders}")
         
-        # ---------------------------------------------------------------------
         # STEP 2: PREPROCESS INPUT
-        # ---------------------------------------------------------------------
         # Transform raw input into model-ready features
         # This does: log transform → one-hot encode → scale
         
@@ -676,20 +665,19 @@ async def predict_emissions(input_data: PredictionInput):
             input_data.cylinders
         )
         
-        # ---------------------------------------------------------------------
+
         # STEP 3: MAKE PREDICTION
-        # ---------------------------------------------------------------------
         # The model was trained to predict log(CO2), not actual CO2
         # So the output here is in log scale
         
         log_prediction = model.predict(scaled_features)[0]
         # [0] gets the first (and only) prediction from the array
         
-        print(f"   🤖 Model prediction (log scale): {log_prediction:.4f}")
+        print(f"     Model prediction (log scale): {log_prediction:.4f}")
         
-        # ---------------------------------------------------------------------
+
         # STEP 4: REVERSE LOG TRANSFORMATION
-        # ---------------------------------------------------------------------
+
         # Convert log(CO2) back to actual CO2 emissions
         # exp() is the inverse function of log()
         # If y = log(x), then x = exp(y)
@@ -699,25 +687,23 @@ async def predict_emissions(input_data: PredictionInput):
         # Round to 2 decimal places and convert to Python float
         co2_value = round(float(actual_co2), 2)
         
-        print(f"   🔄 Reversed to actual CO2: {co2_value} g/km")
+        print(f"    Reversed to actual CO2: {co2_value} g/km")
         
-        # ---------------------------------------------------------------------
+
         # STEP 5: INTERPRET RESULTS
-        # ---------------------------------------------------------------------
         # Convert numerical CO2 into category, description, and color
         
         interpretation, category, color = interpret_emissions(co2_value)
         
         # Print final results to console
-        print(f"\n   ✅ Final Result:")
+        print(f"\n   Final Result:")
         print(f"      CO2 Emissions: {co2_value} g/km")
         print(f"      Category: {category}")
         print(f"      Color: {color}")
         print(f"{'='*60}\n")
         
-        # ---------------------------------------------------------------------
+
         # STEP 6: RETURN JSON RESPONSE
-        # ---------------------------------------------------------------------
         # Create and return PredictionOutput object
         # FastAPI automatically converts this to JSON
         
@@ -736,7 +722,7 @@ async def predict_emissions(input_data: PredictionInput):
     except Exception as e:
         # Handle any unexpected errors
         # Print full error traceback to console for debugging
-        print(f"❌ Prediction error: {str(e)}")
+        print(f" Prediction error: {str(e)}")
         import traceback
         traceback.print_exc()
         
@@ -746,9 +732,9 @@ async def predict_emissions(input_data: PredictionInput):
             detail=f"Prediction error: {str(e)}"
         )
 
-# =============================================================================
+
 # SECTION 12: UTILITY ENDPOINTS
-# =============================================================================
+
 
 @predict_router.get("/health")
 async def health_check():
@@ -756,14 +742,14 @@ async def health_check():
     Health check endpoint for monitoring.
     
     WHAT THIS DOES:
-    ---------------
+
     Returns the status of all model components. Useful for:
     - Checking if the API is ready to handle requests
     - Monitoring in production
     - Debugging startup issues
     
     RESPONSE EXAMPLE:
-    -----------------
+
     {
       "status": "healthy",
       "model_loaded": true,
@@ -784,12 +770,12 @@ async def get_fuel_types():
     Get available fuel types with descriptions.
     
     WHAT THIS DOES:
-    ---------------
+
     Returns all valid fuel types and their meanings.
     The frontend can use this to populate dropdown menus.
     
     RESPONSE EXAMPLE:
-    -----------------
+
     {
       "fuel_types": ["X", "Z", "E", "D", "N"],
       "descriptions": {
@@ -816,7 +802,7 @@ async def get_model_info():
     Get detailed model pipeline information.
     
     WHAT THIS DOES:
-    ---------------
+
     Returns documentation about how the model works.
     Useful for:
     - API documentation
@@ -824,7 +810,7 @@ async def get_model_info():
     - Understanding the system
     
     COMPLETE BEGINNER EXPLANATION:
-    ------------------------------
+
     This endpoint provides a "user manual" for the prediction system.
     It tells developers and users:
     - What inputs the model accepts
@@ -833,7 +819,7 @@ async def get_model_info():
     - Valid ranges for inputs
     
     WHY IS THIS USEFUL?
-    -------------------
+
     1. Documentation: Developers can understand the system without
        reading the code
     2. Debugging: If predictions seem wrong, this helps identify
@@ -843,7 +829,7 @@ async def get_model_info():
        compatible systems
     
     RESPONSE EXAMPLE:
-    -----------------
+
     {
       "input_features": ["fuel_type", "engine_size", "cylinders"],
       "preprocessing_pipeline": [
@@ -859,7 +845,7 @@ async def get_model_info():
     }
     
     WHAT EACH FIELD MEANS:
-    ----------------------
+
     - input_features: The 3 pieces of info users must provide
     - preprocessing_pipeline: Step-by-step transformation process
     - model_behavior: What the model does with the data
@@ -870,9 +856,8 @@ async def get_model_info():
     - drop_parameter: How one-hot encoding was configured
     """
     
-    # -------------------------------------------------------------------------
+
     # SAFELY EXTRACT ENCODER INFORMATION
-    # -------------------------------------------------------------------------
     # Initialize default values in case encoder is None or missing attributes
     feature_names = []
     drop_param = "unknown"
@@ -894,9 +879,8 @@ async def get_model_info():
     if encoder is not None and hasattr(encoder, 'drop'):
         drop_param = str(encoder.drop)
     
-    # -------------------------------------------------------------------------
+
     # BUILD AND RETURN COMPREHENSIVE MODEL INFORMATION
-    # -------------------------------------------------------------------------
     return {
         # The 3 input features users must provide
         "input_features": ["fuel_type", "engine_size", "cylinders"],
