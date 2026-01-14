@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Leaf,
   Gauge,
-  Settings,
+  Cylinder,
   Fuel,
-  TrendingUp,
+  Zap,
   Globe,
   AlertCircle,
   AlertTriangle
@@ -48,7 +48,7 @@ const PredictionForm = () => {
       return;
     }
 
-    //  Reset flow: Clear prediction first, then set loading
+    // Reset flow: Clear prediction first, then set loading
     // This ensures a clean state transition
     setPrediction(null);
 
@@ -75,14 +75,14 @@ const PredictionForm = () => {
       });
 
       if (!res.ok) {
-        let errMsg = "Prediction failed";
+        let errorMsg = "Prediction failed";
         try {
-          const errBody = await res.json();
-          errMsg = errBody.detail || errBody.message || errMsg;
+          const errorBody = await res.json();
+          errorMsg = errorBody.detail || errorBody.message || errorMsg;
         } catch (parseErr) {
           // Fallback if response isn't readable JSON
         }
-        throw new Error(errMsg);
+        throw new Error(errorMsg);
       }
 
       const data = await res.json();
@@ -278,7 +278,7 @@ const PredictionForm = () => {
                         transition={{ delay: 0.25 }}
                       >
                         <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
-                          <Settings className="w-4 h-4 md:w-5 md:h-5" />
+                          <Cylinder className="w-4 h-4 md:w-5 md:h-5" />
                           Number of Cylinders
                         </label>
 
@@ -346,7 +346,7 @@ const PredictionForm = () => {
 
                         <span className="relative z-10">Calculate Emission</span>
                         
-                        <TrendingUp className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
+                        <Zap className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
                       </motion.button>
                     </form>
                   </div>
