@@ -8,12 +8,11 @@ import os
 
 # Import sklearn types for proper type hints
 try:
-    from sklearn.preprocessing import OneHotEncoder, StandardScaler
+    from sklearn.preprocessing import OneHotEncoder
     from xgboost import XGBRegressor
 except ImportError:
     # If sklearn/xgboost not installed, use Any as fallback
     OneHotEncoder = Any  # type: ignore
-    StandardScaler = Any  # type: ignore
     XGBRegressor = Any  # type: ignore
 
 """
@@ -61,7 +60,7 @@ predict_router = APIRouter()
 
 model: Optional[Any] = None      # XGBoost trained model
 encoder: Optional[Any] = None    # OneHotEncoder for fuel_type
-scaler: Optional[Any] = None     # StandardScaler for all features
+     # StandardScaler for all features
 
 
 # SECTION 3: FILE PATHS
@@ -115,15 +114,6 @@ except Exception as e:
 # This block loads the StandardScaler used during training
 # The scaler standardizes features to have mean=0 and std=1
 # This helps the model make better predictions
-
-try:
-    if os.path.exists(scaler_path):
-        scaler = joblib.load(scaler_path)
-        print(f"✓ Scaler loaded successfully from {scaler_path}")
-    else:
-        print(f"✗ Scaler file not found at {scaler_path}")
-except Exception as e:
-    print(f"✗ Could not load scaler: {e}")
 
 # SECTION 7: INPUT VALIDATION SCHEMA
 # This block defines the input validation schema for our API
@@ -465,26 +455,10 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int):
     
     num_df = df[["engine_size(l)", "cylinders"]]
     combined = pd.concat([num_df, cat_encoded_df], axis=1)
-    
-    print(f"   🔗 Combined features: {list(combined.columns)}")
+
+    print(f"   Combined features: {list(combined.columns)}")
     print(f"       Shape: {combined.shape} (1 row, {combined.shape[1]} columns)")
     
-
-    # STEP 5: STANDARDIZATION
-
-    # Check if scaler is loaded (fixes Pylance warning)
-    if scaler is None:
-        raise ValueError("Scaler not loaded. Cannot perform feature scaling.")
-    
-    # Apply the same StandardScaler used during training
-    # This transforms each feature to have mean=0, std=1
-    scaled_input = scaler.transform(combined)
-    
-    print(f"   ⚖️  Scaled features: {scaled_input[0]}\n")
-    
-    # Return the final preprocessed array ready for model prediction
-    return scaled_input
-
 
 # SECTION 10: INTERPRETATION FUNCTION
 
@@ -638,11 +612,11 @@ async def predict_emissions(input_data: PredictionInput):
     # STEP 1: CHECK IF ALL COMPONENTS LOADED
     # If any component failed to load, we can't make predictions
     # Return HTTP 503 (Service Unavailable) error
-    
-    if model is None or encoder is None or scaler is None:
+
+    if model is None or encoder is None:
         raise HTTPException(
             status_code=503,
-            detail="Prediction service not fully initialized. Missing model, encoder, or scaler."
+            detail="Prediction service not fully initialized. Missing model or encoder."
         )
     
     try:
@@ -758,10 +732,9 @@ async def health_check():
     }
     """
     return {
-        "status": "healthy" if all([model, encoder, scaler]) else "unhealthy",
+        "status": "healthy" if all([model, encoder]) else "unhealthy",
         "model_loaded": model is not None,
         "encoder_loaded": encoder is not None,
-        "scaler_loaded": scaler is not None
     }
 
 @predict_router.get("/fuel-types")
@@ -934,7 +907,6 @@ async def get_model_info():
             "components_loaded": {
                 "model": model is not None,
                 "encoder": encoder is not None,
-                "scaler": scaler is not None
             }
         },
         
