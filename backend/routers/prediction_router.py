@@ -32,23 +32,27 @@ model: Optional[Any] = None
 encoder: Optional[Any] = None
 
 # Cache for encoder feature names (loaded once)
-_encoder_feature_names: Optional[list] = None
+encoder_feature_names: Optional[list] = None
 
 # Cache for interpretation results (static data)
-_INTERPRETATION_CACHE = {
+INTERPRETATION_CACHE = {
     120: ("Excellent! This vehicle has very low emissions and is highly "
           "environmentally friendly. You'll save money on fuel and "
           "contribute less to climate change.", "Excellent", "#09422f"),
+
     160: ("Good! This vehicle has moderate emissions and is reasonably "
           "eco-friendly. A solid choice for balancing performance and "
           "environmental impact.", "Good", "#22c55e"),
+
     200: ("Average. This vehicle has typical emissions for its class. "
           "Consider more fuel-efficient options if environmental impact "
           "is a priority.", "Average", "#f59e0b"),
+
     250: ("High. This vehicle produces above-average emissions. "
           "Expect higher fuel costs and greater environmental impact.", "High", "#f74f4f"),
 }
-_INTERPRETATION_VERY_HIGH = (
+
+INTERPRETATION_VERY_HIGH = (
     "Very High. This vehicle produces significant emissions. "
     "Fuel costs will be substantial and environmental impact is "
     "considerable.", "Very High", "#dc2626"
@@ -72,29 +76,29 @@ def log_verbose(*args):
 try:
     if os.path.exists(model_path):
         model = joblib.load(model_path)
-        print(f"✓ Model loaded from {model_path}")
+        print(f"Model loaded from {model_path}")
     else:
-        print(f"✗ Model file not found at {model_path}")
+        print(f"Model file not found at {model_path}")
 except Exception as e:
-    print(f"✗ Could not load model: {e}")
+    print(f"Could not load model: {e}")
 
 # Load encoder
 try:
     if os.path.exists(encoder_path):
         encoder = joblib.load(encoder_path)
-        print(f"✓ Encoder loaded from {encoder_path}")
+        print(f"Encoder loaded from {encoder_path}")
         
         # Cache feature names on startup (one-time operation)
         if encoder is not None and hasattr(encoder, 'get_feature_names_out'):
             try:
-                _encoder_feature_names = encoder.get_feature_names_out(["fuel_type"]).tolist()
-                log_verbose(f"  Cached encoder feature names: {_encoder_feature_names}")
+                encoder_feature_names = encoder.get_feature_names_out(["fuel_type"]).tolist()
+                log_verbose(f"  Cached encoder feature names: {encoder_feature_names}")
             except Exception as e:
                 print(f"Warning: Could not cache feature names: {e}")
     else:
-        print(f"✗ Encoder file not found at {encoder_path}")
+        print(f"Encoder file not found at {encoder_path}")
 except Exception as e:
-    print(f"✗ Could not load encoder: {e}")
+    print(f"Could not load encoder: {e}")
 
 
 class PredictionInput(BaseModel):
@@ -159,22 +163,22 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     fuel_df = pd.DataFrame([{"fuel_type": fuel_type}])
     
     # One-hot encode
-    cat_encoded = encoder.transform(fuel_df)
+    categorical_encoded_feature = encoder.transform(fuel_df)
     
     # Use cached feature names if available
-    if _encoder_feature_names:
-        cat_columns = _encoder_feature_names
+    if encoder_feature_names:
+        categorical_column = encoder_feature_names
     else:
-        cat_columns = encoder.get_feature_names_out(["fuel_type"]).tolist()
+        categorical_column = encoder.get_feature_names_out(["fuel_type"]).tolist()
     
     # Create final DataFrame in one operation (more efficient)
     result = pd.DataFrame(
         np.column_stack([
             [log_engine_size],
             [log_cylinders],
-            cat_encoded
+            categorical_encoded_feature
         ]),
-        columns=["engine_size(l)", "cylinders"] + cat_columns
+        columns=["engine_size(l)", "cylinders"] + categorical_column
     )
     
     log_verbose(f"  Preprocessed shape: {result.shape}")
@@ -190,15 +194,15 @@ def interpret_emissions(co2_value: float) -> tuple:
     """
     
     if co2_value < 120:
-        return _INTERPRETATION_CACHE[120]
+        return INTERPRETATION_CACHE[120]
     elif co2_value < 160:
-        return _INTERPRETATION_CACHE[160]
+        return INTERPRETATION_CACHE[160]
     elif co2_value < 200:
-        return _INTERPRETATION_CACHE[200]
+        return INTERPRETATION_CACHE[200]
     elif co2_value < 250:
-        return _INTERPRETATION_CACHE[250]
+        return INTERPRETATION_CACHE[250]
     else:
-        return _INTERPRETATION_VERY_HIGH
+        return INTERPRETATION_VERY_HIGH
 
 
 @predict_router.post("/predict", response_model=PredictionOutput)
@@ -297,7 +301,7 @@ async def get_model_info():
     """
     
     # Use cached feature names
-    feature_names = _encoder_feature_names or []
+    feature_names = encoder_feature_names or []
     drop_param = str(encoder.drop) if (encoder and hasattr(encoder, 'drop')) else "unknown"
     
     return {

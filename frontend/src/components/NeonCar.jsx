@@ -151,7 +151,7 @@ const NeonCar = () => {
                 textShadow: '0 0 10px rgba(0,0,0,1), 0 0 6px #FFFFFF'
               }}
             >
-              CO₂
+              CO<sub>2</sub>
             </span>
           </motion.div>
         ))}
