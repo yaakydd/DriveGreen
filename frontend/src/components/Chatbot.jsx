@@ -19,7 +19,7 @@ const knowledgeBase = [
   { keywords: ["thank", "thanks", "appreciate"], priority: 10, response: "You're genuinely welcome. Every question you ask is a step towards a cleaner planet. Let's keep going." },
 
   // SPECIFIC TECHNICAL QUERIES - Highest priority
-  { keywords: ["calculate", "predict", "formula", "algorithm", "math", "xgboost"], priority: 10, response: "**The Science Behind Your Score:** I use a tree-based model: XGBOOST. Data sources: EPA MOVES model, EU COPERT, real-world RDE (Real Driving Emissions) studies, and manufacturer-reported values. It's not just a simple lookup—it's a dynamic simulation." },
+  { keywords: ["calculate", "predict", "formula", "algorithm", "math", "xgboost"], priority: 10, response: "**The Science Behind Your Score:** I use the three inputs which is fuel type, engine size and the number of cylinders to estimate emissions, xgboost is the model trained and tested to be used for prediction . The process: The numeric features (engine size, cylinders) is log transformed before training the model and the categorical feature(fuel type) is one-hot encoded. Then they are all put in one dataframe to train the model. After the predicton, the log transformed results is reversed to get the actual CO2 emissions from the vehicle. ." },
   
   { keywords: ["accurate", "trust", "precise", "real", "exact", "reliable"], priority: 10, response: "My core data comes from certified labs (EPA, WLTP) and peer-reviewed studies. The prediction has a **±8-12% margin of error** for standard driving. For maximum accuracy, you can input your actual fuel receipts over 3 months. No model is perfect, but this is industrial-grade." },
   
