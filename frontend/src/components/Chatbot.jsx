@@ -11,7 +11,7 @@ import ReactMarkdown from "react-markdown";
 const knowledgeBase = [
   {
     keywords: ["hello", "hi", "hey", "greetings"],
-    response: "Hi! I’m Eco-Copilot. I can help you understand your vehicle’s carbon emissions and how to reduce them.",
+    response: "Hi! I'm Eco-Copilot. I can help you understand your vehicle's carbon emissions and how to reduce them.",
   },
   {
     keywords: ["app", "do", "help", "purpose"],
@@ -30,12 +30,12 @@ const knowledgeBase = [
     response: "You're genuinely welcome. Every question you ask is a step towards a cleaner planet. Let's keep going.",
   },
 
-  // ******************************************************************
+
   // TECHNICAL & CALCULATION DETAILS (For the "How does this work?" user)
-  // ******************************************************************
+
   {
     keywords: ["calculate", "predict", "formula", "algorithm", "math"],
-    response: "**The Science Behind Your Score:** I use a multi-factor model: `Total CO2e = (Veh. Emission Factor × Annual Miles) + (Cold Start Penalty) + (Driving Aggressiveness Factor) + (AC/Heating Load)`. Data sources: EPA MOVES model, EU COPERT, real-world RDE (Real Driving Emissions) studies, and manufacturer-reported values. It's not just a simple lookup—it's a dynamic simulation.",
+    response: "**The Science Behind Your Score:** I use a tree-based model: XGBOOST w . Data sources: EPA MOVES model, EU COPERT, real-world RDE (Real Driving Emissions) studies, and manufacturer-reported values. It's not just a simple lookup—it's a dynamic simulation.",
   },
   {
     keywords: ["accurate", "trust", "precise", "real", "exact"],
@@ -70,9 +70,8 @@ const knowledgeBase = [
     response: "Hydrogen fuel cell vehicles emit only water vapor. But the **'Well-to-Wheels'** story is key. 'Green' hydrogen from renewables is clean; 'Grey' hydrogen from natural gas can have a higher footprint than a diesel. The infrastructure is still limited.",
   },
 
-  // ******************************************************************
   // HEALTH & SOCIETAL IMPACT (For the "Why should I care?" user)
-  // ******************************************************************
+ 
   {
     keywords: ["health", "lungs", "asthma", "cancer", "sick"],
     response: "This is the human cost. Tailpipe emissions contain **PM2.5** (fine particles) that enter your bloodstream, **NOx** that forms smog, and **benzene** (carcinogen). The WHO links traffic pollution to **4.2 million premature deaths/year** globally. It causes childhood asthma, dementia risk, and low birth weight. Your car's emissions directly affect the health of people near roads—often lower-income communities.",
@@ -98,9 +97,9 @@ const knowledgeBase = [
     response: "Every kilogram of CO2 from your tailpipe adds to the **global blanket** trapping heat. This leads to: stronger hurricanes, deeper droughts, catastrophic wildfires, and sea-level rise. Transportation is ~29% of US greenhouse gases. Your vehicle is a direct contributor to climate instability affecting millions globally.",
   },
 
-  // ******************************************************************
+  
   // MONEY, COST & ECONOMICS (For the "What's in it for me?" user)
-  // ******************************************************************
+  
   {
     keywords: ["cost", "save", "money", "expensive", "cheap", "fuel economy", "mpg"],
     response: "**Financial Breakdown:** A gas car costing $0.12/mile in fuel can cost an EV $0.04/mile in electricity. Annual savings: **$1,000+**. Maintenance: EVs have far fewer moving parts (no oil changes, fewer brakes), saving ~$800/year. Upfront cost is higher but **Total Cost of Ownership** often favors EVs after 5 years, especially with incentives.",
@@ -118,9 +117,9 @@ const knowledgeBase = [
     response: "EV insurance can be **10-20% higher** currently due to repair costs and battery value. However, some insurers offer 'green' discounts for low-emission vehicles. This is evolving rapidly.",
   },
 
-  // ******************************************************************
+  
   // LIFESTYLE & ALTERNATIVES (For the "What can I actually do?" user)
-  // ******************************************************************
+
   {
     keywords: ["bike", "walk", "transit", "bus", "train", "telecommute"],
     response: "The **single most effective** action: drive less. One 10-mile round trip avoided = ~4 kg CO2 saved. Explore: **E-bikes** (huge range, sweat-free), **Car-sharing** for occasional needs, **Transit** for commutes. A 10% reduction in miles is often easier and cheaper than buying a new car.",
@@ -142,9 +141,9 @@ const knowledgeBase = [
     response: "**My buying guide:** 1) **If you drive < 40 miles/day and can charge at home:** Go pure EV. 2) **If long commutes/no home charging:** Prioritize a top-rated hybrid or PHEV. 3) **If buying used:** A 3-year-old efficient hybrid is often the 'greenest' economic choice. 4) **Size matters:** A small efficient gas car can beat a large, heavy EV. Let's analyze your specific needs.",
   },
 
-  // ******************************************************************
+
   // PHILOSOPHICAL & FUTURE (For the deep thinker)
-  // ******************************************************************
+  
   {
     keywords: ["future", "2030", "2040", "ban", "gasoline", "end"],
     response: "The direction is clear: **Zero-emission mandates**. Norway bans new ICE sales in 2025, UK in 2030, California in 2035. Gas stations will decline. Future cities will prioritize pedestrians and cyclists. Your next car choice prepares you for this inevitable transition. You're not just buying a car; you're choosing a side of history.",
@@ -170,9 +169,9 @@ const knowledgeBase = [
     response: "**Honest answer:** EV batteries have an environmental cost in mining (lithium, cobalt). However, this is **concentrated and regulated** (in specific mines), versus gasoline's **distributed and unmanaged** impact (climate change, spills, fracking). Battery recycling is scaling fast. The lifecycle impact of an EV is **significantly lower** than a gas car.",
   },
 
-  // ******************************************************************
+  
   // SOCIAL & PSYCHOLOGICAL (For the "What will people think?" user)
-  // ******************************************************************
+  
   {
     keywords: ["friends", "family", "share", "social", "talk"],
     response: "Lead by example, not by lecture. Share your journey, the fun of an EV's acceleration, the savings, the cleaner air. Offer to let friends test-drive. Frame it as an exciting tech upgrade, not a sacrifice. Social norms are powerful—you can help shift them.",
@@ -182,9 +181,9 @@ const knowledgeBase = [
     response: "**Please, no guilt.** The system was designed without full awareness. Guilt paralyzes; awareness empowers. You're here, learning. That's the first and most important step. Celebrate every positive change, no matter how small. Progress, not perfection.",
   },
 
-  // ******************************************************************
+  
   // CATCH-ALL & FALLBACK
-  // ******************************************************************
+  
   {
     keywords: ["how", "what", "why", "when", "where", "who"],
     response: "That's a great question. To give you the most accurate and helpful answer, could you rephrase it with a bit more detail? For example, 'How do electric cars work in cold weather?' or 'What is the greenest car for a family of five?' I'm here for the details.",
@@ -248,7 +247,7 @@ const Chatbot = () => {
 
   const quickPrompts = [
     "How to reduce emissions",
-    "How the site works",
+    "How does the website works",
     "What do the colors mean?",
   ];
 

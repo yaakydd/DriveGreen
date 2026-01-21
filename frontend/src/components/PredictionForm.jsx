@@ -36,7 +36,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 const MIN_LOADING_TIME = 800;
 
 // Fuel type options (static data)
-const FUEL_OPTIONS = [
+const fuel_types = [
   { value: "X", label: "Regular Gasoline" },
   { value: "Z", label: "Premium Gasoline" },
   { value: "E", label: "Ethanol (E85)" },
@@ -293,7 +293,7 @@ const PredictionForm = () => {
                         className="w-full p-3 md:p-3.5 bg-gray-50 border border-gray-300 rounded-lg md:rounded-xl text-slate-800 text-sm md:text-base focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-sm hover:border-emerald-400 cursor-pointer appearance-none"
                       >
                         <option value="" disabled>Select fuel type</option>
-                        {FUEL_OPTIONS.map(opt => (
+                        {fuel_types.map(opt => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
