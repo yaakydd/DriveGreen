@@ -827,3 +827,14 @@ If you run into issues:
    - [Render Docs](https://render.com/docs)
 
 Good luck with your deployment! 🚀🌱
+
+nvm use 
+
+# Set as default for future terminals
+nvm alias default 22
+
+source ~/.bashrc
+
+
+
+

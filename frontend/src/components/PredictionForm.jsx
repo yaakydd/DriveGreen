@@ -11,6 +11,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 
+import Chatbot from "./Chatbot";
 import Spinner from "./Spinner";
 import AnimationCard from "./AnimationCard";
 import NeonCar from "./NeonCar";
@@ -205,6 +206,7 @@ const PredictionForm = () => {
       engine_size: ""
     });
   }, []);
+
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-sans">
