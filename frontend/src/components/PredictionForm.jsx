@@ -11,32 +11,19 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-import Chatbot from "./Chatbot";
 import Spinner from "./Spinner";
 import AnimationCard from "./AnimationCard";
 import NeonCar from "./NeonCar";
 import DriveGreenLogo from "./DriveGreenLogo";
 import AnimatedParticles from "./BackgroundParticles";
+import Chatbot from "./Chatbot"; // Import Chatbot
 import toast from "react-hot-toast";
 
-/* COMPREHENSIVE OPTIMIZATIONS:
- * 1. Memoized all animation variants (created once, not per render)
- * 2. useCallback for all event handlers (stable references)
- * 3. useMemo for computed values (form validation, styles)
- * 4. Refs for non-reactive values (toast shown flag)
- * 5. Cached static data at module level
- * 6. Spread operators for cleaner variant application
- * 7. Conditional rendering optimized
- * 8. Removed redundant state updates
- * 9. performance.now() for precise timing
- * 10. Single error handling path
- */
-
-// Module-level constants (computed once)
+// Module-level constants
 const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 const MIN_LOADING_TIME = 800;
 
-// Fuel type options (static data)
+// Fuel type options
 const fuel_types = [
   { value: "X", label: "Regular Gasoline" },
   { value: "Z", label: "Premium Gasoline" },
@@ -55,7 +42,7 @@ const PredictionForm = () => {
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Refs for non-reactive data
+  // Refs
   const abortControllerRef = useRef(null);
 
   // Memoized form validation
@@ -64,7 +51,7 @@ const PredictionForm = () => {
     [form.fuel_type, form.cylinders, form.engine_size]
   );
 
-  // Memoized select dropdown style
+  // Memoized select style
   const selectStyle = useMemo(() => ({
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2310B981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
     backgroundRepeat: "no-repeat",
@@ -73,7 +60,7 @@ const PredictionForm = () => {
     paddingRight: "2.5rem"
   }), []);
 
-  // Memoized animation variants (created once)
+  // Memoized animation variants
   const variants = useMemo(() => ({
     spinner: {
       initial: { opacity: 0, scale: 0.9 },
@@ -109,13 +96,12 @@ const PredictionForm = () => {
     }
   }), []);
 
-  // Optimized change handler
+  // Event handlers
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  // Optimized submit handler with request cancellation support
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
@@ -126,12 +112,10 @@ const PredictionForm = () => {
       return;
     }
 
-    // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
 
-    // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
 
     setPrediction(null);
@@ -159,14 +143,13 @@ const PredictionForm = () => {
           const errorBody = await res.json();
           errorMsg = errorBody.detail || errorBody.message || errorMsg;
         } catch {
-          // Use default error message
+          // Use default
         }
         throw new Error(errorMsg);
       }
 
       const data = await res.json();
 
-      // Ensure minimum loading time
       const elapsedTime = performance.now() - startTime;
       const remainingTime = MIN_LOADING_TIME - elapsedTime;
 
@@ -174,7 +157,15 @@ const PredictionForm = () => {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
       }
 
-      setPrediction(data);
+      // Store prediction with form data for chatbot context
+      setPrediction({
+        ...data,
+        vehicleData: {
+          fuel_type: form.fuel_type,
+          cylinders: parseInt(form.cylinders, 10),
+          engine_size: parseFloat(form.engine_size)
+        }
+      });
 
       toast.success("Prediction successful!", {
         icon: <Globe className="w-5 h-5 text-blue-700" />,
@@ -182,7 +173,6 @@ const PredictionForm = () => {
       });
     } catch (err) {
       if (err.name === 'AbortError') {
-        // Request was cancelled, don't show error
         return;
       }
       
@@ -196,7 +186,6 @@ const PredictionForm = () => {
     }
   }, [form, isFormValid]);
 
-  // Optimized reset handler
   const handleReset = useCallback(() => {
     setPrediction(null);
     setLoading(false);
@@ -206,7 +195,6 @@ const PredictionForm = () => {
       engine_size: ""
     });
   }, []);
-
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 font-sans">
@@ -222,12 +210,12 @@ const PredictionForm = () => {
         />
       </div>
 
-      {/* Animated background particles */}
+      {/* Animated particles */}
       <div className="absolute inset-0 pointer-events-none">
         <AnimatedParticles />
       </div>
 
-      {/* Neon car - conditionally rendered */}
+      {/* Neon car */}
       {!loading && !prediction && <NeonCar />}
 
       {/* Main content */}
@@ -256,12 +244,9 @@ const PredictionForm = () => {
               className="w-full max-w-2xl mx-auto"
             >
               <div className="relative group">
-                {/* Glowing border */}
                 <div className="absolute -inset-1 md:-inset-2 bg-gradient-to-r from-emerald-500/70 via-cyan-500/70 to-teal-500/70 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition duration-1000" />
 
-                {/* Main card */}
                 <div className="relative bg-white rounded-2xl md:rounded-3xl shadow-2xl border border-gray-100 py-4 px-5 md:py-6 md:px-8 overflow-hidden">
-                  {/* Header */}
                   <div className="flex flex-col items-center mb-4 md:mb-6">
                     <motion.div {...variants.logo}>
                       <DriveGreenLogo size="large" />
@@ -277,9 +262,7 @@ const PredictionForm = () => {
                     </p>
                   </div>
 
-                  {/* Form */}
                   <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
-                    {/* Fuel type */}
                     <motion.div className="space-y-1 md:space-y-2" {...variants.input.fuel}>
                       <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
                         <Fuel className="w-4 h-4 md:w-5 md:h-5" />
@@ -301,7 +284,6 @@ const PredictionForm = () => {
                       </select>
                     </motion.div>
 
-                    {/* Cylinders */}
                     <motion.div className="space-y-2 md:space-y-2" {...variants.input.cylinders}>
                       <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
                         <Cylinder className="w-4 h-4 md:w-5 md:h-5" />
@@ -321,7 +303,6 @@ const PredictionForm = () => {
                       />
                     </motion.div>
 
-                    {/* Engine size */}
                     <motion.div className="space-y-2 md:space-y-2" {...variants.input.engine}>
                       <label className="flex items-center gap-2 text-sm md:text-base font-semibold text-emerald-600">
                         <Gauge className="w-4 h-4 md:w-5 md:h-5" />
@@ -342,7 +323,6 @@ const PredictionForm = () => {
                       />
                     </motion.div>
 
-                    {/* Submit button */}
                     <motion.button
                       type="submit"
                       whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(15, 141, 99, 0.7)" }}
@@ -356,7 +336,6 @@ const PredictionForm = () => {
                     </motion.button>
                   </form>
 
-                  {/* Footer */}
                   <div className="mt-4 md:mt-5 pt-4 md:pt-5 border-t border-gray-200">
                     <div className="flex flex-col sm:flex-row items-center justify-between text-xs md:text-sm text-slate-600 gap-2 sm:gap-4">
                       <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full whitespace-nowrap">
@@ -377,7 +356,6 @@ const PredictionForm = () => {
                     </div>
                   </div>
 
-                  {/* Decorative corners */}
                   <motion.div
                     {...variants.corners.topLeft}
                     className="absolute top-4 left-4 w-14 h-14 md:top-4 md:left-4 md:w-16 md:h-16 border-l-5 border-t-5 border-emerald-400/70 rounded-tl-2xl"
@@ -392,6 +370,9 @@ const PredictionForm = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Chatbot with prediction context */}
+      <Chatbot predictionData={prediction} />
     </div>
   );
 };
