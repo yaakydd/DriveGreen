@@ -1,56 +1,55 @@
-import React from "react";
-import { motion } from "framer-motion";
-import ChatHeader from "./ChatHeader";
-import MessageList from "./MessageList";
-import QuickPrompts from "./QuickPrompts";
-import InputArea from "./InputArea";
+// src/components/Chatbot/components/ChatWindow.jsx
+import React from 'react';
+import { motion } from 'framer-motion';
+import ChatHeader from './ChatHeader';
+import MessageList from './MessageList';
+import QuickPrompts from './QuickPrompts';
+import InputArea from './InputArea';
+import useAnimations from '../hooks/useAnimations';
 
 const ChatWindow = ({
-  isOpen,
-  onClose,
   messages,
   input,
-  setInput,
-  onSend,
-  onKeyPress,
-  onQuickPrompt,
   isTyping,
-  showQuickPrompts, // ADD THIS
+  predictionData,
+  toggleChat,
+  handleSend,
+  handleKeyPress,
+  handleQuickPrompt,
+  setInput,
   messagesEndRef,
-  inputRef,
-  animations,
-  predictionData
+  inputRef
 }) => {
-  if (!isOpen) return null;
+  const { chatWindow } = useAnimations();
 
   return (
     <motion.div
-      {...animations.chatWindow}
+      {...chatWindow}
       className="fixed bottom-20 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-24 sm:w-[360px] h-[75vh] sm:h-[550px] bg-white border border-gray-200 rounded-3xl shadow-2xl flex flex-col z-50 overflow-hidden"
     >
-      <ChatHeader onClose={onClose} predictionData={predictionData} />
-      
-      <MessageList 
+      <ChatHeader
+        predictionData={predictionData}
+        toggleChat={toggleChat}
+      />
+
+      <MessageList
         messages={messages}
         isTyping={isTyping}
         messagesEndRef={messagesEndRef}
-        animations={animations}
       />
-      
-      {/* PASS showQuickPrompts here */}
-      <QuickPrompts 
+
+      <QuickPrompts
         predictionData={predictionData}
-        onPromptClick={onQuickPrompt}
-        showQuickPrompts={showQuickPrompts}
+        handleQuickPrompt={handleQuickPrompt}
       />
-      
+
       <InputArea
         input={input}
         setInput={setInput}
-        onSend={onSend}
-        onKeyPress={onKeyPress}
-        inputRef={inputRef}
+        handleSend={handleSend}
+        handleKeyPress={handleKeyPress}
         predictionData={predictionData}
+        inputRef={inputRef}
       />
     </motion.div>
   );
