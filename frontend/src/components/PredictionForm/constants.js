@@ -10,7 +10,7 @@ export const fuel_types = [
   { value: "N", label: "Natural Gas" }
 ];
 
-export const initial_form_states = {
+export const initial_form_state = {
   fuel_type: "",
   cylinders: "",
   engine_size: ""
