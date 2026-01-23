@@ -102,24 +102,211 @@ const knowledgeBase = [
   { keywords: ["help"], priority: 2, response: "I'm here to help you understand your vehicle's full environmental impact—from tailpipe to atmosphere, from cost to climate. Ask me about emissions calculations, reducing your carbon footprint, vehicle types, costs, or the future of transportation!" }
 ];
 
-// Improved matching algorithm with scoring
-const findBestMatch = (input) => {
+// Generate context-aware response based on prediction data
+const generatePredictionResponse = (input, predictionData) => {
+  if (!predictionData) return null;
+
   const lowerInput = input.toLowerCase();
-  const words = lowerInput.split(/\s+/).filter(w => w.length > 2); // Filter out short words like "do", "is", "the"
+  const { predicted_co2_emissions, category, interpretation, color, vehicleData } = predictionData;
+  const { fuel_type, cylinders, engine_size } = vehicleData;
+
+  // Fuel type labels
+  const fuelLabels = {
+    "X": "Regular Gasoline",
+    "Z": "Premium Gasoline",
+    "E": "Ethanol (E85)",
+    "D": "Diesel",
+    "N": "Natural Gas"
+  };
+
+  // MY RESULT / MY PREDICTION
+  if (lowerInput.includes("my result") || lowerInput.includes("my prediction") || lowerInput.includes("my score") || lowerInput.includes("my emission") || lowerInput.includes("my vehicle")) {
+    return `**Your Vehicle's Emissions Report:**
+
+**Prediction:** ${predicted_co2_emissions} g/km
+**Category:** ${category}
+**Rating:** ${category === "Excellent" ? "🟢" : category === "Good" ? "🟡" : "🔴"}
+
+**Vehicle Specs:**
+- Fuel: ${fuelLabels[fuel_type]}
+- Engine: ${engine_size}L
+- Cylinders: ${cylinders}
+
+**What This Means:**
+${interpretation}
+
+${predicted_co2_emissions < 160 ? "Great job! Your vehicle has relatively low emissions. " : predicted_co2_emissions < 200 ? "Your vehicle is in the average range. There's room for improvement through eco-driving techniques." : "This is on the higher end. Consider exploring hybrid or electric options for your next vehicle, or focus on reducing miles driven."}
+
+Ask me how to improve your score or compare your result!`;
+  }
+
+  // EXPLAIN MY RESULT
+  if (lowerInput.includes("explain") || lowerInput.includes("understand") || lowerInput.includes("mean")) {
+    return `**Understanding Your ${predicted_co2_emissions} g/km Result:**
+
+Your **${fuelLabels[fuel_type]}** vehicle with a **${engine_size}L ${cylinders}-cylinder** engine produces **${predicted_co2_emissions} grams of CO2 per kilometer** driven.
+
+**Put in Perspective:**
+${predicted_co2_emissions < 120 ? `
+**Excellent Performance!** 
+- You're in the top 15% of vehicles
+- Comparable to efficient hybrids
+- 30-40% better than average vehicles
+` : predicted_co2_emissions < 160 ? `
+**Good Performance**
+- Better than 60% of vehicles on the road
+- Similar to modern compact cars
+- About 15-20% better than average
+` : predicted_co2_emissions < 200 ? `
+**Average Performance**
+- Typical for mid-size sedans and small SUVs
+- Room for 20-30% improvement through eco-driving
+- Consider maintenance and tire pressure optimization
+` : `
+**High Emissions**
+- Typical for large SUVs, trucks, or older vehicles
+- 40-60% higher than efficient alternatives
+- Significant cost and environmental impact
+`}
+
+**Annual Impact** (assuming 13,500 miles/year):
+- **CO2 emissions:** ~${Math.round(predicted_co2_emissions * 13500 * 1.60934 / 1000)} kg/year
+- **Fuel cost:** ~$${Math.round(predicted_co2_emissions * 13500 * 1.60934 / 1000 * 0.25)} annually
+
+Want tips on reducing this? Just ask!`;
+  }
+
+  // HOW TO IMPROVE
+  if (lowerInput.includes("improve") || lowerInput.includes("better") || lowerInput.includes("reduce my") || lowerInput.includes("lower my")) {
+    const quickWins = predicted_co2_emissions < 160 ? [
+      "**Fine-tune:** You're already doing well! Focus on maintaining tire pressure and regular oil changes.",
+      "**Drive smooth:** Avoid rapid acceleration—it can save another 5-10%.",
+      "**Route optimization:** Use GPS to avoid traffic and reduce idling."
+    ] : predicted_co2_emissions < 200 ? [
+      "**Quick wins:** Proper tire inflation (saves 3%), remove excess weight (1-2% per 100 lbs).",
+      "**Eco-driving:** Gentle acceleration, maintain steady speeds, coast to stops.",
+      "**Maintenance:** Regular air filter changes, use recommended oil grade.",
+      "**Consider:** Hybrid or EV for next vehicle (can cut emissions 50-100%)."
+    ] : [
+      "**Immediate actions:**",
+      "  - Check tire pressure weekly (can improve 3-5%)",
+      "  - Remove roof racks and excess cargo",
+      "  - Combine trips and reduce cold starts",
+      "**Driving style (saves 20-30%):**",
+      "  - Accelerate gradually",
+      "  - Use cruise control on highways",
+      "  - Anticipate stops to coast",
+      "**Long-term solutions:**",
+      "  - Trade for a hybrid (40-50% reduction)",
+      "  - Consider full EV (80-100% reduction)",
+      "  - Reduce miles: carpool, bike, transit"
+    ];
+
+    return `**Personalized Improvement Plan for Your ${predicted_co2_emissions} g/km Vehicle:**
+
+${quickWins.join("\n")}
+
+**Potential Savings:**
+${predicted_co2_emissions < 160 ? 
+  "Even small improvements could save $200-300/year in fuel." : 
+  predicted_co2_emissions < 200 ?
+  "With these changes, expect $400-600/year in fuel savings." :
+  "Eco-driving alone could save $800-1200/year. Switching to hybrid: $1500-2000/year."
+}
+
+Ready to track your progress? I can help with that!`;
+  }
+
+  // IS MY RESULT GOOD/BAD
+  if (lowerInput.includes("good") || lowerInput.includes("bad") || lowerInput.includes("average")) {
+    return `**How Your ${predicted_co2_emissions} g/km Stacks Up:**
+
+${predicted_co2_emissions < 120 ? `
+**Excellent!** Your result is **better than 85%** of vehicles.
+- Comparable to: Toyota Prius, Honda Insight, Nissan Leaf
+- You're a climate champion! 
+` : predicted_co2_emissions < 160 ? `
+**Good!** Your result is **better than 60%** of vehicles.
+- Comparable to: Honda Civic, Toyota Corolla, Mazda3
+- You're on the right track! 
+` : predicted_co2_emissions < 200 ? `
+**Average.** Your result is **typical** for mid-size vehicles.
+- Comparable to: Honda CR-V, Ford Escape, Subaru Outback
+- Room for improvement through eco-driving. 
+` : `
+**High.** Your result is in the **top 25%** of emitters.
+- Comparable to: Ford F-150, Chevy Tahoe, large SUVs
+- Significant opportunity to reduce impact. 
+`}
+
+**Benchmark Comparison:**
+- Best-in-class: ~80 g/km (hybrid)
+- Your vehicle: ${predicted_co2_emissions} g/km
+- Average vehicle: ~180 g/km
+- Worst: ~300+ g/km (large trucks/SUVs)
+
+${predicted_co2_emissions < 160 ? "Keep up the great work!" : "Want tips to improve? Just ask!"}`;
+  }
+
+  // COMPARE TO OTHER VEHICLES
+  if (lowerInput.includes("compare") || lowerInput.includes("comparison") || lowerInput.includes("versus") || lowerInput.includes("vs")) {
+    return `**Your ${predicted_co2_emissions} g/km vs Other Options:**
+
+**If you switched to:**
+
+**Electric Vehicle** (e.g., Tesla Model 3, Nissan Leaf)
+- Emissions: ~50-80 g/km (grid-dependent)
+- **Reduction: ${Math.round((1 - 70/predicted_co2_emissions) * 100)}%**
+- Annual savings: ~$${Math.round((predicted_co2_emissions - 70) * 13500 * 1.60934 / 1000 * 0.25)}
+
+**Plug-in Hybrid** (e.g., Toyota RAV4 Prime, Ford Escape PHEV)
+- Emissions: ~90-120 g/km
+- **Reduction: ${predicted_co2_emissions > 120 ? Math.round((1 - 105/predicted_co2_emissions) * 100) : 0}%**
+- Annual savings: ~$${predicted_co2_emissions > 120 ? Math.round((predicted_co2_emissions - 105) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+**Standard Hybrid** (e.g., Toyota Prius, Honda Accord Hybrid)
+- Emissions: ~100-130 g/km
+- **Reduction: ${predicted_co2_emissions > 130 ? Math.round((1 - 115/predicted_co2_emissions) * 100) : 0}%**
+- Annual savings: ~$${predicted_co2_emissions > 130 ? Math.round((predicted_co2_emissions - 115) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+**Efficient Gas Car** (e.g., Honda Civic, Mazda3)
+- Emissions: ~140-160 g/km
+- **Reduction: ${predicted_co2_emissions > 160 ? Math.round((1 - 150/predicted_co2_emissions) * 100) : 0}%**
+- Annual savings: ~$${predicted_co2_emissions > 160 ? Math.round((predicted_co2_emissions - 150) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+*Note: Savings assume $3.50/gallon gas, $0.13/kWh electricity, 13,500 miles/year*
+
+Want to know which is best for YOUR situation? Ask me!`;
+  }
+
+  return null;
+};
+
+// Main matching function
+const findBestMatch = (input, predictionData) => {
+  const lowerInput = input.toLowerCase();
+  const words = lowerInput.split(/\s+/).filter(w => w.length > 2);
+  
+  // Check for prediction-specific responses first
+  if (predictionData) {
+    const contextResponse = generatePredictionResponse(input, predictionData);
+    if (contextResponse) return contextResponse;
+  }
   
   let bestMatch = null;
   let highestScore = 0;
   
   for (const entry of knowledgeBase) {
+    // Skip prediction-required entries if no prediction
+    if (entry.requiresPrediction && !predictionData) continue;
+    
     let score = 0;
     let matchedKeywords = 0;
     
-    // Count keyword matches
     for (const keyword of entry.keywords) {
       if (lowerInput.includes(keyword)) {
         matchedKeywords++;
         
-        // Exact word match gets higher score
         if (words.includes(keyword)) {
           score += 3;
         } else {
@@ -128,10 +315,8 @@ const findBestMatch = (input) => {
       }
     }
     
-    // Apply priority multiplier
     score *= (entry.priority || 1);
     
-    // Bonus for multiple keyword matches
     if (matchedKeywords > 1) {
       score += matchedKeywords * 2;
     }
@@ -142,32 +327,56 @@ const findBestMatch = (input) => {
     }
   }
   
-  // Require minimum score to avoid weak matches
   if (highestScore < 5) {
-    return "That's a great question. To give you the most accurate and helpful answer, could you rephrase it with a bit more detail? For example, 'How do electric cars work in cold weather?' or 'What is the greenest car for a family of five?' I'm here for the details.";
+    if (predictionData) {
+      return "I can help explain your prediction result! Try asking: 'Explain my result', 'How do I improve?', or 'Is my score good?'";
+    }
+    return "That's a great question. To give you the most accurate answer, could you rephrase it with more detail? For example, 'How do electric cars work?' or 'What's the greenest car for a family?'";
   }
   
   return bestMatch.response;
 };
 
-const Chatbot = () => {
+const Chatbot = ({ predictionData }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: "System online. How can I assist your eco-journey today?", sender: "bot" }
+    { text: predictionData 
+      ? `Great! I see you got your prediction: **${predictionData.predicted_co2_emissions} g/km** (${predictionData.category}). Ask me anything about your result!`
+      : "System online. How can I assist your eco-journey today?", 
+      sender: "bot" 
+    }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Memoized quick prompts
-  const quickPrompts = useMemo(() => [
-    "How to reduce emissions",
-    "How does the website work",
-    "What do the colors mean?"
-  ], []);
+  // Update initial message when prediction arrives
+  useEffect(() => {
+    if (predictionData && messages.length === 1) {
+      setMessages([{
+        text: `Prediction complete! Your vehicle emits **${predictionData.predicted_co2_emissions} g/km** (${predictionData.category}). \n\nAsk me:\n• "Explain my result"\n• "How do I improve?"\n• "Is this good?"`,
+        sender: "bot"
+      }]);
+    }
+  }, [predictionData]);
 
-  // Memoized animations
+  // Memoized quick prompts - context-aware
+  const quickPrompts = useMemo(() => {
+    if (predictionData) {
+      return [
+        "Explain my result",
+        "How do I improve?",
+        "Compare to other vehicles"
+      ];
+    }
+    return [
+      "How to reduce emissions",
+      "How does the website work",
+      "What do the colors mean?"
+    ];
+  }, [predictionData]);
+
   const animations = useMemo(() => ({
     chatWindow: {
       initial: { opacity: 0, y: 20, scale: 0.95 },
@@ -185,7 +394,6 @@ const Chatbot = () => {
     setIsOpen(prev => !prev);
   }, []);
 
-  // Auto-scroll
   useEffect(() => {
     if (messagesEndRef.current) {
       const timer = setTimeout(() => {
@@ -195,7 +403,6 @@ const Chatbot = () => {
     }
   }, [messages, isTyping]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
@@ -212,13 +419,13 @@ const Chatbot = () => {
 
     setTimeout(() => {
       const botResponse = {
-        text: findBestMatch(userMessage.text),
+        text: findBestMatch(userMessage.text, predictionData),
         sender: "bot"
       };
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
     }, 800);
-  }, [input]);
+  }, [input, predictionData]);
 
   const handleKeyPress = useCallback((e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -234,13 +441,13 @@ const Chatbot = () => {
 
     setTimeout(() => {
       const botResponse = {
-        text: findBestMatch(userMessage.text),
+        text: findBestMatch(userMessage.text, predictionData),
         sender: "bot"
       };
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
     }, 800);
-  }, []);
+  }, [predictionData]);
 
   return (
     <>
@@ -250,7 +457,6 @@ const Chatbot = () => {
             {...animations.chatWindow}
             className="fixed bottom-20 right-4 left-4 sm:left-auto sm:right-6 sm:bottom-24 sm:w-[360px] h-[75vh] sm:h-[550px] bg-white border border-gray-200 rounded-3xl shadow-2xl flex flex-col z-50 overflow-hidden"
           >
-            {/* Header */}
             <div className="p-4 bg-cyan-500 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
@@ -263,7 +469,7 @@ const Chatbot = () => {
                   <div className="flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 mt-0.5 rounded-full bg-white animate-pulse" />
                     <span className="text-[10px] mt-1 text-slate-100 font-medium uppercase tracking-wider">
-                      Online
+                      {predictionData ? "Analyzing Your Result" : "Online"}
                     </span>
                   </div>
                 </div>
@@ -276,7 +482,6 @@ const Chatbot = () => {
               </button>
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
               {messages.map((msg, index) => (
                 <motion.div
@@ -312,22 +517,18 @@ const Chatbot = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Prompts */}
-            {messages.length < 3 && (
-              <div className="px-4 pb-2 flex gap-2 overflow-x-auto bg-white">
-                {quickPrompts.map((prompt, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleQuickPrompt(prompt)}
-                    className="whitespace-nowrap px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 text-xs text-gray-600 transition-all font-medium"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="px-4 pb-2 flex gap-2 overflow-x-auto bg-white">
+              {quickPrompts.map((prompt, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleQuickPrompt(prompt)}
+                  className="whitespace-nowrap px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 text-xs text-gray-600 transition-all font-medium"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
 
-            {/* Input */}
             <div className="p-4 bg-white border-t border-gray-100">
               <div className="flex gap-2">
                 <input
@@ -336,7 +537,7 @@ const Chatbot = () => {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask Eco-Copilot..."
+                  placeholder={predictionData ? "Ask about your result..." : "Ask Eco-Copilot..."}
                   className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 transition-all"
                 />
                 <button
@@ -352,16 +553,20 @@ const Chatbot = () => {
         )}
       </AnimatePresence>
 
-      {/* Launcher */}
       <motion.button
         onClick={toggleChat}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className={`fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/30 transition-all z-50 ${
-          isOpen ? "bg-gray-900 text-white" : "bg-emerald-600 text-white hover:bg-emerald-700"
+          isOpen ? "bg-gray-900 text-white" : predictionData ? "bg-gradient-to-r from-emerald-600 to-cyan-600 text-white animate-pulse" : "bg-emerald-600 text-white hover:bg-emerald-700"
         }`}
       >
         {isOpen ? <X size={24} /> : <Cpu size={24} />}
+        
+        {/* Notification badge when prediction is ready */}
+        {predictionData && !isOpen && (
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-ping" />
+        )}
       </motion.button>
     </>
   );
