@@ -1,22 +1,22 @@
-import React from "react";
-import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import DOMPurify from 'dompurify'; // You'll need to install this
+// src/components/Chatbot/components/MessageBubble.jsx
+import React from 'react';
+import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import useAnimations from '../hooks/useAnimations';
+import DOMPurify from 'dompurify';
 
-const MessageBubble = ({ message, index, animations }) => {
-  // Sanitize markdown output
-  const sanitizeMarkdown = (text) => {
-    // Basic sanitization
-    const safeText = DOMPurify.sanitize(text, {
-      ALLOWED_TAGS: ['b', 'i', 'strong', 'em', 'code', 'pre', 'br', 'p', 'ul', 'ol', 'li'],
-      ALLOWED_ATTR: []
-    });
-    return safeText;
-  };
+const MessageBubble = ({ message }) => {
+  const { messageAnimation } = useAnimations();
+  
+  // Sanitize markdown content to prevent XSS
+  const sanitizedText = DOMPurify.sanitize(message.text, {
+    ALLOWED_TAGS: ['strong', 'em', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre'],
+    ALLOWED_ATTR: []
+  });
 
   return (
     <motion.div
-      {...animations.message}
+      {...messageAnimation}
       className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
     >
       <div
@@ -26,17 +26,7 @@ const MessageBubble = ({ message, index, animations }) => {
             : "bg-gray-100 text-gray-800 rounded-tl-none border border-gray-100"
         }`}
       >
-        <ReactMarkdown 
-          components={{
-            // Sanitize all rendered content
-            p: ({node, ...props}) => <p {...props} />,
-            strong: ({node, ...props}) => <strong {...props} />,
-            em: ({node, ...props}) => <em {...props} />,
-            code: ({node, ...props}) => <code className="bg-gray-200 px-1 rounded" {...props} />
-          }}
-        >
-          {sanitizeMarkdown(message.text)}
-        </ReactMarkdown>
+        <ReactMarkdown>{sanitizedText}</ReactMarkdown>
       </div>
     </motion.div>
   );
