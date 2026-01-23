@@ -22,32 +22,53 @@ export const generatePredictionResponse = (input, predictionData) => {
   const { predicted_co2_emissions, category, interpretation, vehicleData } = predictionData;
   const { fuel_type, cylinders, engine_size } = vehicleData;
 
-  // MY RESULT / MY PREDICTION
-  if (lowerInput.includes("my result") || lowerInput.includes("my prediction") || 
-      lowerInput.includes("my score") || lowerInput.includes("my emission") || 
-      lowerInput.includes("my vehicle")) {
-    return generateMyResultResponse(predicted_co2_emissions, category, interpretation, fuel_type, engine_size, cylinders);
-  }
-
-  // EXPLAIN MY RESULT
-  if (lowerInput.includes("explain") || lowerInput.includes("understand") || lowerInput.includes("mean")) {
+  // EXPLAIN MY RESULT (Most common query - check FIRST)
+  if (lowerInput.includes("explain my") || 
+      lowerInput.includes("understand my") || 
+      lowerInput.includes("what does my result mean") ||
+      lowerInput.includes("what is my result")) {
     return generateExplanationResponse(predicted_co2_emissions, fuel_type, engine_size, cylinders);
   }
 
-  // HOW TO IMPROVE
-  if (lowerInput.includes("improve") || lowerInput.includes("better") || 
-      lowerInput.includes("reduce my") || lowerInput.includes("lower my")) {
+  // MY RESULT / MY PREDICTION / MY SCORE
+  if (lowerInput.includes("my result") || 
+      lowerInput.includes("my prediction") || 
+      lowerInput.includes("my score") || 
+      lowerInput.includes("my emission") || 
+      lowerInput.includes("my vehicle") ||
+      lowerInput.includes("my car")) {
+    return generateMyResultResponse(predicted_co2_emissions, category, interpretation, fuel_type, engine_size, cylinders);
+  }
+
+  // HOW TO IMPROVE MY RESULT (specific to user's vehicle)
+  if ((lowerInput.includes("improve my") || 
+       lowerInput.includes("better my") || 
+       lowerInput.includes("reduce my") || 
+       lowerInput.includes("lower my")) &&
+      (lowerInput.includes("result") || 
+       lowerInput.includes("score") || 
+       lowerInput.includes("emission"))) {
     return generateImprovementResponse(predicted_co2_emissions);
   }
 
-  // IS MY RESULT GOOD/BAD
-  if (lowerInput.includes("good") || lowerInput.includes("bad") || lowerInput.includes("average")) {
+  // IS MY RESULT GOOD/BAD/AVERAGE
+  if ((lowerInput.includes("is my") || lowerInput.includes("my result")) &&
+      (lowerInput.includes("good") || 
+       lowerInput.includes("bad") || 
+       lowerInput.includes("average") ||
+       lowerInput.includes("terrible") ||
+       lowerInput.includes("excellent"))) {
     return generateBenchmarkResponse(predicted_co2_emissions);
   }
 
-  // COMPARE TO OTHER VEHICLES
-  if (lowerInput.includes("compare") || lowerInput.includes("comparison") || 
-      lowerInput.includes("versus") || lowerInput.includes("vs")) {
+  // COMPARE MY VEHICLE TO OTHERS
+  if ((lowerInput.includes("compare") || 
+       lowerInput.includes("comparison") || 
+       lowerInput.includes("versus") || 
+       lowerInput.includes("vs")) &&
+      (lowerInput.includes("my") || 
+       lowerInput.includes("other") || 
+       lowerInput.includes("different"))) {
     return generateComparisonResponse(predicted_co2_emissions);
   }
 

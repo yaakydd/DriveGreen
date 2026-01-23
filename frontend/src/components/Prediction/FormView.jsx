@@ -45,14 +45,14 @@ const FormView = ({
 
               <select
                 name="fuel_type"
-                value={form.fuel_type}
+                value={form.fuel_types}
                 onChange={handleChange}
                 required
-                style={SELECT_STYLE}
+                style={select_style}
                 className="w-full p-3 md:p-3.5 bg-gray-50 border border-gray-300 rounded-lg md:rounded-xl text-slate-800 text-sm md:text-base focus:ring-2 focus:ring-teal-500/50 focus:border-teal-500 transition-all shadow-sm hover:border-emerald-400 cursor-pointer appearance-none"
               >
                 <option value="" disabled>Select fuel type</option>
-                {FUEL_TYPES.map(opt => (
+                {fuel_types.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>

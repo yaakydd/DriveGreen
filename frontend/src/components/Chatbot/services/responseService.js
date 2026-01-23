@@ -1,4 +1,3 @@
-// src/components/Chatbot/services/responseService.js
 import { knowledgeBase } from '../data/knowledgeBase';
 
 /**

@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
-import { AlertCircle, AlertTriangle, Globe } from "lucide-react";
+import { AlertTriangle, Globe } from "lucide-react";
 import { API_URL, minimum_loading_time } from "../constants";
+
 
 const usePrediction = () => {
   const [prediction, setPrediction] = useState(null);
@@ -47,7 +48,7 @@ const usePrediction = () => {
       const data = await res.json();
 
       const elapsedTime = performance.now() - startTime;
-      const remainingTime = MIN_LOADING_TIME - elapsedTime;
+      const remainingTime = minimum_loading_time - elapsedTime;
 
       if (remainingTime > 0) {
         await new Promise(resolve => setTimeout(resolve, remainingTime));
@@ -66,7 +67,7 @@ const usePrediction = () => {
       setPrediction(predictionWithContext);
 
       toast.success("Prediction successful!", {
-        icon: <Globe className="w-5 h-5 text-blue-700" />,
+        icon: React.createElement(Globe, { className: "w-5 h-5 text-blue-700" }),
         style: { background: "#10b981", color: "#fff" }
       });
     } catch (err) {
@@ -76,7 +77,7 @@ const usePrediction = () => {
       
       console.error(err);
       toast.error(err.message || "Prediction failed. Check your inputs.", {
-        icon: <AlertTriangle className="w-5 h-5 text-red-500" />
+                icon: React.createElement(AlertTriangle, { className: "w-5 h-5 text-red-500" })
       });
     } finally {
       setLoading(false);

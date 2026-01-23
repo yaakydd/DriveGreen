@@ -6,9 +6,9 @@ import AnimatedParticles from "../BackgroundParticles";
 import Chatbot from "../Chatbot";
 import toast from "react-hot-toast";
 
-import { useAnimationVariants } from "./hooks/useAnimationVariants";
-import { useFormValidation } from "./hooks/useFormValidation";
-import { usePrediction } from "./hooks/usePrediction";
+import  useAnimationVariants  from "./hooks/useAnimationVariants";
+import  useFormValidation from "./hooks/useFormValidation";
+import  usePrediction  from "./hooks/usePrediction";
 import { initial_form_state } from "./constants";
 import FormView from "./FormView";
 import LoadingView from "./LoadingView";

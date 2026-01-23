@@ -1,18 +1,22 @@
-// src/components/Chatbot/components/MessageBubble.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import useAnimations from '../hooks/useAnimations';
-import DOMPurify from 'dompurify';
 
 const MessageBubble = ({ message }) => {
   const { messageAnimation } = useAnimations();
   
-  // Sanitize markdown content to prevent XSS
-  const sanitizedText = DOMPurify.sanitize(message.text, {
-    ALLOWED_TAGS: ['strong', 'em', 'p', 'br', 'ul', 'ol', 'li', 'code', 'pre'],
-    ALLOWED_ATTR: []
-  });
+  // Sanitize content to prevent XSS (without external library)
+  const sanitizeText = (text) => {
+    // Remove script tags and dangerous HTML
+    return text
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, ''); // Remove event handlers like onclick=
+  };
+
+  const sanitizedText = sanitizeText(message.text);
 
   return (
     <motion.div
@@ -26,7 +30,17 @@ const MessageBubble = ({ message }) => {
             : "bg-gray-100 text-gray-800 rounded-tl-none border border-gray-100"
         }`}
       >
-        <ReactMarkdown>{sanitizedText}</ReactMarkdown>
+        <ReactMarkdown
+          components={{
+            // Only allow safe markdown elements
+            a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+            img: () => null, // Block images
+            script: () => null, // Block scripts
+            iframe: () => null // Block iframes
+          }}
+        >
+          {sanitizedText}
+        </ReactMarkdown>
       </div>
     </motion.div>
   );
