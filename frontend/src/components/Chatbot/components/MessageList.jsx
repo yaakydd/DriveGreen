@@ -1,16 +1,12 @@
-import React from "react";
-import MessageBubble from "./MessageBubble";
+// src/components/Chatbot/components/MessageList.jsx
+import React from 'react';
+import MessageBubble from './MessageBubble';
 
-const MessageList = ({ messages, isTyping, messagesEndRef, animations }) => {
+const MessageList = ({ messages, isTyping, messagesEndRef }) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
       {messages.map((msg, index) => (
-        <MessageBubble
-          key={index}
-          message={msg}
-          index={index}
-          animations={animations}
-        />
+        <MessageBubble key={index} message={msg} />
       ))}
 
       {isTyping && (
