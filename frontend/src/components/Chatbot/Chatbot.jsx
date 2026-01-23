@@ -1,9 +1,11 @@
 import React, { memo } from "react";
 import { AnimatePresence } from "framer-motion";
 import ChatWindow from "./components/ChatWindow";
+import { findBestMatch } from './services/responseService';
 import ToggleButton from "./components/ToggleButton";
 import { useChatLogic } from "./hooks/useChatLogic";
 import { useAnimations } from "./hooks/useAnimations";
+import { useMessageMatching } from './hooks/useMessageMatching';
 
 const Chatbot = ({ predictionData }) => {
   const {

@@ -31,4 +31,4 @@ const MessageList = ({ messages, isTyping, messagesEndRef, animations }) => {
   );
 };
 
-export default MessageBubble;
+export default MessageList;

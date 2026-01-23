@@ -16,7 +16,7 @@ import ResultView from "./ResultView";
 
 const PredictionForm = () => {
   // State
-  const [form, setForm] = useState(INITIAL_FORM_STATE);
+  const [form, setForm] = useState(initial_form_state);
   
   // Custom hooks
   const variants = useAnimationVariants();
@@ -44,7 +44,7 @@ const PredictionForm = () => {
 
   const handleReset = useCallback(() => {
     resetPrediction();
-    setForm(INITIAL_FORM_STATE);
+    setForm(initial_form_state);
   }, [resetPrediction]);
 
   return (

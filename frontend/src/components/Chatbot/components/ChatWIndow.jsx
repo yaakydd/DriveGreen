@@ -15,6 +15,7 @@ const ChatWindow = ({
   onKeyPress,
   onQuickPrompt,
   isTyping,
+  showQuickPrompts, // ADD THIS
   messagesEndRef,
   inputRef,
   animations,
@@ -36,9 +37,11 @@ const ChatWindow = ({
         animations={animations}
       />
       
+      {/* PASS showQuickPrompts here */}
       <QuickPrompts 
         predictionData={predictionData}
         onPromptClick={onQuickPrompt}
+        showQuickPrompts={showQuickPrompts}
       />
       
       <InputArea

@@ -13,6 +13,7 @@ export const useChatLogic = (predictionData) => {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [showQuickPrompts, setShowQuickPrompts] = useState(true); // ADD THIS
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   
@@ -25,6 +26,7 @@ export const useChatLogic = (predictionData) => {
         text: `Prediction complete! Your vehicle emits **${predictionData.predicted_co2_emissions} g/km** (${predictionData.category}). \n\nAsk me:\n• "Explain my result"\n• "How do I improve?"\n• "Is this good?"`,
         sender: "bot"
       }]);
+      setShowQuickPrompts(true); // Reset when new prediction
     }
   }, [predictionData, messages.length]);
 
@@ -53,6 +55,7 @@ export const useChatLogic = (predictionData) => {
     const userMessage = { text: input, sender: "user" };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
+    setShowQuickPrompts(false); // HIDE quick prompts when user types
     setIsTyping(true);
 
     setTimeout(() => {
@@ -75,6 +78,7 @@ export const useChatLogic = (predictionData) => {
   const sendQuickPrompt = useCallback((prompt) => {
     const userMessage = { text: prompt, sender: "user" };
     setMessages(prev => [...prev, userMessage]);
+    setShowQuickPrompts(false); // HIDE quick prompts when clicked
     setIsTyping(true);
 
     setTimeout(() => {
@@ -92,6 +96,7 @@ export const useChatLogic = (predictionData) => {
     messages,
     input,
     isTyping,
+    showQuickPrompts, // ADD THIS to return
     messagesEndRef,
     inputRef,
     toggleChat,

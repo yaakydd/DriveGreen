@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import { findBestMatch } from '../services/responseService';
 
-const useMessageMatching = (predictionData) => {
+export const useMessageMatching = (predictionData) => {
   const getBotResponse = useCallback((input) => {
-    return findBestMatch(input, predictionData);
+    console.log(' Getting bot response for:', input);
+    const response = findBestMatch(input, predictionData);
+    console.log(' Bot response length:', response?.length || 0);
+    return response;
   }, [predictionData]);
 
   return { getBotResponse };
 };
-
-export default useMessageMatching

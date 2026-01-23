@@ -1,7 +1,12 @@
 import React from "react";
 import { getQuickPrompts } from '../data/quickPrompts';
 
-const QuickPrompts = ({ predictionData, onPromptClick }) => {
+const QuickPrompts = ({ predictionData, onPromptClick, showQuickPrompts }) => {
+  // DON'T SHOW if showQuickPrompts is false
+  if (!showQuickPrompts) {
+    return null;
+  }
+
   const prompts = getQuickPrompts(predictionData);
 
   return (

@@ -1,4 +1,3 @@
-// Enhanced Knowledge Base with intent tags and synonyms
 export const knowledgeBase = [
   // GREETINGS - High priority
   { 
@@ -15,11 +14,11 @@ export const knowledgeBase = [
     response: "You're genuinely welcome. Every question you ask is a step towards a cleaner planet. Let's keep going." 
   },
 
-  // SPECIFIC TECHNICAL QUERIES - Highest priority
+  // **FIXED: Technical queries - REMOVED "prediction" and "predict" keywords**
   { 
-    keywords: ["calculate", "prediction", "predict", "formula", "algorithm", "math", "xgboost", "model", "prediction model"], 
-    priority: 10, 
-    tags: ["technical", "prediction", "how-it-works"],
+    keywords: ["calculate", "formula", "algorithm", "math", "xgboost", "model"], // REMOVED: "prediction", "predict", "prediction model"
+    priority: 8, // LOWERED from 10 to 8
+    tags: ["technical", "how-it-works"],
     response: "**The Science Behind Your Score:** I use the three inputs which is fuel type, engine size and the number of cylinders to estimate emissions, xgboost is the model trained and tested to be used for prediction . The process: The numeric features (engine size, cylinders) is log transformed before training the model and the categorical feature(fuel type) is one-hot encoded. Then they are all put in one dataframe to train the model. After the predicton, the log transformed results is reversed to get the actual CO2 emissions from the vehicle. ." 
   },
   
