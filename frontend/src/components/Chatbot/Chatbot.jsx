@@ -1,11 +1,8 @@
-import React, { memo } from "react";
-import { AnimatePresence } from "framer-motion";
-import ChatWindow from "./components/ChatWindow";
-import { findBestMatch } from './services/responseService';
-import ToggleButton from "./components/ToggleButton";
-import { useChatLogic } from "./hooks/useChatLogic";
-import { useAnimations } from "./hooks/useAnimations";
-import { useMessageMatching } from './hooks/useMessageMatching';
+import React, { memo } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import ChatWindow from './components/ChatWindow';
+import ToggleButton from './components/ToggleButton';
+import useChatLogic from './hooks/useChatLogic';
 
 const Chatbot = ({ predictionData }) => {
   const {
@@ -13,41 +10,39 @@ const Chatbot = ({ predictionData }) => {
     messages,
     input,
     isTyping,
-    messagesEndRef,
-    inputRef,
     toggleChat,
-    setInput,
-    sendMessage,
+    handleSend,
     handleKeyPress,
-    sendQuickPrompt
+    handleQuickPrompt,
+    setInput,
+    messagesEndRef,
+    inputRef
   } = useChatLogic(predictionData);
-
-  const animations = useAnimations();
 
   return (
     <>
       <AnimatePresence>
-        <ChatWindow
-          isOpen={isOpen}
-          onClose={toggleChat}
-          messages={messages}
-          input={input}
-          setInput={setInput}
-          onSend={sendMessage}
-          onKeyPress={handleKeyPress}
-          onQuickPrompt={sendQuickPrompt}
-          isTyping={isTyping}
-          messagesEndRef={messagesEndRef}
-          inputRef={inputRef}
-          animations={animations}
-          predictionData={predictionData}
-        />
+        {isOpen && (
+          <ChatWindow
+            messages={messages}
+            input={input}
+            isTyping={isTyping}
+            predictionData={predictionData}
+            toggleChat={toggleChat}
+            handleSend={handleSend}
+            handleKeyPress={handleKeyPress}
+            handleQuickPrompt={handleQuickPrompt}
+            setInput={setInput}
+            messagesEndRef={messagesEndRef}
+            inputRef={inputRef}
+          />
+        )}
       </AnimatePresence>
 
       <ToggleButton
         isOpen={isOpen}
-        onClick={toggleChat}
         predictionData={predictionData}
+        toggleChat={toggleChat}
       />
     </>
   );
