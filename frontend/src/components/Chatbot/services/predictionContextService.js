@@ -1,444 +1,235 @@
-import { fuelLabels } from '../data/knowledgeBase';
+// src/components/Chatbot/services/predictionContextService.js
 
-// Generate context-aware response based on prediction data
-const generatePredictionResponse = (input, predictionData) => {
-  
-  // Check if prediction data exists
-  if (!predictionData) {
-    console.log('No prediction data - returning null');
-    return null;
-  }
+// Fuel type labels mapping
+const FUEL_LABELS = {
+  "X": "Regular Gasoline",
+  "Z": "Premium Gasoline",
+  "E": "Ethanol (E85)",
+  "D": "Diesel",
+  "N": "Natural Gas"
+};
 
-  const lowerInput = input.toLowerCase().trim();
+/**
+ * Generate context-aware response based on prediction data
+ * @param {string} input - User input
+ * @param {Object} predictionData - Prediction results
+ * @returns {string|null} Context-specific response or null
+ */
+export const generatePredictionResponse = (input, predictionData) => {
+  if (!predictionData) return null;
+
+  const lowerInput = input.toLowerCase();
   const { predicted_co2_emissions, category, interpretation, vehicleData } = predictionData;
   const { fuel_type, cylinders, engine_size } = vehicleData;
 
-  console.log('Checking for prediction-specific phrases...');
-  
-  // **CRITICAL FIX: Check for "my" + prediction words**
-  const hasMyPrediction = 
-    lowerInput.includes('my result') || 
-    lowerInput.includes('my prediction') || 
-    lowerInput.includes('my score') || 
-    lowerInput.includes('my emission') ||
-    lowerInput.includes('my vehicle') ||
-    lowerInput.includes('show my') ||
-    (lowerInput.includes('my') && (
-      lowerInput.includes('result') || 
-      lowerInput.includes('prediction') || 
-      lowerInput.includes('score') || 
-      lowerInput.includes('emission')
-    ));
-
-  console.log('Has "my prediction" phrase?', hasMyPrediction);
-
-  // **CRITICAL FIX: Order matters - check most specific first**
-  
-  // 1. "explain my result" - MOST SPECIFIC
-  if ((lowerInput.includes('explain') || lowerInput.includes('understand') || 
-       lowerInput.includes('mean') || lowerInput.includes('what does')) && 
-      hasMyPrediction) {
-    console.log('✅ Matched: EXPLAIN MY RESULT');
-    return getExplanationResponse(predicted_co2_emissions, fuel_type, cylinders, engine_size);
-  }
-  
-  // 2. "improve my result"
-  if ((lowerInput.includes('improve') || lowerInput.includes('better') || 
-       lowerInput.includes('reduce') || lowerInput.includes('lower')) && 
-      (hasMyPrediction || lowerInput.includes('my'))) {
-    console.log('✅ Matched: IMPROVE MY RESULT');
-    return getImprovementResponse(predicted_co2_emissions);
-  }
-  
-  // 3. "is my result good/bad"
-  if ((lowerInput.includes('good') || lowerInput.includes('bad') || 
-       lowerInput.includes('average') || lowerInput.includes('rating') ||
-       lowerInput.includes('is my')) && 
-      hasMyPrediction) {
-    console.log('✅ Matched: RATE MY RESULT');
-    return getRatingResponse(predicted_co2_emissions);
-  }
-  
-  // 4. "compare my result"
-  if ((lowerInput.includes('compare') || lowerInput.includes('vs') || 
-       lowerInput.includes('versus') || lowerInput.includes('comparison')) && 
-      (hasMyPrediction || lowerInput.includes('my'))) {
-    console.log('✅ Matched: COMPARE MY RESULT');
-    return getComparisonResponse(predicted_co2_emissions);
-  }
-  
-  // 5. General "my result" (show full report)
-  if (hasMyPrediction) {
-    console.log('✅ Matched: SHOW MY RESULT');
-    return getResultsResponse(predicted_co2_emissions, category, interpretation, fuel_type, cylinders, engine_size);
-  }
-  
-  // 6. Fallback for prediction-related queries without "my"
-  if (lowerInput.includes('prediction') || lowerInput.includes('result') || 
-      lowerInput.includes('score') || lowerInput.includes('emission')) {
-    console.log('⚠️ Matched: GENERAL PREDICTION QUERY');
-    return getPredictionFallback(predicted_co2_emissions);
+  // MY RESULT / MY PREDICTION
+  if (lowerInput.includes("my result") || lowerInput.includes("my prediction") || 
+      lowerInput.includes("my score") || lowerInput.includes("my emission") || 
+      lowerInput.includes("my vehicle")) {
+    return generateMyResultResponse(predicted_co2_emissions, category, interpretation, fuel_type, engine_size, cylinders);
   }
 
-  console.log('❌ No prediction match - returning null');
+  // EXPLAIN MY RESULT
+  if (lowerInput.includes("explain") || lowerInput.includes("understand") || lowerInput.includes("mean")) {
+    return generateExplanationResponse(predicted_co2_emissions, fuel_type, engine_size, cylinders);
+  }
+
+  // HOW TO IMPROVE
+  if (lowerInput.includes("improve") || lowerInput.includes("better") || 
+      lowerInput.includes("reduce my") || lowerInput.includes("lower my")) {
+    return generateImprovementResponse(predicted_co2_emissions);
+  }
+
+  // IS MY RESULT GOOD/BAD
+  if (lowerInput.includes("good") || lowerInput.includes("bad") || lowerInput.includes("average")) {
+    return generateBenchmarkResponse(predicted_co2_emissions);
+  }
+
+  // COMPARE TO OTHER VEHICLES
+  if (lowerInput.includes("compare") || lowerInput.includes("comparison") || 
+      lowerInput.includes("versus") || lowerInput.includes("vs")) {
+    return generateComparisonResponse(predicted_co2_emissions);
+  }
+
   return null;
 };
 
-// Response generators
-const getResultsResponse = (emissions, category, interpretation, fuelType, cylinders, engineSize) => {
-  const ratingEmoji = category === "Excellent" ? "🟢" : 
-                     category === "Good" ? "🟡" : "🔴";
-  
-  const followUp = emissions < 160 ? 
-    "**Great job!** Your vehicle has relatively low emissions compared to average." : 
-    emissions < 200 ? 
-    "**Room for improvement:** Your vehicle is in the average range. Eco-driving techniques could help." : 
-    "**Consider alternatives:** This is on the higher end. Hybrid or electric options could significantly reduce emissions.";
+/**
+ * Generate "my result" response
+ */
+const generateMyResultResponse = (emissions, category, interpretation, fuel_type, engine_size, cylinders) => {
+  return `**Your Vehicle's Emissions Report:**
 
-  return `**Your Vehicle's Emissions Report** 📊
-
-**Prediction:** ${emissions.toFixed(1)} g/km
+**Prediction:** ${emissions} g/km
 **Category:** ${category}
-**Rating:** ${ratingEmoji}
+**Rating:** ${category === "Excellent" ? "🟢" : category === "Good" ? "🟡" : "🔴"}
 
-**Vehicle Specifications:**
-• **Fuel Type:** ${fuelLabels[fuelType] || fuelType}
-• **Engine Size:** ${engineSize}L
-• **Cylinders:** ${cylinders}
+**Vehicle Specs:**
+- Fuel: ${FUEL_LABELS[fuel_type] || fuel_type}
+- Engine: ${engine_size}L
+- Cylinders: ${cylinders}
 
-**Interpretation:**
+**What This Means:**
 ${interpretation}
 
-${followUp}
+${emissions < 160 ? "Great job! Your vehicle has relatively low emissions. " : 
+  emissions < 200 ? "Your vehicle is in the average range. There's room for improvement through eco-driving techniques." : 
+  "This is on the higher end. Consider exploring hybrid or electric options for your next vehicle, or focus on reducing miles driven."}
 
-**Ask me:**
-• "Explain this in detail"
-• "How can I improve?"
-• "Compare to other vehicles"
-• "Is this score good?"`;
+Ask me how to improve your score or compare your result!`;
 };
 
-const getExplanationResponse = (emissions, fuelType, cylinders, engineSize) => {
-  const fuelLabel = fuelLabels[fuelType] || fuelType;
-  const annualCO2 = Math.round(emissions * 13500 * 1.60934 / 1000);
-  const annualCost = Math.round(emissions * 13500 * 1.60934 / 1000 * 0.25);
+/**
+ * Generate explanation response
+ */
+const generateExplanationResponse = (emissions, fuel_type, engine_size, cylinders) => {
+  const performanceCategory = emissions < 120 ? 'excellent' : emissions < 160 ? 'good' : emissions < 200 ? 'average' : 'high';
+  
+  const performanceText = {
+    excellent: `**Excellent Performance!** 
+- You're in the top 15% of vehicles
+- Comparable to efficient hybrids
+- 30-40% better than average vehicles`,
+    good: `**Good Performance**
+- Better than 60% of vehicles on the road
+- Similar to modern compact cars
+- About 15-20% better than average`,
+    average: `**Average Performance**
+- Typical for mid-size sedans and small SUVs
+- Room for 20-30% improvement through eco-driving
+- Consider maintenance and tire pressure optimization`,
+    high: `**High Emissions**
+- Typical for large SUVs, trucks, or older vehicles
+- 40-60% higher than efficient alternatives
+- Significant cost and environmental impact`
+  };
 
-  return `**Understanding Your ${emissions.toFixed(1)} g/km Result** 🧠
+  return `**Understanding Your ${emissions} g/km Result:**
 
-Your **${fuelLabel}** vehicle with a **${engineSize}L ${cylinders}-cylinder** engine produces **${emissions.toFixed(1)} grams of CO2 per kilometer** driven.
+Your **${FUEL_LABELS[fuel_type] || fuel_type}** vehicle with a **${engine_size}L ${cylinders}-cylinder** engine produces **${emissions} grams of CO2 per kilometer** driven.
 
-**What this means in context:**
-${getEmissionsPerspective(emissions)}
+**Put in Perspective:**
+${performanceText[performanceCategory]}
 
 **Annual Impact** (assuming 13,500 miles/year):
-• **CO2 emissions:** ~${annualCO2} kg/year (${(annualCO2/1000).toFixed(1)} metric tons)
-• **Fuel cost:** ~$${annualCost} annually
-• **Environmental impact:** Equivalent to ${Math.round(annualCO2 / 20)} tree seedlings grown for 10 years
+- **CO2 emissions:** ~${Math.round(emissions * 13500 * 1.60934 / 1000)} kg/year
+- **Fuel cost:** ~$${Math.round(emissions * 13500 * 1.60934 / 1000 * 0.25)} annually
 
-**Key factors affecting your score:**
-1. **Fuel type:** ${fuelLabel} has specific carbon intensity
-2. **Engine size:** Larger engines typically consume more fuel
-3. **Cylinders:** More cylinders often mean higher emissions
-
-**Want more details or tips to reduce this?**`;
+Want tips on reducing this? Just ask!`;
 };
 
-const getEmissionsPerspective = (emissions) => {
-  if (emissions < 120) {
-    return `**Excellent Performance!** 🌟
-• Top 15% of all vehicles
-• Comparable to efficient hybrids
-• 30-40% better than average vehicles
-• Minimal environmental impact`;
-  } else if (emissions < 160) {
-    return `**Good Performance** 👍
-• Better than 60% of vehicles on the road
-• Similar to modern compact cars
-• About 15-20% better than average
-• Room for optimization`;
-  } else if (emissions < 200) {
-    return `**Average Performance** 📊
-• Typical for mid-size sedans and small SUVs
-• Room for 20-30% improvement through eco-driving
-• Consider maintenance and tire pressure optimization
-• Significant reduction opportunities available`;
-  } else {
-    return `**High Emissions** ⚠️
-• Typical for large SUVs, trucks, or older vehicles
-• 40-60% higher than efficient alternatives
-• Significant cost and environmental impact
-• Major improvement opportunities`;
-  }
-};
+/**
+ * Generate improvement response
+ */
+const generateImprovementResponse = (emissions) => {
+  const quickWins = emissions < 160 ? [
+    "**Fine-tune:** You're already doing well! Focus on maintaining tire pressure and regular oil changes.",
+    "**Drive smooth:** Avoid rapid acceleration—it can save another 5-10%.",
+    "**Route optimization:** Use GPS to avoid traffic and reduce idling."
+  ] : emissions < 200 ? [
+    "**Quick wins:** Proper tire inflation (saves 3%), remove excess weight (1-2% per 100 lbs).",
+    "**Eco-driving:** Gentle acceleration, maintain steady speeds, coast to stops.",
+    "**Maintenance:** Regular air filter changes, use recommended oil grade.",
+    "**Consider:** Hybrid or EV for next vehicle (can cut emissions 50-100%)."
+  ] : [
+    "**Immediate actions:**",
+    "  - Check tire pressure weekly (can improve 3-5%)",
+    "  - Remove roof racks and excess cargo",
+    "  - Combine trips and reduce cold starts",
+    "**Driving style (saves 20-30%):**",
+    "  - Accelerate gradually",
+    "  - Use cruise control on highways",
+    "  - Anticipate stops to coast",
+    "**Long-term solutions:**",
+    "  - Trade for a hybrid (40-50% reduction)",
+    "  - Consider full EV (80-100% reduction)",
+    "  - Reduce miles: carpool, bike, transit"
+  ];
 
-const getImprovementResponse = (emissions) => {
-  const quickWins = getQuickWins(emissions);
-  const potentialSavings = getPotentialSavings(emissions);
-  
-  return `**Personalized Improvement Plan for Your ${emissions.toFixed(1)} g/km Vehicle** 🚀
+  const savings = emissions < 160 ? "$200-300" : emissions < 200 ? "$400-600" : "$800-1200";
+
+  return `**Personalized Improvement Plan for Your ${emissions} g/km Vehicle:**
 
 ${quickWins.join("\n")}
 
-**Potential Impact:**
-${potentialSavings}
-
-**Recommended Priority:**
-${getPriorityActions(emissions)}
-
-**Track your progress:** Try implementing one change at a time and check back in a month!`;
-};
-
-const getQuickWins = (emissions) => {
-  if (emissions < 160) {
-    return [
-      "**1. Maintenance Excellence:**",
-      "   • Monthly tire pressure checks (maintains 3% efficiency)",
-      "   • Regular oil changes with recommended grade",
-      "   • Air filter replacement every 15,000 miles",
-      "",
-      "**2. Driving Optimization:**",
-      "   • Smooth acceleration and braking (saves 5-10%)",
-      "   • Use cruise control on highways",
-      "   • Plan routes to avoid traffic and idling",
-      "",
-      "**3. Vehicle Care:**",
-      "   • Remove unnecessary weight",
-      "   • Keep windows closed at high speeds",
-      "   • Use AC efficiently"
-    ];
-  } else if (emissions < 200) {
-    return [
-      "**1. Immediate Actions (This Week):**",
-      "   • Check and adjust tire pressure (saves 3%)",
-      "   • Remove roof racks and excess cargo (1-2% per 100 lbs)",
-      "   • Clean air filter or replace if dirty",
-      "",
-      "**2. Driving Habits (Next Month):**",
-      "   • Practice gentle acceleration",
-      "   • Maintain steady speeds",
-      "   • Anticipate stops to coast",
-      "   • Avoid unnecessary idling",
-      "",
-      "**3. Future Considerations:**",
-      "   • Hybrid or EV for next vehicle (50-100% reduction)",
-      "   • Regular maintenance schedule",
-      "   • Consider carpooling for commute"
-    ];
-  } else {
-    return [
-      "**1. Critical Actions (Today):**",
-      "   • Check tire pressure weekly (3-5% improvement)",
-      "   • Remove all unnecessary items from vehicle",
-      "   • Take off roof racks when not in use",
-      "",
-      "**2. Driving Transformation (Next 2 Weeks):**",
-      "   • Accelerate gradually (saves 20-30%)",
-      "   • Use cruise control consistently",
-      "   • Coast to stops instead of braking late",
-      "   • Combine trips to reduce cold starts",
-      "",
-      "**3. Strategic Changes (Next 6 Months):**",
-      "   • Consider trading for hybrid (40-50% reduction)",
-      "   • Evaluate full EV option (80-100% reduction)",
-      "   • Explore carpooling, biking, or public transit",
-      "   • Research vehicle incentives and tax credits"
-    ];
-  }
-};
-
-const getPotentialSavings = (emissions) => {
-  if (emissions < 160) {
-    return "• **Fuel savings:** $200-300/year\n• **CO2 reduction:** 0.5-0.8 tons/year\n• **Maintenance savings:** $100-150/year";
-  } else if (emissions < 200) {
-    return "• **Fuel savings:** $400-600/year\n• **CO2 reduction:** 1.0-1.5 tons/year\n• **Potential resale value increase:** $500-1000";
-  } else {
-    return "• **Fuel savings:** $800-1200/year (eco-driving)\n• **CO2 reduction:** 2.0-3.0 tons/year\n• **Hybrid switch savings:** $1500-2000/year\n• **EV switch savings:** $2000-3000/year";
-  }
-};
-
-const getPriorityActions = (emissions) => {
-  if (emissions < 160) {
-    return "1. Maintain current habits\n2. Fine-tune driving style\n3. Regular maintenance";
-  } else if (emissions < 200) {
-    return "1. Tire pressure and weight reduction\n2. Eco-driving techniques\n3. Consider efficient next vehicle";
-  } else {
-    return "1. Immediate tire/weight fixes\n2. Transform driving style\n3. Seriously consider vehicle change";
-  }
-};
-
-const getRatingResponse = (emissions) => {
-  const ratingInfo = getRatingInfo(emissions);
-  
-  return `**How Your ${emissions.toFixed(1)} g/km Result Compares** 📈
-
-${ratingInfo.description}
-
-**Benchmark Scale (g/km):**
-• **Excellent:** <120 (Top 15%)
-• **Good:** 120-160 (Better than 60%)
-• **Average:** 160-200 (Typical range)
-• **High:** 200-250 (Above average)
-• **Very High:** >250 (Top 25% emitters)
-
-**Your Position:** ${emissions.toFixed(1)} g/km → **${ratingInfo.rating}**
-
-**Industry Averages:**
-• **Best hybrid:** ~80 g/km
-• **Average vehicle:** ~180 g/km
-• **Large SUV/Truck:** 250-350 g/km
-
+**Potential Savings:**
 ${emissions < 160 ? 
-  "**Keep up the excellent work!** You're already making a positive impact. 🌱" : 
-  "**Improvement opportunity:** Significant reductions are possible with the right changes. 💡"}`;
+  `Even small improvements could save ${savings}/year in fuel.` : 
+  emissions < 200 ?
+  `With these changes, expect ${savings}/year in fuel savings.` :
+  `Eco-driving alone could save ${savings}/year. Switching to hybrid: $1500-2000/year.`}
+
+Ready to track your progress? I can help with that!`;
 };
 
-const getRatingInfo = (emissions) => {
-  if (emissions < 120) {
-    return {
-      rating: "Excellent! 🌟",
-      description: `**Outstanding Performance!** 
-• You're in the **top 15%** of all vehicles
-• Comparable to: Toyota Prius, Honda Insight, Nissan Leaf
-• Environmental impact: Minimal
-• You're a climate champion!`
-    };
-  } else if (emissions < 160) {
-    return {
-      rating: "Good! 👍",
-      description: `**Solid Performance**
-• Better than **60%** of vehicles on the road
-• Comparable to: Honda Civic, Toyota Corolla, Mazda3
-• Environmental impact: Moderate
-• You're on the right track!`
-    };
-  } else if (emissions < 200) {
-    return {
-      rating: "Average. 📊",
-      description: `**Typical Performance**
-• In the **average range** for modern vehicles
-• Comparable to: Honda CR-V, Ford Escape, Subaru Outback
-• Environmental impact: Significant
-• Room for improvement through focused changes`
-    };
-  } else if (emissions < 250) {
-    return {
-      rating: "High. ⚠️",
-      description: `**Above Average Emissions**
-• In the **top 35%** of emitters
-• Comparable to: Mid-size SUVs, some trucks
-• Environmental impact: High
-• Major improvement opportunities available`
-    };
-  } else {
-    return {
-      rating: "Very High. 🔴",
-      description: `**Among Highest Emitters**
-• In the **top 25%** of emitters
-• Comparable to: Ford F-150, Chevy Tahoe, large SUVs
-• Environmental impact: Very high
-• Immediate action recommended`
-    };
-  }
-};
-
-const getComparisonResponse = (emissions) => {
-  // Calculate reduction percentages
-  const evReduction = emissions > 70 ? Math.round((1 - 70/emissions) * 100) : 0;
-  const phevReduction = emissions > 120 ? Math.round((1 - 105/emissions) * 100) : 0;
-  const hybridReduction = emissions > 130 ? Math.round((1 - 115/emissions) * 100) : 0;
-  const efficientGasReduction = emissions > 160 ? Math.round((1 - 150/emissions) * 100) : 0;
-
-  // Calculate savings
-  const calculateSavings = (targetEmissions) => {
-    if (emissions <= targetEmissions) return 0;
-    return Math.round((emissions - targetEmissions) * 13500 * 1.60934 / 1000 * 0.25);
+/**
+ * Generate benchmark response
+ */
+const generateBenchmarkResponse = (emissions) => {
+  const rating = emissions < 120 ? 'excellent' : emissions < 160 ? 'good' : emissions < 200 ? 'average' : 'high';
+  
+  const ratingText = {
+    excellent: `**Excellent!** Your result is **better than 85%** of vehicles.
+- Comparable to: Toyota Prius, Honda Insight, Nissan Leaf
+- You're a climate champion!`,
+    good: `**Good!** Your result is **better than 60%** of vehicles.
+- Comparable to: Honda Civic, Toyota Corolla, Mazda3
+- You're on the right track!`,
+    average: `**Average.** Your result is **typical** for mid-size vehicles.
+- Comparable to: Honda CR-V, Ford Escape, Subaru Outback
+- Room for improvement through eco-driving.`,
+    high: `**High.** Your result is in the **top 25%** of emitters.
+- Comparable to: Ford F-150, Chevy Tahoe, large SUVs
+- Significant opportunity to reduce impact.`
   };
 
-  const evSavings = calculateSavings(70);
-  const phevSavings = calculateSavings(105);
-  const hybridSavings = calculateSavings(115);
-  const efficientGasSavings = calculateSavings(150);
-  const currentAnnualCost = Math.round(emissions * 13500 * 1.60934 / 1000 * 0.25);
-  const currentAnnualCO2 = Math.round(emissions * 13500 * 1.60934 / 1000);
+  return `**How Your ${emissions} g/km Stacks Up:**
 
-  return `**Your ${emissions.toFixed(1)} g/km vs Other Vehicle Types** ⚖️
+${ratingText[rating]}
 
-**Quick Comparison:**
-• **Your Current:** ${emissions.toFixed(1)} g/km | $${currentAnnualCost}/year
-• **Electric Vehicle:** 50-80 g/km | **${evReduction}% reduction** | Save $${evSavings}/year
-• **Plug-in Hybrid:** 90-120 g/km | **${phevReduction}% reduction** | Save $${phevSavings}/year
-• **Standard Hybrid:** 100-130 g/km | **${hybridReduction}% reduction** | Save $${hybridSavings}/year
-• **Efficient Gas:** 140-160 g/km | **${efficientGasReduction}% reduction** | Save $${efficientGasSavings}/year
+**Benchmark Comparison:**
+- Best-in-class: ~80 g/km (hybrid)
+- Your vehicle: ${emissions} g/km
+- Average vehicle: ~180 g/km
+- Worst: ~300+ g/km (large trucks/SUVs)
 
-**Detailed Breakdown:**
-
-**🚗 Electric Vehicle** (Tesla Model 3, Nissan Leaf)
-• Emissions: 50-80 g/km (depends on electricity source)
-• Reduction: **${evReduction}%** (${(emissions - 70).toFixed(1)} g/km less)
-• Annual savings: ~$${evSavings}
-• **Benefits:** Zero tailpipe emissions, lowest maintenance, tax credits
-• **Considerations:** Charging access, upfront cost
-
-**🔌 Plug-in Hybrid** (Toyota RAV4 Prime, Ford Escape PHEV)
-• Emissions: 90-120 g/km
-• Reduction: **${phevReduction}%** (${(emissions - 105).toFixed(1)} g/km less)
-• Annual savings: ~$${phevSavings}
-• **Benefits:** Electric for short trips, gas for long, no range anxiety
-• **Considerations:** Need charging access for full benefits
-
-**⚡ Standard Hybrid** (Toyota Prius, Honda Accord Hybrid)
-• Emissions: 100-130 g/km
-• Reduction: **${hybridReduction}%** (${(emissions - 115).toFixed(1)} g/km less)
-• Annual savings: ~$${hybridSavings}
-• **Benefits:** No charging needed, proven reliability, good resale
-• **Considerations:** Less reduction than PHEV/EV
-
-**⛽ Efficient Gas Car** (Honda Civic, Mazda3)
-• Emissions: 140-160 g/km
-• Reduction: **${efficientGasReduction}%** (${(emissions - 150).toFixed(1)} g/km less)
-• Annual savings: ~$${efficientGasSavings}
-• **Benefits:** Lowest upfront cost, widely available
-• **Considerations:** Still uses gas, higher long-term costs
-
-**📊 Your Current Impact:**
-• **Annual CO2:** ~${currentAnnualCO2} kg (${(currentAnnualCO2/1000).toFixed(1)} tons)
-• **Annual fuel cost:** ~$${currentAnnualCost}
-• **5-year total:** ~$${currentAnnualCost * 5} and ${currentAnnualCO2 * 5} kg CO2
-
-${getComparisonAnalysis(emissions, evReduction, evSavings)}
-
-*💡 Assumptions: $3.50/gallon gas, $0.13/kWh electricity, 13,500 miles/year. Actual savings vary.*
-
-**Next step:** Want help choosing the best option for your specific situation?`;
+${emissions < 160 ? "Keep up the great work!" : "Want tips to improve? Just ask!"}`;
 };
 
-const getComparisonAnalysis = (emissions, evReduction, evSavings) => {
-  if (emissions < 120) {
-    return `**Analysis:** You're already in excellent territory! While an EV would reduce emissions by ${evReduction}%, your current vehicle is very efficient. Focus on maintenance and consider an EV for your next vehicle in 5+ years.`;
-  } else if (emissions < 160) {
-    return `**Analysis:** A hybrid could cut your emissions by 30-50% with moderate investment. An EV offers the most savings ($${evSavings}/year) if charging is available. Consider your daily driving needs and budget.`;
-  } else if (emissions < 200) {
-    return `**Analysis:** Significant savings available! An EV could save you $${evSavings}/year while cutting emissions by ${evReduction}%. Even a hybrid would save $${Math.round((emissions - 115) * 13500 * 1.60934 / 1000 * 0.25)}/year. Worth serious consideration.`;
-  } else {
-    return `**Analysis:** Major opportunity! An EV would transform your environmental impact (${evReduction}% reduction) and save $${evSavings}/year. The payback period for the price difference could be just 3-5 years. Strongly recommended to explore.`;
-  }
+/**
+ * Generate comparison response
+ */
+const generateComparisonResponse = (emissions) => {
+  const evReduction = emissions > 70 ? Math.round((1 - 70/emissions) * 100) : 0;
+  const phevReduction = emissions > 105 ? Math.round((1 - 105/emissions) * 100) : 0;
+  const hybridReduction = emissions > 115 ? Math.round((1 - 115/emissions) * 100) : 0;
+  const efficientReduction = emissions > 150 ? Math.round((1 - 150/emissions) * 100) : 0;
+
+  return `**Your ${emissions} g/km vs Other Options:**
+
+**If you switched to:**
+
+**Electric Vehicle** (e.g., Tesla Model 3, Nissan Leaf)
+- Emissions: ~50-80 g/km (grid-dependent)
+- **Reduction: ${evReduction}%**
+- Annual savings: ~$${Math.round((emissions - 70) * 13500 * 1.60934 / 1000 * 0.25)}
+
+**Plug-in Hybrid** (e.g., Toyota RAV4 Prime, Ford Escape PHEV)
+- Emissions: ~90-120 g/km
+- **Reduction: ${phevReduction}%**
+- Annual savings: ~$${emissions > 105 ? Math.round((emissions - 105) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+**Standard Hybrid** (e.g., Toyota Prius, Honda Accord Hybrid)
+- Emissions: ~100-130 g/km
+- **Reduction: ${hybridReduction}%**
+- Annual savings: ~$${emissions > 115 ? Math.round((emissions - 115) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+**Efficient Gas Car** (e.g., Honda Civic, Mazda3)
+- Emissions: ~140-160 g/km
+- **Reduction: ${efficientReduction}%**
+- Annual savings: ~$${emissions > 150 ? Math.round((emissions - 150) * 13500 * 1.60934 / 1000 * 0.25) : 0}
+
+*Note: Savings assume $3.50/gallon gas, $0.13/kWh electricity, 13,500 miles/year*
+
+Want to know which is best for YOUR situation? Ask me!`;
 };
-
-const getPredictionFallback = (emissions) => {
-  return `I see you're asking about prediction results. With your current score of **${emissions} g/km**, here's what I can help with:
-
-**Ask me about your specific result:**
-• "Explain my result"
-• "How do I improve my score?"
-• "Is my result good or bad?"
-• "Compare my vehicle to others"
-
-**Or learn about emissions:**
-• "Best ways to reduce emissions"
-• "Electric vs hybrid comparison"
-• "Fuel type impact on environment"
-
-What would you like to know?`;
-};
-
-export default generatePredictionResponse;
