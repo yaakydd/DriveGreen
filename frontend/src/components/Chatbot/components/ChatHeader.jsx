@@ -1,7 +1,8 @@
-import React from "react";
-import { X, Cpu } from "lucide-react";
+// src/components/Chatbot/components/ChatHeader.jsx
+import React from 'react';
+import { X, Cpu } from 'lucide-react';
 
-const ChatHeader = ({ onClose, predictionData }) => {
+const ChatHeader = ({ predictionData, toggleChat }) => {
   return (
     <div className="p-4 bg-cyan-500 border-b border-gray-100 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -21,8 +22,9 @@ const ChatHeader = ({ onClose, predictionData }) => {
         </div>
       </div>
       <button
-        onClick={onClose}
+        onClick={toggleChat}
         className="p-2 hover:bg-white/80 rounded-full transition-colors text-white hover:text-gray-600"
+        aria-label="Close chat"
       >
         <X size={18} />
       </button>
