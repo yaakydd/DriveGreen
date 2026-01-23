@@ -109,7 +109,7 @@ drivegreen/
 │   ├── tailwind.config.js              # Tailwind configuration
 │   ├── postcss.config.js               # PostCSS configuration
 │   └── .env                            # Environment variables
-├── .gitignore                          # Git ignore rules
+├── .gitignore                          # Git ignore rules7
 └── README.md                           # This file
 
 ## Installation & Setup
