@@ -1,6 +1,6 @@
 import React from "react";
 import PredictionForm from "./components/Prediction/PredictionForm";
-import Chatbot from "./components/Chatbot";
+import Chatbot from "./components/Chatbot/ChatBot";
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
