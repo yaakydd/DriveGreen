@@ -16,7 +16,7 @@ import AnimationCard from "./AnimationCard";
 import NeonCar from "./NeonCar";
 import DriveGreenLogo from "./DriveGreenLogo";
 import AnimatedParticles from "./BackgroundParticles";
-import Chatbot from "./Chatbot"; // Import Chatbot
+import Chatbot from "./Chatbot"; 
 import toast from "react-hot-toast";
 
 // Module-level constants
