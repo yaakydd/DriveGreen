@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.prediction_router import predict_router
+from routers.Chatbot_router import chatbot_router
+
 
 app = FastAPI(
     title="DriveGreen API",
@@ -19,6 +21,7 @@ app.add_middleware(
 
 # Include the router
 app.include_router(predict_router, prefix="/api", tags=["predictions"])
+app.include_router(chatbot_router, prefix="/api", tags=["chatbot"])
 
 @app.get("/")
 async def root():
