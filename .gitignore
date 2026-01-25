@@ -1,44 +1,18 @@
-#gitignore
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-ENV/
-env/
-
 # Node
 node_modules/
 dist/
 .next/
 .cache/
 build/
+venv
 
 # Environment variables
 .env
 .env.local
-<<<<<<< HEAD
 .env.production
 .env.development
 
 # IDE
-=======
 .env.*.local
 Emissions_Canada.csv
 
@@ -47,51 +21,9 @@ Emissions_Canada.csv
 .env.*
 !.env.example
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-ENV/
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# IDEs
->>>>>>> bb2ebbb6e77ad01fbafbcd03fed44f5fba2e9d4f
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-<<<<<<< HEAD
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 Emissions_Canada.csv
-=======
-# Models (if large)
-model/*.pkl
->>>>>>> bb2ebbb6e77ad01fbafbcd03fed44f5fba2e9d4f
