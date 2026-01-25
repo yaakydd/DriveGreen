@@ -1,14 +1,26 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import requests
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 chatbot_router = APIRouter()
 
-# Get from environment variable or replace with your key
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "your_hf_token_here")
+# Get API key from environment
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
-# Your emissions knowledge base (extracted from your React component)
+# Validate API key on startup
+if not HUGGINGFACE_API_KEY:
+    print("⚠️  WARNING: HUGGINGFACE_API_KEY not found in environment variables!")
+    print("   Please set it in your .env file")
+else:
+    print("✅ Hugging Face API key loaded successfully")
+
+# Your emissions knowledge base
 EMISSIONS_KNOWLEDGE = """
 VEHICLE EMISSIONS KNOWLEDGE BASE:
 
@@ -89,12 +101,12 @@ BUYING GUIDE:
 
 class ChatRequest(BaseModel):
     message: str
-    prediction_data: dict = None  # Optional: current prediction context
+    prediction_data: Optional[Dict[str, Any]] = None  # ✅ Fixed: Optional dict
 
 class ChatResponse(BaseModel):
     response: str
 
-def build_context_prompt(user_message: str, prediction_data: dict = None) -> str:
+def build_context_prompt(user_message: str, prediction_data: Optional[Dict[str, Any]] = None) -> str:
     """Build a comprehensive prompt with knowledge base and user context."""
     
     context_parts = [EMISSIONS_KNOWLEDGE]
@@ -139,17 +151,18 @@ async def chat(request: ChatRequest):
     Main chatbot endpoint - uses Hugging Face Inference API
     """
     
-    if not HUGGINGFACE_API_KEY or HUGGINGFACE_API_KEY == "your_hf_token_here":
+    # Check if API key is configured
+    if not HUGGINGFACE_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="Hugging Face API key not configured"
+            detail="Chatbot service not configured. Please contact administrator."
         )
     
     try:
         # Build prompt with context
         prompt = build_context_prompt(
             request.message,
-            request.prediction_data
+            request.prediction_data  # ✅ Fixed: Can now accept None
         )
         
         # Call Hugging Face API
@@ -171,6 +184,19 @@ async def chat(request: ChatRequest):
             timeout=30
         )
         
+        # Handle different response status codes
+        if response.status_code == 503:
+            raise HTTPException(
+                status_code=503,
+                detail="AI model is loading. Please try again in a moment."
+            )
+        
+        if response.status_code == 401:
+            raise HTTPException(
+                status_code=500,
+                detail="Invalid API credentials. Please contact administrator."
+            )
+        
         if response.status_code != 200:
             raise HTTPException(
                 status_code=response.status_code,
@@ -179,14 +205,28 @@ async def chat(request: ChatRequest):
         
         result = response.json()
         
-        # Extract generated text
+        # ✅ Fixed: Properly handle both list and dict responses
+        generated_text = ""
         if isinstance(result, list) and len(result) > 0:
-            generated_text = result[0].get('generated_text', '')
-        else:
+            # Result is a list
+            first_item = result[0]
+            if isinstance(first_item, dict):
+                generated_text = first_item.get('generated_text', '')
+            else:
+                generated_text = str(first_item)
+        elif isinstance(result, dict):
+            # Result is a dict
             generated_text = result.get('generated_text', '')
+        else:
+            # Unexpected format
+            generated_text = str(result)
         
-        # Clean up response (remove any prompt echoing)
+        # Clean up response
         cleaned_response = generated_text.strip()
+        
+        # Fallback if empty response
+        if not cleaned_response:
+            cleaned_response = "I'm having trouble generating a response. Could you rephrase your question?"
         
         return ChatResponse(response=cleaned_response)
     
@@ -194,6 +234,11 @@ async def chat(request: ChatRequest):
         raise HTTPException(
             status_code=504,
             detail="Request timed out. Please try again."
+        )
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Network error: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
@@ -205,8 +250,11 @@ async def chat(request: ChatRequest):
 @chatbot_router.get("/chat/health")
 async def chat_health():
     """Health check for chatbot service"""
+    api_configured = bool(HUGGINGFACE_API_KEY)
+    
     return {
-        "status": "healthy",
-        "api_configured": bool(HUGGINGFACE_API_KEY and HUGGINGFACE_API_KEY != "your_hf_token_here"),
-        "model": "Mistral-7B-Instruct-v0.2"
+        "status": "healthy" if api_configured else "misconfigured",
+        "api_configured": api_configured,
+        "model": "Mistral-7B-Instruct-v0.2",
+        "provider": "Hugging Face"
     }
