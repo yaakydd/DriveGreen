@@ -8,3 +8,4 @@ xgboost
 pydantic
 python-multipart
 venv
+requests
