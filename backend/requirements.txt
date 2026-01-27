@@ -1,1 +1,14 @@
-pyth
+venv
+xgboost
+fastapi
+pydantic
+requests
+python-dotenv
+uvicorn
+scikit-learn
+pandas
+fastapi.middleware.cors
+fastapi
+python-multipart
+
+
