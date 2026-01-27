@@ -8,17 +8,10 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-chatbot_router = APIRouter()
+Chatbot_router = APIRouter()
 
-# Get API key from environment
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
-
-# Validate API key on startup
-if not HUGGINGFACE_API_KEY:
-    print("⚠️  WARNING: HUGGINGFACE_API_KEY not found in environment variables!")
-    print("   Please set it in your .env file")
-else:
-    print("✅ Hugging Face API key loaded successfully")
+# Get from environment variable or replace with your key
+#HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "your_hf_token_here")
 
 # Your emissions knowledge base
 EMISSIONS_KNOWLEDGE = """
