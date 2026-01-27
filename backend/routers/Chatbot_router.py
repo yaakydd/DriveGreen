@@ -3,10 +3,10 @@ from pydantic import BaseModel
 import requests
 import os
 
-chatbot_router = APIRouter()
+Chatbot_router = APIRouter()
 
 # Get from environment variable or replace with your key
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "your_hf_token_here")
+#HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "your_hf_token_here")
 
 # Your emissions knowledge base (extracted from your React component)
 EMISSIONS_KNOWLEDGE = """
