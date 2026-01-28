@@ -10,8 +10,13 @@ load_dotenv()
 
 chatbot_router = APIRouter()
 
-# Get from environment variable or replace with your key
-HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY", "your_hf_token_here")
+# Get from environment variable
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+
+# Validate API key is present
+if not HUGGINGFACE_API_KEY:
+    print("WARNING: HUGGINGFACE_API_KEY not found in environment variables")
+    print("Please add it to your backend/.env file")
 
 # Your emissions knowledge base
 EMISSIONS_KNOWLEDGE = """
@@ -94,7 +99,7 @@ BUYING GUIDE:
 
 class ChatRequest(BaseModel):
     message: str
-    prediction_data: Optional[Dict[str, Any]] = None  # ✅ Fixed: Optional dict
+    prediction_data: Optional[Dict[str, Any]] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -145,60 +150,75 @@ async def chat(request: ChatRequest):
     """
     
     # Check if API key is configured
-    if not HUGGINGFACE_API_KEY:
+    if not HUGGINGFACE_API_KEY or HUGGINGFACE_API_KEY == "your_hf_token_here":
         raise HTTPException(
             status_code=500,
-            detail="Chatbot service not configured. Please contact administrator."
+            detail="Chatbot service not configured. Please add HUGGINGFACE_API_KEY to your .env file"
         )
     
     try:
         # Build prompt with context
         prompt = build_context_prompt(
             request.message,
-            request.prediction_data  # ✅ Fixed: Can now accept None
+            request.prediction_data
         )
         
+        # Updated Hugging Face Inference API endpoint
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+        
+        headers = {
+            "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 400,
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "return_full_text": False
+            }
+        }
+        
         # Call Hugging Face API
-        response = requests.post(
-            "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2",
-            headers={
-                "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "inputs": prompt,
-                "parameters": {
-                    "max_new_tokens": 400,
-                    "temperature": 0.7,
-                    "top_p": 0.95,
-                    "return_full_text": False
-                }
-            },
-            timeout=30
-        )
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
         # Handle different response status codes
         if response.status_code == 503:
             raise HTTPException(
                 status_code=503,
-                detail="AI model is loading. Please try again in a moment."
+                detail="AI model is loading. Please wait 30-60 seconds and try again."
             )
         
         if response.status_code == 401:
             raise HTTPException(
                 status_code=500,
-                detail="Invalid API credentials. Please contact administrator."
+                detail="Invalid API credentials. Check your Hugging Face API key in .env file"
+            )
+        
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail="Model not found. The model may have been moved or is unavailable."
+            )
+        
+        if response.status_code == 429:
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit exceeded. Please wait a moment and try again."
             )
         
         if response.status_code != 200:
+            error_detail = response.text
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Hugging Face API error: {response.text}"
+                detail=f"Hugging Face API error ({response.status_code}): {error_detail}"
             )
         
         result = response.json()
         
-        # ✅ Fixed: Properly handle both list and dict responses
+        # Handle response format
         generated_text = ""
         if isinstance(result, list) and len(result) > 0:
             # Result is a list
@@ -226,28 +246,37 @@ async def chat(request: ChatRequest):
     except requests.exceptions.Timeout:
         raise HTTPException(
             status_code=504,
-            detail="Request timed out. Please try again."
+            detail="Request timed out. The AI model may be busy. Please try again."
+        )
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to connect to Hugging Face API. Please check your internet connection."
         )
     except requests.exceptions.RequestException as e:
         raise HTTPException(
             status_code=500,
             detail=f"Network error: {str(e)}"
         )
+    except HTTPException:
+        # Re-raise HTTP exceptions as-is
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Chat error: {str(e)}"
+            detail=f"Unexpected error: {str(e)}"
         )
 
 
 @chatbot_router.get("/chat/health")
 async def chat_health():
     """Health check for chatbot service"""
-    api_configured = bool(HUGGINGFACE_API_KEY)
+    api_configured = bool(HUGGINGFACE_API_KEY and HUGGINGFACE_API_KEY != "your_hf_token_here")
     
     return {
         "status": "healthy" if api_configured else "misconfigured",
         "api_configured": api_configured,
         "model": "Mistral-7B-Instruct-v0.2",
-        "provider": "Hugging Face"
+        "provider": "Hugging Face",
+        "endpoint": "https://api-inference.huggingface.co"
     }

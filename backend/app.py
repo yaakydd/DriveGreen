@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.prediction_router import predict_router
-from backend.routers.chatbot_router import chatbot_router
+from routers.chatbot_router import chatbot_router
 
 
 app = FastAPI(
