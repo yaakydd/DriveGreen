@@ -5,97 +5,13 @@ import requests
 import os
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 chatbot_router = APIRouter()
 
-# Get from environment variable
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
-# Validate API key is present
-if not HUGGINGFACE_API_KEY:
-    print("WARNING: HUGGINGFACE_API_KEY not found in environment variables")
-    print("Please add it to your backend/.env file")
-
-# Your emissions knowledge base
-EMISSIONS_KNOWLEDGE = """
-VEHICLE EMISSIONS KNOWLEDGE BASE:
-
-FUEL TYPES & CARBON INTENSITY:
-- Gasoline (X, Z): ~95 gCO2e/MJ
-- Diesel (D): ~95 gCO2e/MJ (more energy-dense, higher NOx)
-- CNG (N): ~70 gCO2e/MJ
-- E85 (E): ~75 gCO2e/MJ
-- Electric: 0 tailpipe emissions (grid-dependent: 5-130 gCO2/km)
-
-EMISSION CATEGORIES:
-- Excellent: < 120 g/km (Top 15% - like efficient hybrids)
-- Good: 120-160 g/km (Better than 60% - modern compacts)
-- Average: 160-200 g/km (Typical mid-size)
-- High: 200-250 g/km (Large SUVs/trucks)
-- Very High: > 250 g/km (Heavy trucks, poor efficiency)
-
-HOW TO REDUCE EMISSIONS:
-1. Tire Pressure: Keep at max (saves 3%)
-2. Weight Reduction: Remove 100 lbs = 1% improvement
-3. Eco-Driving: Smooth acceleration (saves 20%)
-4. Route Planning: Avoid traffic
-5. Regular Maintenance: Oil changes, air filters
-6. Technology: Fuel-saving OBD-II devices
-7. Alternatives: Public transit 1 day/week
-8. Long-term: Consider EV/hybrid for next vehicle
-
-GOVERNMENT POLICIES & INCENTIVES:
-- Emission Standards: Euro 6, EPA Tier 3
-- Zero-Emission Mandates: California 2035, UK 2030, Norway 2025
-- EV Tax Credits: $7,500 US federal
-- State Rebates: $2,000-$5,000
-- HOV Lane Access for clean vehicles
-- Congestion Charges: London £15/day for high emitters
-
-REWARDS FOR LOW-EMISSION VEHICLES:
-- Federal tax credits up to $7,500
-- State rebates $2,000-$5,000
-- Free/priority parking in cities
-- HOV lane access (solo driving)
-- Annual fuel savings: $1,000+
-- Maintenance savings: $800/year
-
-VEHICLE COMPARISONS:
-- Electric Vehicles: ~70 g/km (grid-dependent)
-- Hybrids: ~115 g/km (30-40% reduction vs gas)
-- Plug-in Hybrids (PHEV): Even better when charged
-- Average Gas Car: ~180 g/km
-- Large SUV/Truck: 250-300+ g/km
-
-HEALTH & CLIMATE IMPACT:
-- PM2.5 particles enter bloodstream
-- NOx creates smog, respiratory issues
-- WHO: 4.2M deaths/year from air pollution
-- Transportation = 29% of US emissions
-- Every kg CO2 contributes to climate change
-
-PREDICTION MODEL DETAILS:
-- Uses XGBoost machine learning algorithm
-- Trained on thousands of vehicle emissions data
-- Process: Log-transform inputs to One-hot encode fuel type to Predict CO2 to Reverse transform
-- Accuracy: ±8-12% margin (EPA/WLTP data)
-- Inputs: Fuel type, engine size (0.9-8.4L), cylinders (3-16)
-- Output: CO2 emissions in g/km
-
-FUTURE OUTLOOK:
-- Gas station decline accelerating
-- Zero-emission mandates spreading globally
-- Battery costs decreasing 89% since 2010
-- EV range improving (300+ miles standard)
-
-BUYING GUIDE:
-- Drive less than 40 mi/day + home charging → EV
-- Long commutes → Hybrid/PHEV
-- Budget conscious → 3-year-old hybrid
-- Remember: Small efficient gas > large inefficient EV
-"""
+# -------------------- MODELS --------------------
 
 class ChatRequest(BaseModel):
     message: str
@@ -104,188 +20,222 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
-def build_context_prompt(user_message: str, prediction_data: Optional[Dict[str, Any]] = None) -> str:
-    """Build a comprehensive prompt with knowledge base and user context."""
-    
-    context_parts = [EMISSIONS_KNOWLEDGE]
-    
-    # Add prediction context if available
+# -------------------- PROMPT TUNING --------------------
+
+def build_context_prompt(user_message: str, prediction_data=None) -> str:
+    system_rules = """
+You are Eco-Copilot, a domain expert in vehicle emissions and fuel efficiency.
+
+RULES:
+- Only answer questions related to vehicle emissions, fuel use, climate impact, or eco-driving.
+- Be concise, factual, and practical.
+- Prefer bullet points.
+- Use metric units (g/km).
+- Do not invent numbers.
+- Do not mention being an AI.
+"""
+
+    reference = """
+REFERENCE DATA:
+- Avg gasoline car: ~180 gCO2/km
+- Efficient hybrid: ~110–120 gCO2/km
+- EV tailpipe: 0 gCO2/km (grid dependent)
+- Categories:
+  Excellent <120 | Good 120–160 | Average 160–200 | High 200–250 | Very High >250
+"""
+
+    vehicle_context = ""
     if prediction_data:
         vehicle_context = f"""
-CURRENT USER'S VEHICLE DATA:
-- Predicted CO2 Emissions: {prediction_data.get('predicted_co2_emissions')} g/km
-- Category: {prediction_data.get('category')}
-- Fuel Type: {prediction_data.get('vehicleData', {}).get('fuel_type')}
-- Engine Size: {prediction_data.get('vehicleData', {}).get('engine_size')}L
-- Cylinders: {prediction_data.get('vehicleData', {}).get('cylinders')}
-- Interpretation: {prediction_data.get('interpretation')}
+USER VEHICLE DATA:
+- CO2: {prediction_data.get("predicted_co2_emissions")} g/km
+- Category: {prediction_data.get("category")}
+- Fuel: {prediction_data.get("vehicleData", {}).get("fuel_type")}
+- Engine: {prediction_data.get("vehicleData", {}).get("engine_size")} L
+- Cylinders: {prediction_data.get("vehicleData", {}).get("cylinders")}
 
-When the user asks about "my result", "my prediction", "my emissions", etc., use THIS data above.
+IMPORTANT:
+When user refers to "my car" or "my result", use this data.
 """
-        context_parts.append(vehicle_context)
-    
-    # Build final prompt
-    full_prompt = f"""{chr(10).join(context_parts)}
 
-INSTRUCTIONS:
-- You are Eco-Copilot, an AI assistant for vehicle emissions
-- Be concise, friendly, and helpful
-- Use the knowledge base above to answer questions accurately
-- If user asks about their specific vehicle, use the "CURRENT USER'S VEHICLE DATA" section
-- Format responses with markdown (bold, lists, etc.)
-- Keep responses under 200 words unless detailed explanation needed
-- If you don't know something, say so honestly
+    return f"""
+{system_rules}
+{reference}
+{vehicle_context}
 
-User Question: {user_message}
+USER QUESTION:
+{user_message}
 
-Your Response:"""
-    
-    return full_prompt
+ANSWER:
+"""
 
+# -------------------- CHAT ENDPOINT --------------------
 
 @chatbot_router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """
-    Main chatbot endpoint - uses Hugging Face Router API (NEW 2025 endpoint)
-    """
-    
-    # Check if API key is configured
-    if not HUGGINGFACE_API_KEY or HUGGINGFACE_API_KEY == "your_hf_token_here":
+
+    if not HUGGINGFACE_API_KEY:
         raise HTTPException(
             status_code=500,
-            detail="Chatbot service not configured. Please add HUGGINGFACE_API_KEY to your .env file"
+            detail="HUGGINGFACE_API_KEY not configured"
         )
-    
+
+    prompt = build_context_prompt(
+        request.message,
+        request.prediction_data
+    )
+
+    API_URL = "https://api-inference.huggingface.co/models/google/gemma-2b-it"
+
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 250,
+            "temperature": 0.6,
+            "top_p": 0.9,
+            "return_full_text": False
+        },
+        "options": {
+            "wait_for_model": True
+        }
+    }
+
     try:
-        # Build prompt with context
-        prompt = build_context_prompt(
-            request.message,
-            request.prediction_data
-        )
-        
-        # NEW Hugging Face Router API endpoint (2025 - replaces old api-inference endpoint)
-        # This unified endpoint routes to multiple inference providers
-        API_URL = "https://router.huggingface.co/v1/chat/completions"
-        
-        headers = {
-            "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        
-        # Use OpenAI-compatible format for the new Router API
-        payload = {
-            "model": "mistralai/Mistral-7B-Instruct-v0.2",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "max_tokens": 400,
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=25)
+
+        if response.status_code == 503:
+            raise HTTPException(503, "Model is loading. Try again in a moment.")
+
+        if response.status_code == 401:
+            raise HTTPException(500, "Invalid Hugging Face API key.")
+
+        if response.status_code == 429:
+            raise HTTPException(429, "Rate limit exceeded.")
+
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Hugging Face inference error."
+            )
+
+        result = response.json()
+
+        if not isinstance(result, list) or not result:
+            raise HTTPException(500, "Unexpected AI response format.")
+
+        text = result[0].get("generated_text", "").strip()
+
+        if not text:
+            text = "I couldn't generate a response. Please rephrase your question."
+
+        return ChatResponse(response=text)
+
+    except requests.exceptions.Timeout:
+        raise HTTPException(504, "AI request timed out.")
+
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(503, "Cannot reach AI service.")
+
+    except Exception as e:
+        raise HTTPException(500, f"Server error: {str(e)}")
+    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 400,
             "temperature": 0.7,
-            "top_p": 0.95
+            "top_p": 0.95,
+            "return_full_text": False
         }
-        
-        # Call Hugging Face Router API
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
-        
-        # Handle different response status codes
+    }
+
+    try:
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+
+        # ---- Handle Hugging Face errors explicitly ----
         if response.status_code == 503:
             raise HTTPException(
                 status_code=503,
-                detail="AI model is loading. Please wait 30-60 seconds and try again."
+                detail="AI model is loading. Please try again in 30–60 seconds."
             )
-        
+
         if response.status_code == 401:
             raise HTTPException(
                 status_code=500,
-                detail="Invalid API credentials. Check your Hugging Face API key in .env file"
+                detail="Invalid Hugging Face API key."
             )
-        
-        if response.status_code == 404:
-            raise HTTPException(
-                status_code=404,
-                detail="Model not found. The model may have been moved or is unavailable."
-            )
-        
+
         if response.status_code == 429:
             raise HTTPException(
                 status_code=429,
-                detail="Rate limit exceeded. Please wait a moment and try again."
+                detail="Rate limit exceeded. Please try again later."
             )
-        
+
         if response.status_code != 200:
-            error_detail = response.text
             raise HTTPException(
                 status_code=response.status_code,
-                detail=f"Hugging Face API error ({response.status_code}): {error_detail}"
+                detail="Hugging Face inference API error."
             )
-        
+
+        # ---- Parse HF Inference response ----
         result = response.json()
-        
-        # Handle OpenAI-compatible response format
-        generated_text = ""
-        if "choices" in result and len(result["choices"]) > 0:
-            # OpenAI-compatible format
-            message = result["choices"][0].get("message", {})
-            generated_text = message.get("content", "")
-        elif isinstance(result, list) and len(result) > 0:
-            # Fallback: Old format (list)
-            first_item = result[0]
-            if isinstance(first_item, dict):
-                generated_text = first_item.get('generated_text', '')
-            else:
-                generated_text = str(first_item)
-        elif isinstance(result, dict):
-            # Fallback: Dict format
-            generated_text = result.get('generated_text', '')
-        else:
-            # Unexpected format
-            generated_text = str(result)
-        
-        # Clean up response
-        cleaned_response = generated_text.strip()
-        
-        # Fallback if empty response
-        if not cleaned_response:
-            cleaned_response = "I'm having trouble generating a response. Could you rephrase your question?"
-        
-        return ChatResponse(response=cleaned_response)
-    
+
+        if not isinstance(result, list) or not result:
+            raise HTTPException(
+                status_code=500,
+                detail="Unexpected response format from AI service."
+            )
+
+        generated_text = result[0].get("generated_text", "").strip()
+
+        if not generated_text:
+            generated_text = (
+                "I couldn't generate a response. "
+                "Please rephrase your question."
+            )
+
+        return ChatResponse(response=generated_text)
+
     except requests.exceptions.Timeout:
         raise HTTPException(
             status_code=504,
-            detail="Request timed out. The AI model may be busy. Please try again."
+            detail="The AI request timed out. Please try again."
         )
+
     except requests.exceptions.ConnectionError:
         raise HTTPException(
             status_code=503,
-            detail="Unable to connect to Hugging Face API. Please check your internet connection."
+            detail="Unable to connect to Hugging Face servers."
         )
+
     except requests.exceptions.RequestException as e:
         raise HTTPException(
             status_code=500,
             detail=f"Network error: {str(e)}"
         )
+
     except HTTPException:
-        # Re-raise HTTP exceptions as-is
+        # Pass FastAPI errors through untouched
         raise
+
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Unexpected error: {str(e)}"
+            detail=f"Unexpected server error: {str(e)}"
         )
-
-
-@chatbot_router.get("/chat/health")
-async def chat_health():
-    """Health check for chatbot service"""
-    api_configured = bool(HUGGINGFACE_API_KEY and HUGGINGFACE_API_KEY != "your_hf_token_here")
-    
-    return {
-        "status": "healthy" if api_configured else "misconfigured",
-        "api_configured": api_configured,
-        "model": "Mistral-7B-Instruct-v0.2",
-        "provider": "Hugging Face Router API",
-        "endpoint": "https://router.huggingface.co/v1"
-    }
