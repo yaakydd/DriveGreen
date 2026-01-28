@@ -11,7 +11,7 @@ chatbot_router = APIRouter()
 
 HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
-# -------------------- MODELS --------------------
+# ===================== MODELS =====================
 
 class ChatRequest(BaseModel):
     message: str
@@ -20,47 +20,56 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
-# -------------------- PROMPT TUNING --------------------
+# ===================== PROMPT TUNING =====================
 
-def build_context_prompt(user_message: str, prediction_data=None) -> str:
-    system_rules = """
-You are Eco-Copilot, a domain expert in vehicle emissions and fuel efficiency.
+def build_context_prompt(
+    user_message: str,
+    prediction_data: Optional[Dict[str, Any]] = None
+) -> str:
+    system_prompt = """
+You are Eco-Copilot, an expert assistant for the DriveGreen platform.
 
-RULES:
-- Only answer questions related to vehicle emissions, fuel use, climate impact, or eco-driving.
-- Be concise, factual, and practical.
+GUIDELINES:
+- Focus ONLY on vehicle emissions, fuel efficiency, eco-driving, and climate impact.
+- Be concise, practical, and factual.
 - Prefer bullet points.
-- Use metric units (g/km).
-- Do not invent numbers.
-- Do not mention being an AI.
+- Use metric units (g CO₂/km).
+- Do NOT invent statistics.
+- Do NOT mention being an AI or model.
 """
 
-    reference = """
-REFERENCE DATA:
-- Avg gasoline car: ~180 gCO2/km
-- Efficient hybrid: ~110–120 gCO2/km
-- EV tailpipe: 0 gCO2/km (grid dependent)
+    reference_data = """
+REFERENCE BENCHMARKS:
+- Average gasoline car: ~180 g CO₂/km
+- Efficient hybrid: ~110–120 g CO₂/km
+- Diesel average: ~160–170 g CO₂/km
+- EV tailpipe emissions: 0 g CO₂/km (excluding grid)
 - Categories:
-  Excellent <120 | Good 120–160 | Average 160–200 | High 200–250 | Very High >250
+  • Excellent: <120
+  • Good: 120–160
+  • Average: 160–200
+  • High: 200–250
+  • Very High: >250
 """
 
     vehicle_context = ""
     if prediction_data:
         vehicle_context = f"""
 USER VEHICLE DATA:
-- CO2: {prediction_data.get("predicted_co2_emissions")} g/km
+- CO₂ emissions: {prediction_data.get("predicted_co2_emissions")} g/km
 - Category: {prediction_data.get("category")}
-- Fuel: {prediction_data.get("vehicleData", {}).get("fuel_type")}
-- Engine: {prediction_data.get("vehicleData", {}).get("engine_size")} L
+- Fuel type: {prediction_data.get("vehicleData", {}).get("fuel_type")}
+- Engine size: {prediction_data.get("vehicleData", {}).get("engine_size")} L
 - Cylinders: {prediction_data.get("vehicleData", {}).get("cylinders")}
 
 IMPORTANT:
-When user refers to "my car" or "my result", use this data.
+When the user says "my car", "my vehicle", or "my result",
+use the data above.
 """
 
     return f"""
-{system_rules}
-{reference}
+{system_prompt}
+{reference_data}
 {vehicle_context}
 
 USER QUESTION:
@@ -69,11 +78,10 @@ USER QUESTION:
 ANSWER:
 """
 
-# -------------------- CHAT ENDPOINT --------------------
+# ===================== CHAT ENDPOINT =====================
 
 @chatbot_router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-
     if not HUGGINGFACE_API_KEY:
         raise HTTPException(
             status_code=500,
@@ -85,6 +93,7 @@ async def chat(request: ChatRequest):
         request.prediction_data
     )
 
+    # 🔥 Fast, small, instruction-tuned model
     API_URL = "https://api-inference.huggingface.co/models/google/gemma-2b-it"
 
     headers = {
@@ -95,7 +104,7 @@ async def chat(request: ChatRequest):
     payload = {
         "inputs": prompt,
         "parameters": {
-            "max_new_tokens": 250,
+            "max_new_tokens": 300,
             "temperature": 0.6,
             "top_p": 0.9,
             "return_full_text": False
@@ -106,132 +115,52 @@ async def chat(request: ChatRequest):
     }
 
     try:
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=25)
+        response = requests.post(
+            API_URL,
+            headers=headers,
+            json=payload,
+            timeout=25
+        )
+
+        # -------- Status handling (MATCHES FRONTEND) --------
+        if response.status_code == 429:
+            raise HTTPException(429, "Rate limit exceeded.")
 
         if response.status_code == 503:
-            raise HTTPException(503, "Model is loading. Try again in a moment.")
+            raise HTTPException(503, "AI service unavailable.")
 
         if response.status_code == 401:
             raise HTTPException(500, "Invalid Hugging Face API key.")
 
-        if response.status_code == 429:
-            raise HTTPException(429, "Rate limit exceeded.")
-
         if response.status_code != 200:
             raise HTTPException(
                 status_code=response.status_code,
-                detail="Hugging Face inference error."
+                detail="AI inference error."
             )
 
         result = response.json()
 
         if not isinstance(result, list) or not result:
-            raise HTTPException(500, "Unexpected AI response format.")
+            raise HTTPException(500, "Invalid AI response format.")
 
-        text = result[0].get("generated_text", "").strip()
+        generated_text = result[0].get("generated_text", "").strip()
 
-        if not text:
-            text = "I couldn't generate a response. Please rephrase your question."
+        if not generated_text:
+            generated_text = (
+                "I couldn’t generate a helpful response. "
+                "Please rephrase your question."
+            )
 
-        return ChatResponse(response=text)
+        return ChatResponse(response=generated_text)
 
+    # -------- Network & timeout handling --------
     except requests.exceptions.Timeout:
         raise HTTPException(504, "AI request timed out.")
 
     except requests.exceptions.ConnectionError:
         raise HTTPException(503, "Cannot reach AI service.")
 
-    except Exception as e:
-        raise HTTPException(500, f"Server error: {str(e)}")
-    API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
-
-    headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
-        "Content-Type": "application/json"
-    }
-
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "max_new_tokens": 400,
-            "temperature": 0.7,
-            "top_p": 0.95,
-            "return_full_text": False
-        }
-    }
-
-    try:
-        response = requests.post(
-            API_URL,
-            headers=headers,
-            json=payload,
-            timeout=30
-        )
-
-        # ---- Handle Hugging Face errors explicitly ----
-        if response.status_code == 503:
-            raise HTTPException(
-                status_code=503,
-                detail="AI model is loading. Please try again in 30–60 seconds."
-            )
-
-        if response.status_code == 401:
-            raise HTTPException(
-                status_code=500,
-                detail="Invalid Hugging Face API key."
-            )
-
-        if response.status_code == 429:
-            raise HTTPException(
-                status_code=429,
-                detail="Rate limit exceeded. Please try again later."
-            )
-
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail="Hugging Face inference API error."
-            )
-
-        # ---- Parse HF Inference response ----
-        result = response.json()
-
-        if not isinstance(result, list) or not result:
-            raise HTTPException(
-                status_code=500,
-                detail="Unexpected response format from AI service."
-            )
-
-        generated_text = result[0].get("generated_text", "").strip()
-
-        if not generated_text:
-            generated_text = (
-                "I couldn't generate a response. "
-                "Please rephrase your question."
-            )
-
-        return ChatResponse(response=generated_text)
-
-    except requests.exceptions.Timeout:
-        raise HTTPException(
-            status_code=504,
-            detail="The AI request timed out. Please try again."
-        )
-
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=503,
-            detail="Unable to connect to Hugging Face servers."
-        )
-
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Network error: {str(e)}"
-        )
-
     except HTTPException:
-        # Pass FastAPI errors through untouched
         raise
 
     except Exception as e:
