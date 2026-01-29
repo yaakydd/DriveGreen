@@ -1,75 +1,266 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo
+} from "react";
 import { X, Send, Cpu, AlertCircle, WifiOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
-/* UPGRADED CHATBOT WITH AI INTEGRATION
- * ✅ Hugging Face API integration
- * ✅ Dynamic responses based on LLM
- * ✅ Personalized responses with prediction data
- * ✅ Comprehensive error handling
- * ✅ Loading states and retry logic
- * ✅ Network error detection
- * ✅ Rate limiting handling
- * ✅ XSS protection maintained
- */
+/* ===================== CONFIG ===================== */
 
-// ==================== CONFIGURATION ====================
-const API_CONFIG = {
-  baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
-  chatEndpoint: '/api/chat',
-  timeout: 30000, // 30 seconds
-  maxRetries: 2
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const CHAT_ENDPOINT = "/api/chat";
+const REQUEST_TIMEOUT = 30000;
+
+/* ===================== HELPERS ===================== */
+
+const sanitizeText = (text) =>
+  text
+    .replace(/<script.*?>.*?<\/script>/gi, "")
+    .replace(/javascript:/gi, "")
+    .replace(/on\w+=/gi, "");
+
+const ErrorIconMap = {
+  NETWORK: WifiOff,
+  TIMEOUT: AlertCircle,
+  RATE_LIMIT: AlertCircle,
+  SERVICE_UNAVAILABLE: AlertCircle,
+  UNKNOWN: AlertCircle
 };
 
-// ==================== FUEL LABELS ====================
-const FUEL_LABELS = {
-  "X": "Regular Gasoline",
-  "Z": "Premium Gasoline",
-  "E": "Ethanol (E85)",
-  "D": "Diesel",
-  "N": "Natural Gas"
+/* ===================== API ===================== */
+
+const sendMessage = async (message, predictionData, signal) => {
+  const res = await fetch(`${API_URL}${CHAT_ENDPOINT}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal,
+    body: JSON.stringify({
+      message: sanitizeText(message),
+      prediction_data: predictionData
+    })
+  });
+
+  if (res.status === 429) throw { type: "RATE_LIMIT" };
+  if (res.status === 503) throw { type: "SERVICE_UNAVAILABLE" };
+  if (!res.ok) throw { type: "UNKNOWN" };
+
+  const data = await res.json();
+  return data.response;
 };
 
-// ==================== UTILITY FUNCTIONS ====================
+/* ===================== ERROR UI ===================== */
 
-// XSS protection
-const sanitizeText = (text) => {
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '');
+const ErrorBubble = memo(({ error, onRetry }) => {
+  if (!error) return null;
+  const Icon = ErrorIconMap[error.type] || AlertCircle;
+
+  return (
+    <div className="flex gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
+      <Icon size={16} className="text-red-600 mt-1" />
+      <div className="flex-1">
+        <p className="text-sm text-red-700">{error.message}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-1 text-xs font-semibold text-red-700 hover:underline"
+          >
+            Try again
+          </button>
+        )}
+      </div>
+    </div>
+  );
+});
+
+/* ===================== MAIN COMPONENT ===================== */
+
+const Chatbot = ({ predictionData }) => {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [typing, setTyping] = useState(false);
+  const [error, setError] = useState(null);
+
+  const abortRef = useRef(null);
+  const endRef = useRef(null);
+  const inputRef = useRef(null);
+
+  /* ---------- Initial Message ---------- */
+
+  useEffect(() => {
+    const intro = predictionData
+      ? `Prediction complete: **${predictionData.predicted_co2_emissions} g/km** (${predictionData.category}).  
+Ask me:
+• Explain my result  
+• How can I reduce emissions?`
+      : "Hi! I’m Eco-Copilot 🌱. Ask me anything about vehicle emissions.";
+
+    setMessages([{ sender: "bot", text: intro }]);
+  }, [predictionData]);
+
+  /* ---------- Auto Scroll ---------- */
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typing]);
+
+  /* ---------- Send ---------- */
+
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || typing) return;
+
+    const userText = input.trim();
+    setInput("");
+    setTyping(true);
+    setError(null);
+
+    setMessages((m) => [...m, { sender: "user", text: userText }]);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      REQUEST_TIMEOUT
+    );
+
+    try {
+      const reply = await sendMessage(
+        userText,
+        predictionData,
+        controller.signal
+      );
+      setMessages((m) => [...m, { sender: "bot", text: reply }]);
+    } catch (err) {
+      let type = err.type || "UNKNOWN";
+      let message =
+        type === "RATE_LIMIT"
+          ? "Too many requests. Please wait a moment."
+          : type === "SERVICE_UNAVAILABLE"
+          ? "AI is warming up. Try again shortly."
+          : type === "TIMEOUT"
+          ? "Request timed out."
+          : "Something went wrong.";
+
+      setError({ type, message });
+    } finally {
+      clearTimeout(timeout);
+      setTyping(false);
+    }
+  }, [input, typing, predictionData]);
+
+  /* ---------- Retry ---------- */
+
+  const retryLast = () => {
+    const lastUser = [...messages].reverse().find(m => m.sender === "user");
+    if (!lastUser) return;
+    setInput(lastUser.text);
+    handleSend();
+  };
+
+  /* ---------- Keyboard ---------- */
+
+  const onKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  /* ===================== UI ===================== */
+
+  return (
+    <>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-20 right-4 w-[360px] h-[550px] bg-white rounded-3xl shadow-xl flex flex-col z-50"
+          >
+            {/* Header */}
+            <div className="p-4 bg-emerald-600 text-white flex justify-between rounded-t-3xl">
+              <div className="flex items-center gap-2">
+                <Cpu size={18} />
+                <span className="font-semibold">Eco-Copilot</span>
+              </div>
+              <button onClick={() => setOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+              {messages.map((m, i) => (
+                <div
+                  key={i}
+                  className={`flex ${
+                    m.sender === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                      m.sender === "user"
+                        ? "bg-emerald-600 text-white"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    <ReactMarkdown>{m.text}</ReactMarkdown>
+                  </div>
+                </div>
+              ))}
+
+              {typing && (
+                <div className="text-sm text-gray-400">Eco-Copilot is typing…</div>
+              )}
+
+              {error && <ErrorBubble error={error} onRetry={retryLast} />}
+              <div ref={endRef} />
+            </div>
+
+            {/* Input */}
+            <div className="p-3 border-t flex gap-2">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                disabled={typing}
+                placeholder="Ask about emissions…"
+                className="flex-1 border rounded-xl px-3 py-2 text-sm"
+              />
+              <button
+                onClick={handleSend}
+                disabled={typing || !input.trim()}
+                className="bg-emerald-600 text-white px-4 rounded-xl"
+              >
+                <Send size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toggle */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg"
+      >
+        <Cpu />
+      </button>
+    </>
+  );
 };
 
-// Sleep utility for retries
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ==================== API FUNCTIONS ====================
-
-/**
- * Call the chatbot API with retry logic and error handling
- */
-const callChatbotAPI = async (message, predictionData, retryCount = 0) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
-
-  try {
-    const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.chatEndpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: sanitizeText(message),
-        prediction_data: predictionData
-      }),
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    // Handle different HTTP status codes
+export default memo(Chatbot);
     if (response.status === 429) {
       throw new Error('RATE_LIMIT');
     }
