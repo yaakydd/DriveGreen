@@ -5,6 +5,12 @@ dist/
 .cache/
 build/
 venv
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 
 # Environment variables
 .env

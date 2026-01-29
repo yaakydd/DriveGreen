@@ -146,7 +146,7 @@ Your Response:"""
 @chatbot_router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    Main chatbot endpoint - uses Hugging Face Router API (NEW 2025 endpoint)
+    Main chatbot endpoint - uses Hugging Face Inference API
     """
     
     # Check if API key is configured
@@ -163,30 +163,25 @@ async def chat(request: ChatRequest):
             request.prediction_data
         )
         
-        # NEW Hugging Face Router API endpoint (2025 - replaces old api-inference endpoint)
-        # This unified endpoint routes to multiple inference providers
-        API_URL = "https://router.huggingface.co/v1/chat/completions"
+        # Use the standard Hugging Face Inference API (not Router API)
+        API_URL = "https://router.huggingface.com/api/models/mistral-7b-instruct-v0.2"
         
         headers = {
             "Authorization": f"Bearer {HUGGINGFACE_API_KEY}",
             "Content-Type": "application/json"
         }
         
-        # Use OpenAI-compatible format for the new Router API
         payload = {
-            "model": "mistralai/Mistral-7B-Instruct-v0.2",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "max_tokens": 400,
-            "temperature": 0.7,
-            "top_p": 0.95
+            "inputs": prompt,
+            "parameters": {
+                "max_new_tokens": 400,
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "return_full_text": False
+            }
         }
         
-        # Call Hugging Face Router API
+        # Call Hugging Face API
         response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
         
         # Handle different response status codes
@@ -223,21 +218,17 @@ async def chat(request: ChatRequest):
         
         result = response.json()
         
-        # Handle OpenAI-compatible response format
+        # Handle response format
         generated_text = ""
-        if "choices" in result and len(result["choices"]) > 0:
-            # OpenAI-compatible format
-            message = result["choices"][0].get("message", {})
-            generated_text = message.get("content", "")
-        elif isinstance(result, list) and len(result) > 0:
-            # Fallback: Old format (list)
+        if isinstance(result, list) and len(result) > 0:
+            # Result is a list
             first_item = result[0]
             if isinstance(first_item, dict):
                 generated_text = first_item.get('generated_text', '')
             else:
                 generated_text = str(first_item)
         elif isinstance(result, dict):
-            # Fallback: Dict format
+            # Result is a dict
             generated_text = result.get('generated_text', '')
         else:
             # Unexpected format
@@ -286,6 +277,6 @@ async def chat_health():
         "status": "healthy" if api_configured else "misconfigured",
         "api_configured": api_configured,
         "model": "Mistral-7B-Instruct-v0.2",
-        "provider": "Hugging Face Router API",
-        "endpoint": "https://router.huggingface.co/v1"
+        "provider": "Hugging Face Inference API",
+        "endpoint": "https://api-inference.huggingface.co"
     }
