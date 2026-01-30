@@ -75,19 +75,23 @@ Ask questions and get instant answers about:
   - `xgboost_model.pkl` - Pre-trained xgboost model
 - `requirements.txt` - Python dependencies
 
-## Complete Project Structure
 
+## 📁 Complete Project Structure
+
+```
 drivegreen/
 ├── backend/                            # Python Backend
 │   ├── app.py                          # FastAPI application
 │   ├── routers/
-│   │   └── prediction_router.py               # Prediction API routes
+│   │   ├── prediction_router.py        # Prediction API routes
+│   │   └── chatbot_router.py           # Chatbot API routes
 │   ├── model/
-│   │   └── encoder.pkl 
-│   │   └── xgboost_model.pkl 
+│   │   ├── encoder.pkl                 # Label encoder
+│   │   └── xgboost_model.pkl           # Trained model
+│   ├── chatbot_analytics.json          # Chatbot usage analytics
 │   ├── requirements.txt                # Python dependencies
-│   ├── venv/                           # Virtual environment (not in git)
-│   └── .env                            # Environment variables (optional)
+│   ├── .env                            # Environment variables
+│   └── .venv/                          # Virtual environment (gitignored)
 │
 ├── frontend/                           # React Frontend
 │   ├── src/
@@ -102,15 +106,22 @@ drivegreen/
 │   │   ├── App.jsx                     # Root component
 │   │   ├── main.jsx                    # Entry point
 │   │   └── index.css                   # Global Tailwind styles
-│   ├── public/                         # Static assets
-│   │ └── DriveGreenLogo.jpeg           # DriveGreen favicon
+│   ├── public/
+│   │   ├── DriveGreenLogo.jpeg         # Logo
+│   │   └── favicon.ico                 # Website icon
 │   ├── package.json                    # Node dependencies
 │   ├── vite.config.js                  # Vite configuration
 │   ├── tailwind.config.js              # Tailwind configuration
 │   ├── postcss.config.js               # PostCSS configuration
 │   └── .env                            # Environment variables
-├── .gitignore                          # Git ignore rules7
-└── README.md                           # This file
+│
+├── notebook/                           # Jupyter Notebook & Data
+│   ├── Emissions_Canada.ipynb          # Model training notebook
+│   └── Emissions_Canada.csv            # Original dataset
+│
+├── .gitignore                          # Git ignore rules
+└── README.md                           # Project documentation
+```
 
 ## Installation & Setup
 

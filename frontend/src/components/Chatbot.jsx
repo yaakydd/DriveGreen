@@ -6,19 +6,18 @@ import React, {
   useCallback,
   memo
 } from "react";
-import { X, Send, Cpu, AlertCircle, WifiOff } from "lucide-react";
+import { X, Send, Cpu, AlertCircle, WifiOff, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
-/* ===================== CONFIG ===================== */
 
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_CONFIG = {
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+  chatEndpoint: "/api/chatbot/chat",
+  timeout: 30000,
+  maxRetries: 2
+};
 
-const CHAT_ENDPOINT = "/api/chat";
-const REQUEST_TIMEOUT = 30000;
-
-/* ===================== HELPERS ===================== */
 
 const sanitizeText = (text) =>
   text
@@ -26,241 +25,26 @@ const sanitizeText = (text) =>
     .replace(/javascript:/gi, "")
     .replace(/on\w+=/gi, "");
 
-const ErrorIconMap = {
-  NETWORK: WifiOff,
-  TIMEOUT: AlertCircle,
-  RATE_LIMIT: AlertCircle,
-  SERVICE_UNAVAILABLE: AlertCircle,
-  UNKNOWN: AlertCircle
-};
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-/* ===================== API ===================== */
 
-const sendMessage = async (message, predictionData, signal) => {
-  const res = await fetch(`${API_URL}${CHAT_ENDPOINT}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    signal,
-    body: JSON.stringify({
-      message: sanitizeText(message),
-      prediction_data: predictionData
-    })
-  });
+const callChatbotAPI = async (message, predictionData, retryCount = 0) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
 
-  if (res.status === 429) throw { type: "RATE_LIMIT" };
-  if (res.status === 503) throw { type: "SERVICE_UNAVAILABLE" };
-  if (!res.ok) throw { type: "UNKNOWN" };
+  try {
+    const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.chatEndpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        message: sanitizeText(message),
+        prediction_data: predictionData
+      })
+    });
 
-  const data = await res.json();
-  return data.response;
-};
+    clearTimeout(timeoutId);
 
-/* ===================== ERROR UI ===================== */
-
-const ErrorBubble = memo(({ error, onRetry }) => {
-  if (!error) return null;
-  const Icon = ErrorIconMap[error.type] || AlertCircle;
-
-  return (
-    <div className="flex gap-2 p-3 bg-red-50 border border-red-200 rounded-xl">
-      <Icon size={16} className="text-red-600 mt-1" />
-      <div className="flex-1">
-        <p className="text-sm text-red-700">{error.message}</p>
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="mt-1 text-xs font-semibold text-red-700 hover:underline"
-          >
-            Try again
-          </button>
-        )}
-      </div>
-    </div>
-  );
-});
-
-/* ===================== MAIN COMPONENT ===================== */
-
-const Chatbot = ({ predictionData }) => {
-  const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
-  const [typing, setTyping] = useState(false);
-  const [error, setError] = useState(null);
-
-  const abortRef = useRef(null);
-  const endRef = useRef(null);
-  const inputRef = useRef(null);
-
-  /* ---------- Initial Message ---------- */
-
-  useEffect(() => {
-    const intro = predictionData
-      ? `Prediction complete: **${predictionData.predicted_co2_emissions} g/km** (${predictionData.category}).  
-Ask me:
-• Explain my result  
-• How can I reduce emissions?`
-      : "Hi! I’m Eco-Copilot 🌱. Ask me anything about vehicle emissions.";
-
-    setMessages([{ sender: "bot", text: intro }]);
-  }, [predictionData]);
-
-  /* ---------- Auto Scroll ---------- */
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typing]);
-
-  /* ---------- Send ---------- */
-
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || typing) return;
-
-    const userText = input.trim();
-    setInput("");
-    setTyping(true);
-    setError(null);
-
-    setMessages((m) => [...m, { sender: "user", text: userText }]);
-
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    const timeout = setTimeout(
-      () => controller.abort(),
-      REQUEST_TIMEOUT
-    );
-
-    try {
-      const reply = await sendMessage(
-        userText,
-        predictionData,
-        controller.signal
-      );
-      setMessages((m) => [...m, { sender: "bot", text: reply }]);
-    } catch (err) {
-      let type = err.type || "UNKNOWN";
-      let message =
-        type === "RATE_LIMIT"
-          ? "Too many requests. Please wait a moment."
-          : type === "SERVICE_UNAVAILABLE"
-          ? "AI is warming up. Try again shortly."
-          : type === "TIMEOUT"
-          ? "Request timed out."
-          : "Something went wrong.";
-
-      setError({ type, message });
-    } finally {
-      clearTimeout(timeout);
-      setTyping(false);
-    }
-  }, [input, typing, predictionData]);
-
-  /* ---------- Retry ---------- */
-
-  const retryLast = () => {
-    const lastUser = [...messages].reverse().find(m => m.sender === "user");
-    if (!lastUser) return;
-    setInput(lastUser.text);
-    handleSend();
-  };
-
-  /* ---------- Keyboard ---------- */
-
-  const onKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  /* ===================== UI ===================== */
-
-  return (
-    <>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-20 right-4 w-[360px] h-[550px] bg-white rounded-3xl shadow-xl flex flex-col z-50"
-          >
-            {/* Header */}
-            <div className="p-4 bg-emerald-600 text-white flex justify-between rounded-t-3xl">
-              <div className="flex items-center gap-2">
-                <Cpu size={18} />
-                <span className="font-semibold">Eco-Copilot</span>
-              </div>
-              <button onClick={() => setOpen(false)}>
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`flex ${
-                    m.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                      m.sender === "user"
-                        ? "bg-emerald-600 text-white"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    <ReactMarkdown>{m.text}</ReactMarkdown>
-                  </div>
-                </div>
-              ))}
-
-              {typing && (
-                <div className="text-sm text-gray-400">Eco-Copilot is typing…</div>
-              )}
-
-              {error && <ErrorBubble error={error} onRetry={retryLast} />}
-              <div ref={endRef} />
-            </div>
-
-            {/* Input */}
-            <div className="p-3 border-t flex gap-2">
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={onKeyDown}
-                disabled={typing}
-                placeholder="Ask about emissions…"
-                className="flex-1 border rounded-xl px-3 py-2 text-sm"
-              />
-              <button
-                onClick={handleSend}
-                disabled={typing || !input.trim()}
-                className="bg-emerald-600 text-white px-4 rounded-xl"
-              >
-                <Send size={16} />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Toggle */}
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-lg"
-      >
-        <Cpu />
-      </button>
-    </>
-  );
-};
-
-export default memo(Chatbot);
     if (response.status === 429) {
       throw new Error('RATE_LIMIT');
     }
@@ -283,7 +67,7 @@ export default memo(Chatbot);
     // Handle abort/timeout
     if (error.name === 'AbortError') {
       if (retryCount < API_CONFIG.maxRetries) {
-        await sleep(1000 * (retryCount + 1)); // Exponential backoff
+        await sleep(1000 * (retryCount + 1));
         return callChatbotAPI(message, predictionData, retryCount + 1);
       }
       return { 
@@ -338,7 +122,8 @@ export default memo(Chatbot);
   }
 };
 
-// ==================== ERROR MESSAGE COMPONENT ====================
+/* Function to handle error messages */
+
 const ErrorMessage = memo(({ error, onRetry }) => {
   const errorConfig = {
     NETWORK: {
@@ -396,7 +181,8 @@ const ErrorMessage = memo(({ error, onRetry }) => {
 
 ErrorMessage.displayName = 'ErrorMessage';
 
-// ==================== MAIN CHATBOT COMPONENT ====================
+/* Main Chatbot Component */
+
 const Chatbot = ({ predictionData }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -434,7 +220,6 @@ const Chatbot = ({ predictionData }) => {
 
   const toggleChat = useCallback(() => {
     setIsOpen(prev => !prev);
-    // Clear connection errors when opening
     if (!isOpen) {
       setConnectionError(null);
     }
@@ -458,14 +243,13 @@ const Chatbot = ({ predictionData }) => {
    * Main function to get bot response from API
    */
   const getBotResponse = useCallback(async (userMessage) => {
-    setConnectionError(null); // Clear previous errors
+    setConnectionError(null);
 
     const result = await callChatbotAPI(userMessage, predictionData);
 
     if (result.success) {
       return result.response;
     } else {
-      // Store error for display
       setConnectionError({
         type: result.error,
         message: result.message
@@ -483,7 +267,6 @@ const Chatbot = ({ predictionData }) => {
     const trimmedInput = input.trim();
     setHasUserMessaged(true);
     
-    // Add user message
     const userMessage = { text: sanitizeText(trimmedInput), sender: "user" };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
@@ -491,15 +274,12 @@ const Chatbot = ({ predictionData }) => {
     setConnectionError(null);
 
     try {
-      // Get AI response
       const botResponse = await getBotResponse(trimmedInput);
 
-      // Add bot response or show error
       setTimeout(() => {
         if (botResponse) {
           setMessages(prev => [...prev, { text: botResponse, sender: "bot" }]);
         } else {
-          // Error already stored in connectionError state
           setMessages(prev => [...prev, { 
             text: "", 
             sender: "bot", 
@@ -528,11 +308,9 @@ const Chatbot = ({ predictionData }) => {
    * Retry last message
    */
   const handleRetry = useCallback(async () => {
-    // Find last user message
     const lastUserMessage = [...messages].reverse().find(m => m.sender === "user");
     if (!lastUserMessage) return;
 
-    // Remove error message
     setMessages(prev => prev.filter(m => !m.isError));
     setIsTyping(true);
     setConnectionError(null);
@@ -634,7 +412,7 @@ const Chatbot = ({ predictionData }) => {
                     <div className={`max-w-[80%] p-3.5 rounded-2xl text-sm leading-relaxed ${
                       msg.sender === "user" 
                         ? "bg-emerald-600 text-white rounded-tr-none" 
-                        : "bg-gray-100 text-gray-800 rounded-tl-none"
+                        : "bg-cyan-100 text-gray-800 rounded-tl-none border border-cyan-400"
                     }`}>
                       <ReactMarkdown>{msg.text}</ReactMarkdown>
                     </div>
@@ -674,8 +452,8 @@ const Chatbot = ({ predictionData }) => {
                 ))}
               </div>
             )}
-
-            {/* Input */}
+            
+            {/* Input Area */}
             <div className="p-4 border-t">
               <div className="flex gap-2">
                 <input
@@ -687,7 +465,7 @@ const Chatbot = ({ predictionData }) => {
                   placeholder={predictionData ? "Ask about your result..." : "Ask Eco-Copilot..."}
                   maxLength={500}
                   disabled={isTyping}
-                  className="flex-1 bg-gray-50 border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-gray-50 border rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button 
                   onClick={handleSend} 
@@ -712,14 +490,20 @@ const Chatbot = ({ predictionData }) => {
           isOpen 
             ? "bg-gray-900 text-white" 
             : predictionData 
-              ? "bg-gradient-to-r from-emerald-600 to-cyan-600 text-white animate-pulse" 
+              ? "bg-gradient-to-r from-emerald-600 to-cyan-600 text-white" 
               : "bg-emerald-600 text-white"
         }`}
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? <X size={24} /> : <Cpu size={24} />}
         {predictionData && !isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white animate-ping" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg"
+          >
+            <Sparkles size={14} className="text-white" />
+          </motion.div>
         )}
       </motion.button>
     </>

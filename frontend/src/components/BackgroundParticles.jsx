@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { motion } from "framer-motion";
 
-/* OPTIMIZATIONS APPLIED:
+/* OPTIMIZATIONS APPLIED TO THIS COMPONENT:
  * 1. Reduced particle count from 35 to 20 (43% reduction)
  * 2. Reduced CO2 icons from 12 to 6 (50% reduction)
  * 3. Pre-computed random values in useMemo (no recalculation on re-render)

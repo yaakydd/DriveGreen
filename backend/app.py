@@ -21,7 +21,7 @@ app.add_middleware(
 
 # Include the router
 app.include_router(predict_router, prefix="/api", tags=["predictions"])
-app.include_router(chatbot_router, prefix="/api", tags=["chatbot"])
+app.include_router(chatbot_router, prefix="/api/chatbot", tags=["chatbot"])
 
 @app.get("/")
 async def root():
