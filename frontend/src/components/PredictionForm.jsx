@@ -20,7 +20,7 @@ import Chatbot from "./Chatbot";
 import toast from "react-hot-toast";
 
 // Module-level constants
-const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_URL = import.meta.env.VITE_API_URL;
 const MIN_LOADING_TIME = 800;
 
 // Fuel type options
