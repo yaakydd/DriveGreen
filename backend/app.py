@@ -13,11 +13,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://drive-green-seven.vercel.app",  # Add your Vercel URL
-        "http://localhost:3000",  # For local testing
-        "http://localhost:5173",
-    ],  # Update with your frontend URL in production
+    allow_origins=["*"],  # Update with your frontend URL in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
