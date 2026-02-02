@@ -138,29 +138,46 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     if encoder is None:
         raise ValueError("Encoder not loaded.")
 
-    # MATCH TRAINING
+    # Apply log1p transformation
     log_engine_size = np.log1p(engine_size)
     log_cylinders = np.log1p(cylinders)
 
+    # One-hot encode fuel type
     fuel_df = pd.DataFrame({"fuel_type": [fuel_type]})
     encoded = encoder.transform(fuel_df)
 
+    # Get feature names from encoder
+    feature_names_from_encoder = encoder.get_feature_names_out(["fuel_type"])
+    
+    # Create DataFrame with encoded features
     cat_df = pd.DataFrame(
         encoded,
-        columns=encoder.get_feature_names_out(["fuel_type"])
+        columns=feature_names_from_encoder
     )
-
+    
+    # Create numerical features DataFrame
     num_df = pd.DataFrame({
         "engine_size(l)": [log_engine_size],
         "cylinders": [log_cylinders]
     })
-
+    
+    # Combine numerical and categorical features
     X = pd.concat([num_df, cat_df], axis=1)
-
-    # Enforce training column order
-    feature_names = joblib.load("model/feature_names.pkl")
-    X = X.reindex(columns=feature_names, fill_value=0)
-
+    
+    # Load and enforce training column order
+    try:
+        feature_names = joblib.load("model/feature_names.pkl")
+        X = X.reindex(columns=feature_names, fill_value=0)
+        log_verbose(f"  Final feature order: {X.columns.tolist()}")
+    except FileNotFoundError:
+        # If feature_names.pkl doesn't exist, try to infer correct order
+        log_verbose("Warning: feature_names.pkl not found, using inferred order")
+        expected_order = ["engine_size(l)", "cylinders"] + list(feature_names_from_encoder)
+        X = X.reindex(columns=expected_order, fill_value=0)
+    
+    log_verbose(f"  Preprocessed shape: {X.shape}")
+    log_verbose(f"  Feature values:\n{X.to_dict('records')[0]}")
+    
     return X
 
 
