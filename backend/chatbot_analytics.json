@@ -1,9 +1,9 @@
 {
-  "total_requests": 14,
+  "total_requests": 16,
   "ai_responses": 0,
-  "fallback_responses": 14,
+  "fallback_responses": 16,
   "common_questions": {
-    "how does the website work?": 1,
+    "how does the website work?": 2,
     "what does my result mean": 1,
     "nooo like the results i got after the prediction": 1,
     "what are the policies": 1,
@@ -13,7 +13,8 @@
     "what is the impact of vehicle carbon emissions on children": 1,
     "hello": 3,
     "predict co2 emissions for this vehicle": 1,
-    "how does the website work": 1
+    "how does the website work": 1,
+    "what policies are being made": 1
   },
   "fallback_triggers": {},
   "response_times": [
@@ -30,14 +31,16 @@
     0.7867879867553711,
     1.5282588005065918,
     1.334139108657837,
-    2.124361276626587
+    2.124361276626587,
+    0.6660277843475342,
+    0.6725203990936279
   ],
   "user_categories": {
     "Unknown": 1
   },
   "daily_activity": {
     "2026-01-30": 11,
-    "2026-02-02": 3
+    "2026-02-02": 5
   },
   "conversation_lengths": [
     26,
@@ -53,7 +56,9 @@
     5,
     5,
     38,
-    25
+    25,
+    26,
+    28
   ],
-  "last_updated": "2026-02-02T11:28:14.932093"
+  "last_updated": "2026-02-02T21:54:11.684450"
 }
