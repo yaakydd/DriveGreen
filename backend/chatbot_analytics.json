@@ -1,7 +1,7 @@
 {
-  "total_requests": 11,
+  "total_requests": 14,
   "ai_responses": 0,
-  "fallback_responses": 11,
+  "fallback_responses": 14,
   "common_questions": {
     "how does the website work?": 1,
     "what does my result mean": 1,
@@ -11,7 +11,9 @@
     "how can i maintain my vehicle to reduce emissions": 1,
     "what are some of the best practices to reduce carbon emissions from vehicles": 1,
     "what is the impact of vehicle carbon emissions on children": 1,
-    "hello": 2
+    "hello": 3,
+    "predict co2 emissions for this vehicle": 1,
+    "how does the website work": 1
   },
   "fallback_triggers": {},
   "response_times": [
@@ -25,11 +27,17 @@
     0.7780377864837646,
     0.7132868766784668,
     0.7561876773834229,
-    0.7867879867553711
+    0.7867879867553711,
+    1.5282588005065918,
+    1.334139108657837,
+    2.124361276626587
   ],
-  "user_categories": {},
+  "user_categories": {
+    "Unknown": 1
+  },
   "daily_activity": {
-    "2026-01-30": 11
+    "2026-01-30": 11,
+    "2026-02-02": 3
   },
   "conversation_lengths": [
     26,
@@ -42,7 +50,10 @@
     58,
     5,
     2,
-    5
+    5,
+    5,
+    38,
+    25
   ],
-  "last_updated": "2026-01-30T15:20:32.561077"
+  "last_updated": "2026-02-02T11:28:14.932093"
 }

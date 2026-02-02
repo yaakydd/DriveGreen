@@ -16,13 +16,6 @@ except ImportError:
 """
 OPTIMIZED PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API
 
-Key optimizations:
-1. Cached preprocessing results to reduce repeated computations
-2. Lazy loading of encoder feature names
-3. Reduced DataFrame operations
-4. Minimized logging overhead in production
-5. Efficient memory usage with numpy operations
-6. Single-pass data transformations
 """
 
 predict_router = APIRouter()
@@ -142,54 +135,33 @@ class PredictionOutput(BaseModel):
 
 
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.DataFrame:
-    """
-    Optimized preprocessing with reduced DataFrame operations.
-    
-    Optimizations:
-    1. Single DataFrame creation instead of multiple concat operations
-    2. Direct numpy array manipulation where possible
-    3. Cached encoder feature names
-    4. Reduced intermediate variables
-    """
-    
     if encoder is None:
         raise ValueError("Encoder not loaded.")
-    
-    # Log transformation (to match training data)
-    log_engine_size = np.log(engine_size)
-    log_cylinders = np.log(cylinders)
-    
-    # Create minimal DataFrame for encoding - MUST match training format
+
+    # MATCH TRAINING
+    log_engine_size = np.log1p(engine_size)
+    log_cylinders = np.log1p(cylinders)
+
     fuel_df = pd.DataFrame({"fuel_type": [fuel_type]})
-    
-    # One-hot encode
-    categorical_encoded_array = encoder.transform(fuel_df)
-    
-    # Use cached feature names if available
-    if encoder_feature_names:
-        categorical_columns = encoder_feature_names
-    else:
-        categorical_columns = encoder.get_feature_names_out(["fuel_type"]).tolist()
-    
-    # Convert encoded array to DataFrame
-    categorical_encoded_df = pd.DataFrame(
-        categorical_encoded_array,
-        columns=categorical_columns
+    encoded = encoder.transform(fuel_df)
+
+    cat_df = pd.DataFrame(
+        encoded,
+        columns=encoder.get_feature_names_out(["fuel_type"])
     )
-    
-    # Create numerical features DataFrame
-    numerical_df = pd.DataFrame({
+
+    num_df = pd.DataFrame({
         "engine_size(l)": [log_engine_size],
         "cylinders": [log_cylinders]
     })
-    
-    # Combine in the SAME ORDER as training: numerical first, then categorical
-    result = pd.concat([numerical_df, categorical_encoded_df], axis=1)
-    
-    log_verbose(f"  Preprocessed shape: {result.shape}")
-    log_verbose(f"  Columns: {result.columns.tolist()}")
-    
-    return result
+
+    X = pd.concat([num_df, cat_df], axis=1)
+
+    # Enforce training column order
+    feature_names = joblib.load("model/feature_names.pkl")
+    X = X.reindex(columns=feature_names, fill_value=0)
+
+    return X
 
 
 def interpret_emissions(co2_value: float) -> tuple:
@@ -247,7 +219,7 @@ async def predict_emissions(input_data: PredictionInput):
         log_verbose(f"  Log prediction: {log_prediction:.4f}")
         
         # Reverse log transform and round in one step
-        co2_value = round(float(np.exp(log_prediction)), 2)
+        co2_value = round(float(np.expm1(log_prediction)), 2)
         log_verbose(f"  CO2: {co2_value} g/km")
         
         # Interpret
