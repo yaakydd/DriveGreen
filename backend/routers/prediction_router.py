@@ -155,33 +155,40 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     if encoder is None:
         raise ValueError("Encoder not loaded.")
     
-    # Log transformation (numpy operations are faster than pandas)
+    # Log transformation (to match training data)
     log_engine_size = np.log(engine_size)
     log_cylinders = np.log(cylinders)
     
-    # Create minimal DataFrame for encoding
-    fuel_df = pd.DataFrame([{"fuel_type": fuel_type}])
+    # Create minimal DataFrame for encoding - MUST match training format
+    fuel_df = pd.DataFrame({"fuel_type": [fuel_type]})
     
     # One-hot encode
-    categorical_encoded_feature = encoder.transform(fuel_df)
+    categorical_encoded_array = encoder.transform(fuel_df)
     
     # Use cached feature names if available
     if encoder_feature_names:
-        categorical_column = encoder_feature_names
+        categorical_columns = encoder_feature_names
     else:
-        categorical_column = encoder.get_feature_names_out(["fuel_type"]).tolist()
+        categorical_columns = encoder.get_feature_names_out(["fuel_type"]).tolist()
     
-    # Create final DataFrame in one operation (more efficient)
-    result = pd.DataFrame(
-        np.column_stack([
-            [log_engine_size],
-            [log_cylinders],
-            categorical_encoded_feature
-        ]),
-        columns=["engine_size(l)", "cylinders"] + categorical_column
+    # Convert encoded array to DataFrame
+    categorical_encoded_df = pd.DataFrame(
+        categorical_encoded_array,
+        columns=categorical_columns
     )
     
+    # Create numerical features DataFrame
+    numerical_df = pd.DataFrame({
+        "engine_size(l)": [log_engine_size],
+        "cylinders": [log_cylinders]
+    })
+    
+    # Combine in the SAME ORDER as training: numerical first, then categorical
+    result = pd.concat([numerical_df, categorical_encoded_df], axis=1)
+    
     log_verbose(f"  Preprocessed shape: {result.shape}")
+    log_verbose(f"  Columns: {result.columns.tolist()}")
+    
     return result
 
 
