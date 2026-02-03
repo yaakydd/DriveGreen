@@ -232,7 +232,7 @@ def generate_suggested_questions(
     
     if any(word in message_lower for word in ["policy", "law", "regulation", "government"]):
         questions.extend([
-            "What are current emission standards?",
+            "What are current vehicle emission standards?",
             "Are there tax benefits for eco-cars?",
             "What countries have the strictest laws?",
             "How do Ghana's regulations compare?",
