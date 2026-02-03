@@ -399,8 +399,7 @@ You are free to:
 
 **Your Name**
 - GitHub: [@yaakydd](https://github.com/yaakydd)
-- LinkedIn: [Your LinkedIn](https://linkedin.com/in/yourprofile)
-- Email: kyddgim17@gmail.com
+- Email: kyddgimd17@gmail.com@gmail.com
 
 ## Acknowledgments
 
