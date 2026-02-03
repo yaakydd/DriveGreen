@@ -23,9 +23,6 @@ Key fixes:
 
 predict_router = APIRouter()
 
-# ============================================
-# CRITICAL: Fuel type order MUST match training
-# ============================================
 FUEL_TYPE_ORDER = ['X', 'Z', 'E', 'D', 'N']
 
 # Global variables for model components
@@ -88,9 +85,7 @@ def find_model_file(filename: str) -> Optional[str]:
     return None
 
 
-# ============================================
-# MODEL LOADING
-# ============================================
+# Model loading function
 def load_models():
     """Load all model components."""
     global model, encoder, feature_names, encoder_feature_names
@@ -100,19 +95,19 @@ def load_models():
     if model_path:
         try:
             model = joblib.load(model_path)
-            print(f"✓ Model loaded from {model_path}")
+            print(f" Model loaded from {model_path}")
         except Exception as e:
-            print(f"✗ Could not load model: {e}")
+            print(f" Could not load model: {e}")
     else:
-        print(f"✗ Model file 'xgboost_model.pkl' not found in any model directory")
-        print(f"  Searched: {MODEL_DIRS}")
+        print(f" Model file 'xgboost_model.pkl' not found in any model directory")
+        print(f" Searched: {MODEL_DIRS}")
 
     # Load encoder
     encoder_path = find_model_file("encoder.pkl")
     if encoder_path:
         try:
             encoder = joblib.load(encoder_path)
-            print(f"✓ Encoder loaded from {encoder_path}")
+            print(f" Encoder loaded from {encoder_path}")
             
             # Cache feature names on startup
             if encoder is not None and hasattr(encoder, 'get_feature_names_out'):
@@ -123,42 +118,40 @@ def load_models():
                     # CRITICAL VERIFICATION: Check if order matches
                     expected_order = [f"fuel_type_{ft}" for ft in FUEL_TYPE_ORDER]
                     if encoder_feature_names == expected_order:
-                        print(f"  ✓ Fuel type order verified: {FUEL_TYPE_ORDER}")
+                        print(f"  Fuel type order verified: {FUEL_TYPE_ORDER}")
                     else:
-                        print(f"  ⚠ WARNING: Fuel type order mismatch!")
+                        print(f"   WARNING: Fuel type order mismatch!")
                         print(f"    Expected: {expected_order}")
                         print(f"    Got: {encoder_feature_names}")
                 except Exception as e:
-                    print(f"⚠ Warning: Could not cache feature names: {e}")
+                    print(f" Warning: Could not cache feature names: {e}")
         except Exception as e:
-            print(f"✗ Could not load encoder: {e}")
+            print(f" Could not load encoder: {e}")
     else:
-        print(f"✗ Encoder file 'encoder.pkl' not found in any model directory")
+        print(f" Encoder file 'encoder.pkl' not found in any model directory")
 
     # Load feature names
     feature_names_path = find_model_file("feature_names.pkl")
     if feature_names_path:
         try:
             feature_names = joblib.load(feature_names_path)
-            print(f"✓ Feature names loaded from {feature_names_path}")
-            print(f"  Expected column order: {feature_names}")
+            print(f" Feature names loaded from {feature_names_path}")
+            print(f" Expected column order: {feature_names}")
         except Exception as e:
-            print(f"✗ Could not load feature names: {e}")
+            print(f" Could not load feature names: {e}")
     else:
-        print(f"✗ Feature names file 'feature_names.pkl' not found")
+        print(f" Feature names file 'feature_names.pkl' not found")
         # If feature_names.pkl doesn't exist, construct it manually
         if encoder_feature_names:
             feature_names = ["engine_size(l)", "cylinders"] + encoder_feature_names
-            print(f"  ℹ Constructed feature names: {feature_names}")
+            print(f"Constructed feature names: {feature_names}")
 
 
 # Load models on startup
 load_models()
 
 
-# ============================================
-# PYDANTIC MODELS
-# ============================================
+# Pydantic models for input/output validation
 class PredictionInput(BaseModel):
     """Input validation schema."""
     
@@ -199,9 +192,7 @@ class PredictionOutput(BaseModel):
     color: str
 
 
-# ============================================
-# PREPROCESSING FUNCTION - FIXED VERSION
-# ============================================
+# Preprocessing function
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.DataFrame:
     """
     CRITICAL: Exact match to training process!
@@ -220,9 +211,7 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     if feature_names is None:
         raise ValueError("Feature names not loaded. Please check model files.")
 
-    log_verbose(f"\n{'='*60}")
     log_verbose(f"PREPROCESSING INPUT")
-    log_verbose(f"{'='*60}")
     log_verbose(f"Input: fuel_type={fuel_type}, engine_size={engine_size}, cylinders={cylinders}")
 
     try:
@@ -290,20 +279,17 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
         log_verbose(f"  DataFrame shape: {X.shape}")
         log_verbose(f"  Column types: {X.dtypes.tolist()}")
         log_verbose(f"  Index: {X.index.tolist()}")
-        log_verbose(f"{'='*60}\n")
 
         return X
         
     except Exception as e:
-        log_verbose(f"✗ Error in preprocessing: {e}")
+        log_verbose(f" Error in preprocessing: {e}")
         import traceback
         log_verbose(traceback.format_exc())
         raise
 
 
-# ============================================
-# INTERPRETATION FUNCTION
-# ============================================
+# Interpretation function with caching to explain the CO2 predicted value
 def interpret_emissions(co2_value: float) -> tuple:
     """Optimized interpretation with cached results."""
     
@@ -319,9 +305,8 @@ def interpret_emissions(co2_value: float) -> tuple:
         return INTERPRETATION_VERY_HIGH
 
 
-# ============================================
-# API ENDPOINTS
-# ============================================
+# API endpoints
+
 @predict_router.post("/predict", response_model=PredictionOutput)
 async def predict_emissions(input_data: PredictionInput):
     """
@@ -347,9 +332,7 @@ async def predict_emissions(input_data: PredictionInput):
         )
     
     try:
-        log_verbose(f"\n{'='*60}")
         log_verbose(f"NEW PREDICTION REQUEST")
-        log_verbose(f"{'='*60}")
         log_verbose(f"Input: {input_data.model_dump()}")
         
         # Preprocess input
@@ -379,7 +362,6 @@ async def predict_emissions(input_data: PredictionInput):
         # Interpret result
         interpretation, category, color = interpret_emissions(co2_value)
         log_verbose(f"  Category: {category}")
-        log_verbose(f"{'='*60}\n")
         
         return PredictionOutput(
             predicted_co2_emissions=co2_value,
@@ -389,11 +371,11 @@ async def predict_emissions(input_data: PredictionInput):
         )
     
     except ValueError as e:
-        log_verbose(f"✗ Validation error: {e}")
+        log_verbose(f" Validation error: {e}")
         raise HTTPException(status_code=422, detail=str(e))
     
     except Exception as e:
-        log_verbose(f"✗ Prediction error: {e}")
+        log_verbose(f" Prediction error: {e}")
         import traceback
         error_traceback = traceback.format_exc()
         log_verbose(f"Traceback:\n{error_traceback}")
@@ -503,24 +485,3 @@ async def test_prediction():
             "traceback": traceback.format_exc(),
             "message": "Test prediction failed"
         }
-    
-@predict_router.get("/debug/files")
-async def debug_files():
-    """Check if model files are accessible."""
-    import os
-    
-    current_dir = os.getcwd()
-    model_dirs = ['model', 'models', './model', './models']
-    
-    results = {
-        "current_directory": current_dir,
-        "directory_contents": os.listdir(current_dir) if os.path.exists(current_dir) else [],
-        "model_files": {}
-    }
-    
-    for directory in model_dirs:
-        if os.path.exists(directory):
-            files = os.listdir(directory)
-            results["model_files"][directory] = files
-    
-    return results
