@@ -132,8 +132,7 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const activeColor = getCategoryHex();
 
-  // PREMIUM PDF GENERATION (REVERTED & REFINED) 
- const generateAndSharePDF = () => {
+const generateAndSharePDF = () => {
   try {
     const toastId = toast.loading("Generating Report...");
     
