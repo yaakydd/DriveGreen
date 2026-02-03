@@ -42,4 +42,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 Emissions_Canada.csv
-model/*.pkl
