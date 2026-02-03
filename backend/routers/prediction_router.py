@@ -15,7 +15,7 @@ except ImportError:
 
 """
 CORRECTED PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API
-Fixed to match exact training column order
+Fixed to match exact training column order and ensure DataFrame compatibility with XGBoost
 """
 
 predict_router = APIRouter()
@@ -155,6 +155,8 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     1. Transform numerical features with log1p
     2. One-hot encode categorical
     3. Concat: [numerical_transformed, categorical_encoded]
+    
+    FIXED: Returns a properly formatted DataFrame with exact column names expected by XGBoost
     """
     if encoder is None:
         raise ValueError("Encoder not loaded.")
@@ -175,7 +177,7 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     # Get encoded column names from encoder
     encoded_columns = encoder.get_feature_names_out(["fuel_type"])
     
-    # Create categorical DataFrame
+    # Create categorical DataFrame with proper column names
     cat_df = pd.DataFrame(
         encoded,
         columns=encoded_columns
@@ -183,7 +185,7 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     
     log_verbose(f"  Encoded fuel type: {cat_df.to_dict('records')[0]}")
 
-    # Step 3: Create numerical DataFrame
+    # Step 3: Create numerical DataFrame with exact column names from training
     num_df = pd.DataFrame({
         "engine_size(l)": [log_engine_size],
         "cylinders": [log_cylinders]
@@ -196,10 +198,18 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     log_verbose(f"  Combined columns (before reorder): {X.columns.tolist()}")
 
     # Step 5: CRITICAL - Reindex to match exact training order
+    # This ensures the DataFrame has the exact columns in the exact order
     X = X.reindex(columns=feature_names, fill_value=0)
     
     log_verbose(f"  Final columns (after reorder): {X.columns.tolist()}")
     log_verbose(f"  Final values: {X.values[0]}")
+    
+    # Step 6: CRITICAL FIX - Ensure column names are preserved as strings
+    # XGBoost needs feature names to match exactly
+    X.columns = X.columns.astype(str)
+    
+    log_verbose(f"  DataFrame shape: {X.shape}")
+    log_verbose(f"  DataFrame dtypes: {X.dtypes.to_dict()}")
 
     return X
 
@@ -229,6 +239,8 @@ async def predict_emissions(input_data: PredictionInput):
     2. Reduced logging overhead
     3. Direct numpy operations
     4. Minimal type conversions
+    
+    FIXED: Ensures DataFrame with proper feature names is passed to XGBoost
     """
     
     if model is None or encoder is None or feature_names is None:
@@ -250,14 +262,18 @@ async def predict_emissions(input_data: PredictionInput):
         log_verbose(f"PREDICTION REQUEST: {input_data.fuel_type}, "
                    f"{input_data.engine_size}L, {input_data.cylinders} cyl")
         
-        # Preprocess
+        # Preprocess - returns a properly formatted DataFrame
         features = preprocess_input(
             input_data.fuel_type,
             input_data.engine_size,
             input_data.cylinders
         )
         
-        # Predict
+        # Verify DataFrame structure before prediction
+        log_verbose(f"  Features type: {type(features)}")
+        log_verbose(f"  Features columns: {features.columns.tolist()}")
+        
+        # Predict - XGBoost will now receive a DataFrame with correct feature names
         log_prediction = model.predict(features)[0]
         log_verbose(f"  Log prediction: {log_prediction:.4f}")
         
@@ -278,10 +294,13 @@ async def predict_emissions(input_data: PredictionInput):
         )
     
     except ValueError as e:
+        log_verbose(f"✗ Validation error: {e}")
         raise HTTPException(status_code=422, detail=str(e))
     
     except Exception as e:
         log_verbose(f"✗ Prediction error: {e}")
+        import traceback
+        log_verbose(f"  Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
 
 
@@ -326,11 +345,12 @@ async def get_model_info():
             "2. Log1p transform: cylinders → log(1 + cylinders)",
             "3. One-hot encode: fuel_type → binary columns",
             "4. Combine: [log_engine, log_cylinders, encoded_fuel_columns]",
-            "5. Reorder to match training column order"
+            "5. Reorder to match training column order",
+            "6. Ensure column names are strings for XGBoost compatibility"
         ],
         "model_behavior": [
-            "6. Model predicts: log(1 + CO2) emissions",
-            "7. Reverse transform: CO2 = expm1(prediction)"
+            "7. Model predicts: log(1 + CO2) emissions",
+            "8. Reverse transform: CO2 = expm1(prediction)"
         ],
         "expected_feature_order": feature_names if feature_names else "Not loaded",
         "encoded_features": ["engine_size(l)", "cylinders"] + enc_features,
