@@ -14,8 +14,11 @@ except ImportError:
     XGBRegressor = Any
 
 """
-FINAL FIXED PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API
-With explicit fuel type ordering: X, Z, E, D, N
+FIXED PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API
+Key fixes:
+1. Proper DataFrame column naming for XGBoost
+2. Consistent feature ordering
+3. Better error handling
 """
 
 predict_router = APIRouter()
@@ -57,13 +60,17 @@ INTERPRETATION_VERY_HIGH = (
     "considerable.", "Very High", "#dc2626"
 )
 
-# File paths
-model_path = "model/xgboost_model.pkl"
-encoder_path = "model/encoder.pkl"
-feature_names_path = "model/feature_names.pkl"
+# File paths - UPDATED to check multiple locations
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_DIRS = [
+    "model",
+    "models", 
+    os.path.join(BASE_DIR, "model"),
+    os.path.join(BASE_DIR, "models"),
+]
 
 # Environment flag for verbose logging
-VERBOSE_LOGGING = os.getenv("VERBOSE_LOGGING", "false").lower() == "true"
+VERBOSE_LOGGING = os.getenv("VERBOSE_LOGGING", "true").lower() == "true"
 
 
 def log_verbose(*args):
@@ -72,53 +79,81 @@ def log_verbose(*args):
         print(*args)
 
 
+def find_model_file(filename: str) -> Optional[str]:
+    """Find model file in multiple possible directories."""
+    for model_dir in MODEL_DIRS:
+        path = os.path.join(model_dir, filename)
+        if os.path.exists(path):
+            return path
+    return None
+
+
 # ============================================
 # MODEL LOADING
 # ============================================
-try:
-    if os.path.exists(model_path):
-        model = joblib.load(model_path)
-        print(f"✓ Model loaded from {model_path}")
+def load_models():
+    """Load all model components."""
+    global model, encoder, feature_names, encoder_feature_names
+    
+    # Load model
+    model_path = find_model_file("xgboost_model.pkl")
+    if model_path:
+        try:
+            model = joblib.load(model_path)
+            print(f"✓ Model loaded from {model_path}")
+        except Exception as e:
+            print(f"✗ Could not load model: {e}")
     else:
-        print(f"✗ Model file not found at {model_path}")
-except Exception as e:
-    print(f"✗ Could not load model: {e}")
+        print(f"✗ Model file 'xgboost_model.pkl' not found in any model directory")
+        print(f"  Searched: {MODEL_DIRS}")
 
-try:
-    if os.path.exists(encoder_path):
-        encoder = joblib.load(encoder_path)
-        print(f"✓ Encoder loaded from {encoder_path}")
-        
-        # Cache feature names on startup
-        if encoder is not None and hasattr(encoder, 'get_feature_names_out'):
-            try:
-                encoder_feature_names = encoder.get_feature_names_out(["fuel_type"]).tolist()
-                print(f"  Encoder features: {encoder_feature_names}")
-                
-                # CRITICAL VERIFICATION: Check if order matches
-                expected_order = [f"fuel_type_{ft}" for ft in FUEL_TYPE_ORDER]
-                if encoder_feature_names == expected_order:
-                    print(f"  ✓ Fuel type order verified: {FUEL_TYPE_ORDER}")
-                else:
-                    print(f"  ⚠ WARNING: Fuel type order mismatch!")
-                    print(f"    Expected: {expected_order}")
-                    print(f"    Got: {encoder_feature_names}")
-            except Exception as e:
-                print(f"⚠ Warning: Could not cache feature names: {e}")
+    # Load encoder
+    encoder_path = find_model_file("encoder.pkl")
+    if encoder_path:
+        try:
+            encoder = joblib.load(encoder_path)
+            print(f"✓ Encoder loaded from {encoder_path}")
+            
+            # Cache feature names on startup
+            if encoder is not None and hasattr(encoder, 'get_feature_names_out'):
+                try:
+                    encoder_feature_names = encoder.get_feature_names_out(["fuel_type"]).tolist()
+                    print(f"  Encoder features: {encoder_feature_names}")
+                    
+                    # CRITICAL VERIFICATION: Check if order matches
+                    expected_order = [f"fuel_type_{ft}" for ft in FUEL_TYPE_ORDER]
+                    if encoder_feature_names == expected_order:
+                        print(f"  ✓ Fuel type order verified: {FUEL_TYPE_ORDER}")
+                    else:
+                        print(f"  ⚠ WARNING: Fuel type order mismatch!")
+                        print(f"    Expected: {expected_order}")
+                        print(f"    Got: {encoder_feature_names}")
+                except Exception as e:
+                    print(f"⚠ Warning: Could not cache feature names: {e}")
+        except Exception as e:
+            print(f"✗ Could not load encoder: {e}")
     else:
-        print(f"✗ Encoder file not found at {encoder_path}")
-except Exception as e:
-    print(f"✗ Could not load encoder: {e}")
+        print(f"✗ Encoder file 'encoder.pkl' not found in any model directory")
 
-try:
-    if os.path.exists(feature_names_path):
-        feature_names = joblib.load(feature_names_path)
-        print(f"✓ Feature names loaded from {feature_names_path}")
-        print(f"  Expected column order: {feature_names}")
+    # Load feature names
+    feature_names_path = find_model_file("feature_names.pkl")
+    if feature_names_path:
+        try:
+            feature_names = joblib.load(feature_names_path)
+            print(f"✓ Feature names loaded from {feature_names_path}")
+            print(f"  Expected column order: {feature_names}")
+        except Exception as e:
+            print(f"✗ Could not load feature names: {e}")
     else:
-        print(f"✗ Feature names file not found at {feature_names_path}")
-except Exception as e:
-    print(f"✗ Could not load feature names: {e}")
+        print(f"✗ Feature names file 'feature_names.pkl' not found")
+        # If feature_names.pkl doesn't exist, construct it manually
+        if encoder_feature_names:
+            feature_names = ["engine_size(l)", "cylinders"] + encoder_feature_names
+            print(f"  ℹ Constructed feature names: {feature_names}")
+
+
+# Load models on startup
+load_models()
 
 
 # ============================================
@@ -165,7 +200,7 @@ class PredictionOutput(BaseModel):
 
 
 # ============================================
-# PREPROCESSING FUNCTION - FINAL FIX
+# PREPROCESSING FUNCTION - FIXED VERSION
 # ============================================
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.DataFrame:
     """
@@ -180,75 +215,90 @@ def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.D
     Returns DataFrame with proper feature names for XGBoost
     """
     if encoder is None:
-        raise ValueError("Encoder not loaded.")
+        raise ValueError("Encoder not loaded. Please check model files.")
     
     if feature_names is None:
-        raise ValueError("Feature names not loaded.")
+        raise ValueError("Feature names not loaded. Please check model files.")
 
     log_verbose(f"\n{'='*60}")
     log_verbose(f"PREPROCESSING INPUT")
     log_verbose(f"{'='*60}")
     log_verbose(f"Input: fuel_type={fuel_type}, engine_size={engine_size}, cylinders={cylinders}")
 
-    # Step 1: Log1p transform numerical features
-    log_engine_size = np.log1p(engine_size)
-    log_cylinders = np.log1p(cylinders)
-    
-    log_verbose(f"\nStep 1: Log transform")
-    log_verbose(f"  engine_size: {engine_size} → {log_engine_size:.4f}")
-    log_verbose(f"  cylinders: {cylinders} → {log_cylinders:.4f}")
+    try:
+        # Step 1: Log1p transform numerical features
+        log_engine_size = np.log1p(engine_size)
+        log_cylinders = np.log1p(cylinders)
+        
+        log_verbose(f"\nStep 1: Log transform")
+        log_verbose(f"  engine_size: {engine_size} → {log_engine_size:.4f}")
+        log_verbose(f"  cylinders: {cylinders} → {log_cylinders:.4f}")
 
-    # Step 2: One-hot encode fuel type
-    fuel_df = pd.DataFrame({"fuel_type": [fuel_type]})
-    encoded = encoder.transform(fuel_df)
-    
-    # Get encoded column names
-    encoded_columns = encoder.get_feature_names_out(["fuel_type"])
-    
-    # Create categorical DataFrame
-    cat_df = pd.DataFrame(
-        encoded,
-        columns=encoded_columns
-    )
-    
-    log_verbose(f"\nStep 2: One-hot encoding")
-    log_verbose(f"  fuel_type: {fuel_type}")
-    log_verbose(f"  Encoded columns: {encoded_columns.tolist()}")
-    log_verbose(f"  Encoded values: {encoded[0]}")
+        # Step 2: One-hot encode fuel type
+        fuel_df = pd.DataFrame({"fuel_type": [fuel_type]})
+        encoded = encoder.transform(fuel_df)
+        
+        # Get encoded column names
+        try:
+            encoded_columns = encoder.get_feature_names_out(["fuel_type"])
+        except:
+            # Fallback if get_feature_names_out doesn't work
+            encoded_columns = [f"fuel_type_{ft}" for ft in FUEL_TYPE_ORDER]
+        
+        # Create categorical DataFrame
+        cat_df = pd.DataFrame(
+            encoded,
+            columns=encoded_columns
+        )
+        
+        log_verbose(f"\nStep 2: One-hot encoding")
+        log_verbose(f"  fuel_type: {fuel_type}")
+        log_verbose(f"  Encoded columns: {list(encoded_columns)}")
+        log_verbose(f"  Encoded values: {encoded[0] if hasattr(encoded, '__getitem__') else encoded.toarray()[0]}")
 
-    # Step 3: Create numerical DataFrame
-    num_df = pd.DataFrame({
-        "engine_size(l)": [log_engine_size],
-        "cylinders": [log_cylinders]
-    })
-    
-    log_verbose(f"\nStep 3: Create numerical DataFrame")
-    log_verbose(f"  Columns: {num_df.columns.tolist()}")
-    log_verbose(f"  Values: {num_df.values[0]}")
+        # Step 3: Create numerical DataFrame
+        num_df = pd.DataFrame({
+            "engine_size(l)": [log_engine_size],
+            "cylinders": [log_cylinders]
+        })
+        
+        log_verbose(f"\nStep 3: Create numerical DataFrame")
+        log_verbose(f"  Columns: {num_df.columns.tolist()}")
+        log_verbose(f"  Values: {num_df.values[0]}")
 
-    # Step 4: Combine in training order [numerical, categorical]
-    X = pd.concat([num_df, cat_df], axis=1)
-    
-    log_verbose(f"\nStep 4: Concatenate")
-    log_verbose(f"  Combined columns: {X.columns.tolist()}")
+        # Step 4: Combine in training order [numerical, categorical]
+        X = pd.concat([num_df, cat_df], axis=1)
+        
+        log_verbose(f"\nStep 4: Concatenate")
+        log_verbose(f"  Combined columns: {X.columns.tolist()}")
 
-    # Step 5: CRITICAL - Reindex to match exact training order
-    X = X.reindex(columns=feature_names, fill_value=0)
-    
-    log_verbose(f"\nStep 5: Reindex to training order")
-    log_verbose(f"  Expected: {feature_names}")
-    log_verbose(f"  Final columns: {X.columns.tolist()}")
-    log_verbose(f"  Final values: {X.values[0]}")
-    
-    # Step 6: Ensure column names are strings (XGBoost requirement)
-    X.columns = X.columns.astype(str)
-    
-    log_verbose(f"\nStep 6: Final validation")
-    log_verbose(f"  DataFrame shape: {X.shape}")
-    log_verbose(f"  Column types: {X.dtypes.tolist()}")
-    log_verbose(f"{'='*60}\n")
+        # Step 5: CRITICAL - Reindex to match exact training order
+        X = X.reindex(columns=feature_names, fill_value=0)
+        
+        log_verbose(f"\nStep 5: Reindex to training order")
+        log_verbose(f"  Expected: {feature_names}")
+        log_verbose(f"  Final columns: {X.columns.tolist()}")
+        log_verbose(f"  Final values: {X.values[0]}")
+        
+        # Step 6: Ensure column names are strings (XGBoost requirement)
+        X.columns = X.columns.astype(str)
+        
+        # Step 7: CRITICAL FIX - Ensure DataFrame has proper index
+        X = X.reset_index(drop=True)
+        
+        log_verbose(f"\nStep 6: Final validation")
+        log_verbose(f"  DataFrame shape: {X.shape}")
+        log_verbose(f"  Column types: {X.dtypes.tolist()}")
+        log_verbose(f"  Index: {X.index.tolist()}")
+        log_verbose(f"{'='*60}\n")
 
-    return X
+        return X
+        
+    except Exception as e:
+        log_verbose(f"✗ Error in preprocessing: {e}")
+        import traceback
+        log_verbose(traceback.format_exc())
+        raise
 
 
 # ============================================
@@ -293,7 +343,7 @@ async def predict_emissions(input_data: PredictionInput):
         
         raise HTTPException(
             status_code=503,
-            detail=f"Prediction service not fully initialized. Missing: {', '.join(missing)}"
+            detail=f"Prediction service not fully initialized. Missing: {', '.join(missing)}. Please check that model files exist in the correct directory."
         )
     
     try:
@@ -314,6 +364,7 @@ async def predict_emissions(input_data: PredictionInput):
         log_verbose(f"  Type: {type(features)}")
         log_verbose(f"  Shape: {features.shape}")
         log_verbose(f"  Columns: {features.columns.tolist()}")
+        log_verbose(f"  Values: {features.values[0]}")
         
         # Make prediction (XGBoost expects DataFrame with feature names)
         log_prediction = model.predict(features)[0]
@@ -343,7 +394,8 @@ async def predict_emissions(input_data: PredictionInput):
     except Exception as e:
         log_verbose(f"✗ Prediction error: {e}")
         import traceback
-        log_verbose(f"Traceback:\n{traceback.format_exc()}")
+        error_traceback = traceback.format_exc()
+        log_verbose(f"Traceback:\n{error_traceback}")
         raise HTTPException(
             status_code=500,
             detail=f"Internal prediction error: {str(e)}"
@@ -353,12 +405,15 @@ async def predict_emissions(input_data: PredictionInput):
 @predict_router.get("/health")
 async def health_check():
     """Health check endpoint."""
+    status = all([model, encoder, feature_names])
     return {
-        "status": "healthy" if all([model, encoder, feature_names]) else "unhealthy",
+        "status": "healthy" if status else "unhealthy",
         "model_loaded": model is not None,
         "encoder_loaded": encoder is not None,
         "feature_names_loaded": feature_names is not None,
-        "fuel_type_order": FUEL_TYPE_ORDER
+        "fuel_type_order": FUEL_TYPE_ORDER,
+        "feature_names": feature_names if feature_names else None,
+        "model_directories_checked": MODEL_DIRS
     }
 
 
@@ -440,8 +495,31 @@ async def test_prediction():
             "message": "Test prediction successful"
         }
     except Exception as e:
+        import traceback
         return {
             "status": "error",
             "error": str(e),
+            "traceback": traceback.format_exc(),
             "message": "Test prediction failed"
         }
+    
+@predict_router.get("/debug/files")
+async def debug_files():
+    """Check if model files are accessible."""
+    import os
+    
+    current_dir = os.getcwd()
+    model_dirs = ['model', 'models', './model', './models']
+    
+    results = {
+        "current_directory": current_dir,
+        "directory_contents": os.listdir(current_dir) if os.path.exists(current_dir) else [],
+        "model_files": {}
+    }
+    
+    for directory in model_dirs:
+        if os.path.exists(directory):
+            files = os.listdir(directory)
+            results["model_files"][directory] = files
+    
+    return results
