@@ -367,7 +367,8 @@ async def predict_emissions(input_data: PredictionInput):
         log_verbose(f"  Values: {features.values[0]}")
         
         # Make prediction (XGBoost expects DataFrame with feature names)
-        log_prediction = model.predict(features)[0]
+        log_prediction = model.predict(features.values)[0]
+
         log_verbose(f"\nPrediction:")
         log_verbose(f"  Log(CO2): {log_prediction:.4f}")
         
