@@ -67,8 +67,8 @@ const EmissionGauge = ({ value, color, max = 350 }) => {
   );
 };
 
-const AnimationCard = ({ prediction, formData, onReset }) => {
-  const { predicted_co2_emissions, interpretation, category } = prediction;
+const AnimationCard = ({ prediction, onReset }) => {
+  const { predicted_co2_emissions, interpretation, category, vehicleData } = prediction;
   
   //  HELPER FUNCTIONS 
   const getCategoryColor = () => {
@@ -134,8 +134,8 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const generateAndSharePDF = () => {
     try {
-      //Validate formData before proceeding
-      if (!formData) {
+      //Validate vehicleData before proceeding
+      if (!vehicleData) {
         toast.error("Vehicle data is missing. Please try submitting the form again.");
         return;
       }
@@ -290,9 +290,9 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
         // Added optional chaining and fallback values
         const specs = [
-          { l: "FUEL TYPE", v: getFuelLabel(formData?.fuel_type) },
-          { l: "CYLINDERS", v: formData?.cylinders || "N/A" },
-          { l: "ENGINE SIZE", v: (formData?.engine_size || "N/A") + " L" }
+          { l: "FUEL TYPE", v: getFuelLabel(vehicleData?.fuel_type) },
+          { l: "CYLINDERS", v: vehicleData?.cylinders || "N/A" },
+          { l: "ENGINE SIZE", v: (vehicleData?.engine_size || "N/A") + " L" }
         ];
 
         let gridX = margin;
