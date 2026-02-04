@@ -132,8 +132,14 @@ const AnimationCard = ({ prediction, formData, onReset }) => {
 
   const activeColor = getCategoryHex();
 
-const generateAndSharePDF = () => {
+  const generateAndSharePDF = () => {
     try {
+      //Validate formData before proceeding
+      if (!formData) {
+        toast.error("Vehicle data is missing. Please try submitting the form again.");
+        return;
+      }
+
       const toastId = toast.loading("Generating Report...");
       
       // Explicit configuration helps stability in production
@@ -272,29 +278,37 @@ const generateAndSharePDF = () => {
         cursorY += 8;
 
         const getFuelLabel = (code) => {
-            const map = { "X": "Regular Gas", "Z": "Premium Gas", "E": "Ethanol", "D": "Diesel", "N": "Natural Gas" };
-            return map[code] || code;
+          const map = { 
+            "X": "Regular Gas", 
+            "Z": "Premium Gas", 
+            "E": "Ethanol", 
+            "D": "Diesel", 
+            "N": "Natural Gas" 
+          };
+          return map[code] || code || "Unknown";
         };
+
+        // Added optional chaining and fallback values
         const specs = [
-            { l: "FUEL TYPE", v: getFuelLabel(formData.fuel_type) },
-            { l: "CYLINDERS", v: formData.cylinders },
-            { l: "ENGINE SIZE", v: formData.engine_size + " L" }
+          { l: "FUEL TYPE", v: getFuelLabel(formData?.fuel_type) },
+          { l: "CYLINDERS", v: formData?.cylinders || "N/A" },
+          { l: "ENGINE SIZE", v: (formData?.engine_size || "N/A") + " L" }
         ];
 
         let gridX = margin;
         const boxWidth = (pageWidth - (margin * 2) - 10) / 3;
         
         specs.forEach((item) => {
-            doc.setFillColor(248, 250, 252);
-            doc.roundedRect(gridX, cursorY, boxWidth, 20, 2, 2, "F");
-            doc.setFontSize(8);
-            doc.setTextColor(textGray);
-            doc.text(item.l, gridX + 5, cursorY + 8);
-            doc.setFontSize(11);
-            doc.setTextColor(textDark);
-            doc.setFont("helvetica", "bold");
-            doc.text(String(item.v), gridX + 5, cursorY + 16);
-            gridX += boxWidth + 5;
+          doc.setFillColor(248, 250, 252);
+          doc.roundedRect(gridX, cursorY, boxWidth, 20, 2, 2, "F");
+          doc.setFontSize(8);
+          doc.setTextColor(textGray);
+          doc.text(item.l, gridX + 5, cursorY + 8);
+          doc.setFontSize(11);
+          doc.setTextColor(textDark);
+          doc.setFont("helvetica", "bold");
+          doc.text(String(item.v), gridX + 5, cursorY + 16);
+          gridX += boxWidth + 5;
         });
         cursorY += 30;
 
@@ -321,13 +335,13 @@ const generateAndSharePDF = () => {
 
         const recs = getRecommendations(category);
         recs.forEach(rec => {
-            doc.setFillColor(...themeColors.accent);
-            doc.circle(margin + 2, cursorY - 1.5, 1.5, "F");
-            doc.setFontSize(10);
-            doc.setFont("helvetica", "normal");
-            doc.setTextColor("#334155");
-            doc.text(sanitizeText(rec), margin + 8, cursorY);
-            cursorY += 6;
+          doc.setFillColor(...themeColors.accent);
+          doc.circle(margin + 2, cursorY - 1.5, 1.5, "F");
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor("#334155");
+          doc.text(sanitizeText(rec), margin + 8, cursorY);
+          cursorY += 6;
         });
         cursorY += 10;
 
@@ -339,23 +353,23 @@ const generateAndSharePDF = () => {
         cursorY += 10;
 
         const ranges = [
-            { l: "Exc (<120)", w: 30, c: [16, 185, 129] },
-            { l: "Good", w: 20, c: [34, 197, 94] },
-            { l: "Avg", w: 20, c: [245, 158, 11] },
-            { l: "High", w: 15, c: [239, 68, 68] },
-            { l: "V.High", w: 15, c: [220, 38, 38] }
+          { l: "Excellent (<120)", w: 30, c: [16, 185, 129] },
+          { l: "Good", w: 20, c: [34, 197, 94] },
+          { l: "Average", w: 20, c: [245, 158, 11] },
+          { l: "High", w: 15, c: [239, 68, 68] },
+          { l: "Very High", w: 15, c: [220, 38, 38] }
         ];
 
         let barX = margin;
         const totalBarWidth = pageWidth - (margin * 2);
         ranges.forEach((range) => {
-             const segWidth = (totalBarWidth * range.w) / 100;
-             doc.setFillColor(...range.c);
-             doc.rect(barX, cursorY, segWidth, 6, "F");
-             doc.setFontSize(7);
-             doc.setTextColor(textGray);
-             doc.text(range.l, barX, cursorY + 9);
-             barX += segWidth;
+          const segWidth = (totalBarWidth * range.w) / 100;
+          doc.setFillColor(...range.c);
+          doc.rect(barX, cursorY, segWidth, 6, "F");
+          doc.setFontSize(7);
+          doc.setTextColor(textGray);
+          doc.text(range.l, barX, cursorY + 9);
+          barX += segWidth;
         });
 
         const percentage = Math.min(Math.max(predicted_co2_emissions, 0), 350) / 350;
@@ -389,7 +403,7 @@ const generateAndSharePDF = () => {
         doc.setFontSize(12);
         doc.setFont("helvetica", "normal");
         doc.setTextColor(...themeColors.textDim);
-        doc.text("www.drivegreen.com", pageWidth / 2, pageHeight - 30, { align: "center" });
+        doc.text("https://drive-green-emissions.vercel.app", pageWidth / 2, pageHeight - 30, { align: "center" });
       };
 
       drawCover();
@@ -405,7 +419,7 @@ const generateAndSharePDF = () => {
     } catch (error) {
       console.error("PDF Detail Error:", error);
       toast.dismiss();
-      toast.error("Failed to generate PDF");
+      toast.error("Failed to generate PDF. Please try again.");
     }
   };
 
@@ -433,13 +447,12 @@ const generateAndSharePDF = () => {
       animate="visible"
       className="relative w-full max-w-lg mx-auto"
     >
-      {/* White Card Container */}
       {/* Dynamic Gradient Card Container */}
       <div 
         className="relative overflow-hidden rounded-[2.5rem] border border-white/10 shadow-2xl shadow-black/50"
         style={{
-          background: `radial-gradient(circle at top right, ${activeColor}40, #171717 60%)`, // localized glow + dark base
-          backgroundColor: '#171717' // fallback color
+          background: `radial-gradient(circle at top right, ${activeColor}40, #171717 60%)`,
+          backgroundColor: '#171717'
         }}
       >
         
@@ -467,7 +480,7 @@ const generateAndSharePDF = () => {
               color={activeColor} 
             />
             
-            {/* Category Badge Floating Below - heavily modified for dark theme */}
+            {/* Category Badge Floating Below */}
             <motion.div 
               initial={{ y: -10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -482,13 +495,13 @@ const generateAndSharePDF = () => {
 
           {/* Interpretation - Dark glassmorphism */}
           <motion.div variants={itemVariants} className="mb-8 w-full">
-             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 text-left flex items-stretch gap-4">
-                <div className="w-1.5 rounded-full shrink-0" style={{ backgroundColor: activeColor }}></div>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {interpretation}
-                </p>
-              </div>
-            </motion.div>
+            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 text-left flex items-stretch gap-4">
+              <div className="w-1.5 rounded-full shrink-0" style={{ backgroundColor: activeColor }}></div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {interpretation}
+              </p>
+            </div>
+          </motion.div>
 
           {/* Actions */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 w-full">
@@ -504,8 +517,8 @@ const generateAndSharePDF = () => {
               onClick={generateAndSharePDF}
               className="flex-[1.5] py-3.5 px-4 rounded-xl font-bold text-sm text-white transition-all shadow-lg flex items-center justify-center gap-2 relative overflow-hidden group"
               style={{ 
-                  background: `linear-gradient(135deg, ${activeColor}, ${activeColor}dd)`,
-                  boxShadow: `0 8px 20px -6px ${activeColor}66`
+                background: `linear-gradient(135deg, ${activeColor}, ${activeColor}dd)`,
+                boxShadow: `0 8px 20px -6px ${activeColor}66`
               }}
             >
               <FileDown size={18} className="relative z-10" />
@@ -513,9 +526,9 @@ const generateAndSharePDF = () => {
             </button>
           </motion.div>
 
-          </div>
         </div>
-      </motion.div>
+      </div>
+    </motion.div>
   );
 };
 
