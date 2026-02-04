@@ -204,7 +204,7 @@ const AnimationCard = ({ prediction, onReset }) => {
         doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(...themeColors.text);
-        doc.text("DRIVEGREEN AI", margin + 15, pageHeight - margin - 10);
+        doc.text("DRIVEGREEN AI", margin + 15, pageHeight - margin - 20);
       };
 
       // CONTENT PAGE (Design Maintained)
@@ -390,7 +390,25 @@ const AnimationCard = ({ prediction, onReset }) => {
       // BACK PAGE (Design Maintained)
       const drawBackPage = () => {
         doc.addPage();
-        drawCover();
+        
+        // Draw background without the bottom text
+        doc.setFillColor(...themeColors.bg);
+        doc.rect(0, 0, pageWidth, pageHeight, "F");
+
+        // Accent circles (glow effect)
+        doc.setDrawColor(...themeColors.accent);
+        doc.setLineWidth(0.05);
+        for (let i = 1; i <= 10; i++) {
+          doc.circle(0, 0, 80 + (i * 2), "S");
+          doc.circle(pageWidth, pageHeight * 0.4, 60 + (i * 2), "S");
+          doc.circle(0, pageHeight, 100 + (i * 2), "S");
+        }
+
+        // Side Strip
+        doc.setFillColor(...themeColors.accent);
+        doc.rect(margin, margin, 4, pageHeight - (margin * 2), "F");
+        
+        // Center content box
         doc.setFillColor(...themeColors.bg);
         doc.rect(margin + 5, 100, pageWidth - (margin * 2) - 10, 150, "F"); 
         
@@ -400,10 +418,15 @@ const AnimationCard = ({ prediction, onReset }) => {
         doc.text("Driving Towards", pageWidth / 2, pageHeight / 2 - 10, { align: "center" });
         doc.setTextColor(...themeColors.accent);
         doc.text("A Greener Future", pageWidth / 2, pageHeight / 2 + 5, { align: "center" });
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "normal");
-        doc.setTextColor(...themeColors.textDim);
-        doc.text("https://drive-green-emissions.vercel.app", pageWidth / 2, pageHeight - 30, { align: "center" });
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(...themeColors.accent);
+        doc.text("https://drive-green-emissions.vercel.app", pageWidth / 2, pageHeight - 25, { align: "center" });
+
+        // Subtle line above the URL
+        doc.setDrawColor(...themeColors.accent);
+        doc.setLineWidth(0.3);
+        doc.line(pageWidth / 2 - 50, pageHeight - 30, pageWidth / 2 + 50, pageHeight - 30);
       };
 
       drawCover();
