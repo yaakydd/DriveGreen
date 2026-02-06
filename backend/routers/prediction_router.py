@@ -13,14 +13,6 @@ except ImportError:
     OneHotEncoder = Any
     XGBRegressor = Any
 
-"""
-FIXED PREDICTION ROUTER - CO2 EMISSIONS PREDICTION API
-Key fixes:
-1. Proper DataFrame column naming for XGBoost
-2. Consistent feature ordering
-3. Better error handling
-"""
-
 predict_router = APIRouter()
 
 FUEL_TYPE_ORDER = ['X', 'Z', 'E', 'D', 'N']
@@ -195,8 +187,6 @@ class PredictionOutput(BaseModel):
 # Preprocessing function
 def preprocess_input(fuel_type: str, engine_size: float, cylinders: int) -> pd.DataFrame:
     """
-    CRITICAL: Exact match to training process!
-    
     Training order:
     1. Log1p transform: engine_size, cylinders
     2. One-hot encode: fuel_type (with explicit order: X, Z, E, D, N)
