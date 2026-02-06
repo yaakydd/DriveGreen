@@ -399,7 +399,7 @@ You are free to:
 
 **Your Name**
 - GitHub: [@yaakydd](https://github.com/yaakydd)
-- Email: kyddgimd17@gmail.com@gmail.com
+- Email: antwiyaa17@gmail.com 
 
 ## Acknowledgments
 
