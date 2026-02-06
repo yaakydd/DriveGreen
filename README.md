@@ -412,7 +412,7 @@ You are free to:
 
 Have questions or suggestions? Feel free to:
 - Open an issue on GitHub
-- Email: kyddgimd17@gmail.com
+- Email: antwiyaa17@gmail.com 
 ---
 
 **Built with 💚 for a greener future**
